@@ -152,6 +152,7 @@ export function floatModuleAt(moduleEl, floatBtn, left, top, { persist = true, w
 }
 
 function applyDefaultFloatingModules() {
+  if (typeof window !== "undefined" && window.innerWidth <= 860) return;
   for (const def of DOCK_MODULES) {
     if (!def.defaultFloat) continue;
     const el = document.getElementById(def.id);
@@ -177,15 +178,17 @@ export function restoreLayoutState() {
     const raw = readLayoutRaw();
     if (!raw) { applyDefaultFloatingModules(); syncDockContainersVisibility(); return; }
     const parsed = JSON.parse(raw);
+    const isMobile = typeof window !== "undefined" && window.innerWidth <= 860;
     const orderedDefs = [...DOCK_MODULES].sort((a, b) => (parsed?.[a.id]?.order ?? 99) - (parsed?.[b.id]?.order ?? 99));
     for (const def of orderedDefs) {
       const el = document.getElementById(def.id), floatBtn = document.getElementById(def.btnId), cfg = parsed?.[def.id];
       if (!el) continue;
       if (!cfg) {
-        if (def.defaultFloat) { const pos = getDefaultFloatPosition(el); floatModuleAt(el, floatBtn, pos.left, pos.top, { persist: false }); }
+        if (def.defaultFloat && !isMobile) { const pos = getDefaultFloatPosition(el); floatModuleAt(el, floatBtn, pos.left, pos.top, { persist: false }); }
         continue;
       }
-      if (cfg.mode === "float") floatModuleAt(el, floatBtn, cfg.left ?? 40, cfg.top ?? 60, { persist: false, width: cfg.width, height: cfg.height });
+      if (cfg.mode === "float" && !isMobile) floatModuleAt(el, floatBtn, cfg.left ?? 40, cfg.top ?? 60, { persist: false, width: cfg.width, height: cfg.height });
+      else if (cfg.mode === "float" && isMobile) dockModuleTo(el, def.defaultSide, floatBtn, { persist: false });
       else if (cfg.mode === "dock-left") dockModuleTo(el, "left", floatBtn, { persist: false });
       else if (cfg.mode === "dock-bottom") dockModuleTo(el, "bottom", floatBtn, { persist: false });
       else if (cfg.mode === "dock-right") dockModuleTo(el, "right", floatBtn, { persist: false });
