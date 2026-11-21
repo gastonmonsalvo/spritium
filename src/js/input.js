@@ -412,7 +412,8 @@ export function setupMouseEvents(canvas) {
       const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
       const { w } = getGridDims();
       const cellPx = Math.max(1, (canvas.clientWidth || w) / Math.max(1, w));
-      const tol = Math.max(0.5, 10 / cellPx);
+      const hitPx = e.pointerType === "touch" || e.pointerType === "pen" ? 18 : 10;
+      const tol = Math.max(0.5, hitPx / cellPx);
       const targetAxis = axis === "h" ? "v" : "h";
       const targetPos = axis === "h" ? rawX : rawY;
       return (state.rulerGuides || []).findIndex(

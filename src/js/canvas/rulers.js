@@ -170,13 +170,16 @@ export function renderRulers() {
   const guides = Array.isArray(state.rulerGuides) ? state.rulerGuides : [];
   const drag = state.activeGuideDrag?.valid ? state.activeGuideDrag : null;
   const allGuides = drag ? [...guides, drag] : guides;
+  const isTouchLike = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 860);
+  const halfW = isTouchLike ? 7 : 5.5;
+  const triH = isTouchLike ? 11 : 9;
   for (const g of allGuides) {
     if (g.axis === "v") {
       const pos = Math.floor((centerTx * w + g.pos) * cellPx) + 0.5;
       tCtx.fillStyle = "#10b981";
       tCtx.beginPath();
-      tCtx.moveTo(pos - 4, thickness - 7);
-      tCtx.lineTo(pos + 4, thickness - 7);
+      tCtx.moveTo(pos - halfW, thickness - triH);
+      tCtx.lineTo(pos + halfW, thickness - triH);
       tCtx.lineTo(pos, thickness);
       tCtx.closePath();
       tCtx.fill();
@@ -184,8 +187,8 @@ export function renderRulers() {
       const pos = Math.floor((centerTy * h + g.pos) * cellPx) + 0.5;
       lCtx.fillStyle = "#10b981";
       lCtx.beginPath();
-      lCtx.moveTo(thickness - 7, pos - 4);
-      lCtx.lineTo(thickness - 7, pos + 4);
+      lCtx.moveTo(thickness - triH, pos - halfW);
+      lCtx.lineTo(thickness - triH, pos + halfW);
       lCtx.lineTo(thickness, pos);
       lCtx.closePath();
       lCtx.fill();
