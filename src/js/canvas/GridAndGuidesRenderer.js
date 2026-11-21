@@ -178,6 +178,14 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
   const cellW = baseW / w;
   const cellH = baseH / h;
   const lineW = Math.max(0.75, 1.15 / (zoom || 1));
+  const isLightTheme =
+    Boolean(state.isLightTheme) ||
+    (typeof document !== "undefined" && document.body?.classList.contains("theme-light"));
+  const isLightSurface =
+    typeof state.canvasBgLightness === "number" ? state.canvasBgLightness >= 0.5 : isLightTheme;
+  const lineStroke = isLightSurface ? "rgba(185, 28, 28, 0.54)" : "rgba(239, 68, 68, 0.34)";
+  const bandFill = isLightSurface ? "rgba(220, 38, 38, 0.12)" : "rgba(239, 68, 68, 0.09)";
+  const bandStroke = isLightSurface ? "rgba(185, 28, 28, 0.38)" : "rgba(239, 68, 68, 0.24)";
 
   ctx.save();
   ctx.beginPath();
@@ -187,7 +195,7 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
   if (w >= 4) {
     if (w % 2 === 0) {
       const midX = Math.round(tileOriginX + (w / 2) * cellW) + 0.5;
-      ctx.strokeStyle = "rgba(239, 68, 68, 0.34)";
+      ctx.strokeStyle = lineStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
       ctx.moveTo(midX, tileOriginY);
@@ -196,9 +204,9 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
     } else {
       const col = Math.floor(w / 2);
       const x0 = tileOriginX + col * cellW;
-      ctx.fillStyle = "rgba(239, 68, 68, 0.09)";
+      ctx.fillStyle = bandFill;
       ctx.fillRect(x0, tileOriginY, cellW, baseH);
-      ctx.strokeStyle = "rgba(239, 68, 68, 0.24)";
+      ctx.strokeStyle = bandStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
       ctx.moveTo(Math.round(x0) + 0.5, tileOriginY);
@@ -212,7 +220,7 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
   if (h >= 4) {
     if (h % 2 === 0) {
       const midY = Math.round(tileOriginY + (h / 2) * cellH) + 0.5;
-      ctx.strokeStyle = "rgba(239, 68, 68, 0.34)";
+      ctx.strokeStyle = lineStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
       ctx.moveTo(tileOriginX, midY);
@@ -221,9 +229,9 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
     } else {
       const row = Math.floor(h / 2);
       const y0 = tileOriginY + row * cellH;
-      ctx.fillStyle = "rgba(239, 68, 68, 0.09)";
+      ctx.fillStyle = bandFill;
       ctx.fillRect(tileOriginX, y0, baseW, cellH);
-      ctx.strokeStyle = "rgba(239, 68, 68, 0.24)";
+      ctx.strokeStyle = bandStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
       ctx.moveTo(tileOriginX, Math.round(y0) + 0.5);
