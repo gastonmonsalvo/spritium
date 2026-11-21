@@ -8,7 +8,7 @@ import { startFreeTransform } from "../tools/freeTransform.js";
 import { isActiveLayerLocked } from "../workspace/layers.js";
 import { reconcileActiveTilemapLayer } from "../workspace/tilemap.js";
 import { syncCanvasColorsToPalette } from "../workspace/paletteManager.js";
-import { clearSelection, selectAll, invertSelection } from "../tools/tools.js";
+import { clearSelection, selectAll, invertSelection, isInsideSelection } from "../tools/tools.js";
 import {
   copySelection,
   cutSelection,
@@ -191,6 +191,11 @@ export function openCanvasContextMenu(clientX, clientY) {
   const vh = window.innerHeight;
   const mw = menu.offsetWidth || 200;
   const mh = menu.offsetHeight || 260;
-  menu.style.left = `${Math.min(clientX, vw - mw - 8)}px`;
-  menu.style.top = `${Math.min(clientY, vh - mh - 8)}px`;
+  const left = vw <= 640
+    ? Math.max(12, Math.round((vw - mw) / 2))
+    : Math.max(8, Math.min(clientX, vw - mw - 8));
+  const bottomPad = vw <= 860 ? 60 : 8;
+  const top = Math.max(8, Math.min(clientY, vh - mh - bottomPad));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
 }

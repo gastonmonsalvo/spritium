@@ -282,6 +282,15 @@ export function setupMouseEvents(canvas) {
 
   const touchPointers = new Map();
   let pinchState = null;
+  let canvasLongPressTimer = null;
+  let canvasLongPressOrigin = null;
+  const clearCanvasLongPress = () => {
+    if (canvasLongPressTimer) {
+      clearTimeout(canvasLongPressTimer);
+      canvasLongPressTimer = null;
+    }
+    canvasLongPressOrigin = null;
+  };
 
   canvas.style.touchAction = "none";
   setupSpacePanAndContextGuards(canvas, ptr);
@@ -301,6 +310,7 @@ export function setupMouseEvents(canvas) {
     if (e.pointerType === "touch") {
       touchPointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
       if (touchPointers.size === 2) {
+        clearCanvasLongPress();
         ptr.isMouseDown = false;
         ptr.activeStrategy = null;
         const pts = [...touchPointers.values()];
@@ -316,10 +326,30 @@ export function setupMouseEvents(canvas) {
         return;
       }
       if (touchPointers.size > 2) return;
+      const { x: gx, y: gy } = getGridCoordinates(e, canvas);
+      if (SELECTION_CTX_TOOLS.has(state.currentTool) || (state.selection && isInsideSelection(gx, gy))) {
+        clearCanvasLongPress();
+        canvasLongPressOrigin = { x: e.clientX, y: e.clientY };
+        const cx = e.clientX;
+        const cy = e.clientY;
+        canvasLongPressTimer = setTimeout(() => {
+          canvasLongPressTimer = null;
+          canvasLongPressOrigin = null;
+          ptr.isMouseDown = false;
+          ptr.activeStrategy = null;
+          if (typeof navigator !== "undefined") navigator.vibrate?.(14);
+          openCanvasContextMenu(cx, cy);
+        }, 480);
+      }
     }
     handleCanvasMouseDown(e, canvas, ptr);
   });
   canvas.addEventListener("pointermove", (e) => {
+    if (canvasLongPressOrigin && e.pointerType === "touch") {
+      if (Math.hypot(e.clientX - canvasLongPressOrigin.x, e.clientY - canvasLongPressOrigin.y) > 6) {
+        clearCanvasLongPress();
+      }
+    }
     if (e.pointerType === "touch" && touchPointers.has(e.pointerId)) {
       touchPointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
       if (pinchState && touchPointers.size === 2) {
@@ -364,6 +394,7 @@ export function setupMouseEvents(canvas) {
   });
   const clearTouchPointer = (e) => {
     if (e.pointerType !== "touch") return;
+    clearCanvasLongPress();
     touchPointers.delete(e.pointerId);
     if (touchPointers.size < 2) pinchState = null;
   };

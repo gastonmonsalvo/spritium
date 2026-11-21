@@ -200,6 +200,12 @@
     overflow-y: auto;
   }
 
+  .context-menu {
+    max-width: calc(100vw - 24px);
+    max-height: 62dvh;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72);
+  }
+
   .menu-item:nth-last-child(-n+2) .menu-dropdown {
     left: auto;
     right: 0;

@@ -2,7 +2,7 @@
  * toolStrategies.js: Patrón Strategy ({ onDown, onMove, onUp }) para las herramientas del lienzo.
  */
 
-import { state, pushLayerState, cloneGrid, getGridDims } from "../core/state.js";
+import { state, pushLayerState, cloneGrid, getGridDims, isSymmetryActive, getSymmetryPoints } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import {
   applyToolAt,
@@ -464,12 +464,16 @@ const lineStrategy = (() => {
 const filterBrushStrategy = (() => {
   let lastPt = null;
   const applyAt = (x, y) => {
-    if (state.currentTool === "jumble") {
-      applyJumbleAt(x, y, state.brushSize);
-    } else if (state.currentTool === "noise") {
-      applyNoiseAt(x, y, state.brushSize);
-    } else {
-      applyBlurAt(x, y, state.brushSize);
+    const { w: gw, h: gh } = getGridDims();
+    const pts = isSymmetryActive() ? getSymmetryPoints(x, y, gw, gh) : [[x, y]];
+    for (const [sx, sy] of pts) {
+      if (state.currentTool === "jumble") {
+        applyJumbleAt(sx, sy, state.brushSize);
+      } else if (state.currentTool === "noise") {
+        applyNoiseAt(sx, sy, state.brushSize);
+      } else {
+        applyBlurAt(sx, sy, state.brushSize);
+      }
     }
   };
   return {

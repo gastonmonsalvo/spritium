@@ -439,7 +439,9 @@ export function applyNoiseAt(cx, cy, brushSize = state.brushSize) {
       if (!curIdx) continue;
       const rgb = parseColorToRgb(state.paletteMap[curIdx]);
       if (!rgb) continue;
-      const delta = (Math.random() * 2 - 1) * 32;
+      if (Math.random() > 0.55) continue;
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      const delta = sign * (28 + Math.random() * 64);
       const nr = Math.max(0, Math.min(255, rgb[0] + delta));
       const ng = Math.max(0, Math.min(255, rgb[1] + delta));
       const nb = Math.max(0, Math.min(255, rgb[2] + delta));
