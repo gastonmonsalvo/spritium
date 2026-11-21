@@ -3,7 +3,7 @@
  * version.js: Fuente única de verdad para la versión pública y canal de distribución de Spritium.
  */
 
-export const APP_VERSION = "0.9.0-beta.1";
+export const APP_VERSION = "0.9.0-beta.2";
 export const APP_CHANNEL = "beta";
 
 /**
