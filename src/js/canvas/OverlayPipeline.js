@@ -98,7 +98,7 @@ export function drawSelectionAndGizmosOverlay(ctx, cellSize, tileOriginX, tileOr
 
   drawSnapGuides(ctx, cellSize, baseW, baseH);
   if (state.freeTransform?.corners?.length === 4) {
-    drawFreeTransformOverlay(ctx, cellSize, zoom, state.freeTransform.corners);
+    drawFreeTransformOverlay(ctx, cellSize, zoom, state.freeTransform.corners, state.freeTransform.pivot || null);
   }
   ctx.restore();
   drawPixelCursorOverlay(ctx, cellSize, zoom);

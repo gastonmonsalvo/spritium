@@ -72,8 +72,9 @@ function renderLineAndShapeOptions() {
     </div>
     <div id="optShapeSelector" style="display: none; gap: 4px">${shapeBtnsHtml}</div>
     <div id="optFilterSelector" style="display: none; gap: 4px">
-      <button type="button" id="filterBtnBlur" class="tool-btn active" data-action="setTool" data-action-arg="blur" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.blur" title="${tAttr("title.blur")}"><i data-lucide="droplet" class="ui-icon-sm"></i><span data-i18n="tool.filters">Blur</span></button>
-      <button type="button" id="filterBtnJumble" class="tool-btn" data-action="setTool" data-action-arg="jumble" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.jumble" title="${tAttr("title.jumble")}"><i data-lucide="shuffle" class="ui-icon-sm"></i><span data-i18n="tool.filters">Jumble</span></button>
+      <button type="button" id="filterBtnBlur" class="tool-btn active" data-action="setTool" data-action-arg="blur" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.blur" title="${tAttr("title.blur")}"><i data-lucide="droplet" class="ui-icon-sm"></i><span data-i18n="tool.blur_short">${tAttr("tool.blur_short")}</span></button>
+      <button type="button" id="filterBtnJumble" class="tool-btn" data-action="setTool" data-action-arg="jumble" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.jumble" title="${tAttr("title.jumble")}"><i data-lucide="shuffle" class="ui-icon-sm"></i><span data-i18n="tool.jumble_short">${tAttr("tool.jumble_short")}</span></button>
+      <button type="button" id="filterBtnNoise" class="tool-btn" data-action="setTool" data-action-arg="noise" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.noise" title="${tAttr("title.noise")}"><i data-lucide="sparkles" class="ui-icon-sm"></i><span data-i18n="tool.noise_short">${tAttr("tool.noise_short")}</span></button>
     </div>`;
 }
 

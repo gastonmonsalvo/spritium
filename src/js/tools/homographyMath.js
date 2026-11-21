@@ -61,15 +61,20 @@ export function getFreeTransformHandles(corners) {
   };
 }
 
-/** Rota las 4 esquinas `rad` radianes alrededor de su centroide. */
-export function rotateCornersAroundCenter(corners, rad) {
-  const cx = (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4;
-  const cy = (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4;
+/** Rota las 4 esquinas `rad` radianes alrededor de `pivot` (o de su centroide si se omite). */
+export function rotateCornersAroundPoint(corners, rad, pivot = null) {
+  const cx = pivot?.x ?? (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4;
+  const cy = pivot?.y ?? (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4;
   const cos = Math.cos(rad), sin = Math.sin(rad);
   return corners.map((p) => {
     const dx = p.x - cx, dy = p.y - cy;
     return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
   });
+}
+
+/** Rota las 4 esquinas `rad` radianes alrededor de su centroide. */
+export function rotateCornersAroundCenter(corners, rad) {
+  return rotateCornersAroundPoint(corners, rad, null);
 }
 
 /** Aplica arrastre sobre una esquina (`tl`, `tr`, `br`, `bl`) según modo y modificadores. */

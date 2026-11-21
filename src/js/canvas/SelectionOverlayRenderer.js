@@ -119,13 +119,14 @@ export function drawSelectionOverlay(ctx, cellSize, dashOffset = 0) {
 }
 
 /**
- * Dibuja el cuadrilátero y las 9 manijas del gizmo de Transformación Libre.
+ * Dibuja el cuadrilátero, las 9 manijas y el pivote de rotación del gizmo de Transformación Libre.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cellSize
  * @param {number} zoom
  * @param {Array<{x: number, y: number}>} corners
+ * @param {{x: number, y: number}|null} [pivot]
  */
-export function drawFreeTransformOverlay(ctx, cellSize, zoom, corners) {
+export function drawFreeTransformOverlay(ctx, cellSize, zoom, corners, pivot = null) {
   const pts = corners.map((p) => ({ x: p.x * cellSize, y: p.y * cellSize }));
   const topMid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
   const edgeDx = pts[1].x - pts[0].x;
@@ -172,6 +173,24 @@ export function drawFreeTransformOverlay(ctx, cellSize, zoom, corners) {
     ctx.fillRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
     ctx.strokeRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
   }
+
+  // Mira arrastrable del punto de eje de rotación (pivote)
+  const px = (pivot?.x ?? (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4) * cellSize;
+  const py = (pivot?.y ?? (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4) * cellSize;
+  const pr = 5.5 / zoom;
+  ctx.strokeStyle = "#09090b";
+  ctx.fillStyle = "#f59e0b";
+  ctx.beginPath();
+  ctx.arc(px, py, pr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = "#f59e0b";
+  ctx.beginPath();
+  ctx.moveTo(px - pr * 1.7, py);
+  ctx.lineTo(px + pr * 1.7, py);
+  ctx.moveTo(px, py - pr * 1.7);
+  ctx.lineTo(px, py + pr * 1.7);
+  ctx.stroke();
   ctx.restore();
 }
 

@@ -175,7 +175,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   }
 
   const isShape = toolName === "rect" || toolName === "circle" || toolName === "triangle";
-  const isFilter = toolName === "blur" || toolName === "jumble";
+  const isFilter = toolName === "blur" || toolName === "jumble" || toolName === "noise";
   const activeLayer = state.layers?.[state.activeLayerIndex];
   const inTilemapPlaceMode =
     activeLayer?.type === "tilemap" &&
@@ -282,13 +282,14 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   if (isFilter) {
     lastFilterTool = toolName;
     const filterBtn = document.getElementById("toolFilterBrush");
-    const iconName = toolName === "jumble" ? "shuffle" : "droplet";
+    const iconName = toolName === "jumble" ? "shuffle" : toolName === "noise" ? "sparkles" : "droplet";
     if (filterBtn) {
       filterBtn.innerHTML = `<i data-lucide="${iconName}" class="ui-icon"></i>`;
       refreshIcons(filterBtn);
     }
     document.getElementById("filterBtnBlur")?.classList.toggle("active", toolName === "blur");
     document.getElementById("filterBtnJumble")?.classList.toggle("active", toolName === "jumble");
+    document.getElementById("filterBtnNoise")?.classList.toggle("active", toolName === "noise");
   }
 }
 
@@ -316,6 +317,7 @@ export function setTool(toolName) {
     triangle: "toolShapes",
     blur: "toolFilterBrush",
     jumble: "toolFilterBrush",
+    noise: "toolFilterBrush",
     spray: "toolSpray",
     move: "toolMove",
     pan: "toolPan",

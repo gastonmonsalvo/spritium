@@ -126,6 +126,7 @@ export async function handleUploadExternalFile(file, options = {}) {
       let maxIdx = Math.max(39, ...Object.keys(state.paletteMap).map(Number).filter((n) => n < 9000));
       const { w: gw, h: gh } = getGridDims();
       const newGrid = Array.from({ length: gh }, () => new Array(gw).fill(0));
+      const newOutOfBounds = [];
       const srcH = data.grid.length;
       const srcW = data.grid[0]?.length || 0;
       const offX = srcW !== gw ? Math.floor((gw - srcW) / 2) : 0;
@@ -133,10 +134,8 @@ export async function handleUploadExternalFile(file, options = {}) {
 
       for (let sy = 0; sy < srcH; sy++) {
         const dy = sy + offY;
-        if (dy < 0 || dy >= gh) continue;
         for (let sx = 0; sx < srcW; sx++) {
           const dx = sx + offX;
-          if (dx < 0 || dx >= gw) continue;
           const srcIdx = data.grid[sy][sx];
           if (!srcIdx || srcIdx === 0) continue;
           let mapped = remap.get(srcIdx);
@@ -157,7 +156,12 @@ export async function handleUploadExternalFile(file, options = {}) {
             }
             remap.set(srcIdx, mapped);
           }
-          newGrid[dy][dx] = mapped;
+          if (!mapped) continue;
+          if (dx >= 0 && dx < gw && dy >= 0 && dy < gh) {
+            newGrid[dy][dx] = mapped;
+          } else {
+            newOutOfBounds.push([dx, dy, mapped]);
+          }
         }
       }
 
@@ -173,6 +177,10 @@ export async function handleUploadExternalFile(file, options = {}) {
       state.isDirtySinceImport = true;
       state.resBaseSnapshot = null;
       addNewLayer(assetName || i18n.t("default.imported_name"), newGrid);
+      const importedLayer = state.layers?.[state.activeLayerIndex];
+      if (importedLayer && newOutOfBounds.length > 0) {
+        importedLayer.outOfBounds = newOutOfBounds;
+      }
       buildPaletteUI();
       renderCustomPaletteUI();
       renderAll();

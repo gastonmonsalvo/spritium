@@ -14,7 +14,7 @@ import {
   pointInQuad,
   distToSegment,
   getFreeTransformHandles,
-  rotateCornersAroundCenter,
+  rotateCornersAroundPoint,
   applyCornerDrag,
   applyEdgeDrag,
 } from "./homographyMath.js";
@@ -124,6 +124,7 @@ export function startFreeTransform() {
   state.freeTransform = {
     originalGrid, baseOutOfBounds, ...data, hadSelection: hasSelection, mode: "scale", angleDeg: 0,
     corners: [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }],
+    pivot: { x: x + w / 2, y: y + h / 2 },
   };
   renderFreeTransformPreview();
   updateToolOptionsUI();
@@ -203,11 +204,11 @@ export function setFreeTransformMode(mode) {
   updateToolOptionsUI();
 }
 
-/** Rota la transformación libre actual por un delta en grados alrededor de su centro. */
+/** Rota la transformación libre actual por un delta en grados alrededor de su pivote (o centro). */
 export function rotateFreeTransformBy(deltaDeg) {
   const ft = state.freeTransform;
   if (!ft) return;
-  ft.corners = rotateCornersAroundCenter(ft.corners, (deltaDeg * Math.PI) / 180);
+  ft.corners = rotateCornersAroundPoint(ft.corners, (deltaDeg * Math.PI) / 180, ft.pivot || null);
   ft.angleDeg = Math.round(((ft.angleDeg || 0) + deltaDeg) * 10) / 10;
   renderFreeTransformPreview();
   renderAll();
@@ -218,6 +219,7 @@ export function hitTestFreeTransform(gx, gy) {
   const ft = state.freeTransform;
   if (!ft?.corners) return null;
   const corners = ft.corners, tol = Math.max(1.6, state.gridSize / 24), handles = getFreeTransformHandles(corners);
+  if (ft.pivot && Math.hypot(gx - ft.pivot.x, gy - ft.pivot.y) <= tol) return "pivot";
   for (const k of ["rot", "tl", "tr", "br", "bl", "t", "r", "b", "l"]) {
     if (Math.hypot(gx - handles[k].x, gy - handles[k].y) <= tol) return k;
   }
@@ -233,9 +235,11 @@ export function hitTestFreeTransform(gx, gy) {
 export function getFreeTransformCursor(rawX, rawY, event) {
   const ft = state.freeTransform;
   if (!ft) return "";
+  if (event?.altKey) return "crosshair";
   const hit = hitTestFreeTransform(rawX, rawY);
   const isCtrl = Boolean(event?.ctrlKey || event?.metaKey);
   const skewMode = isCtrl || ft.mode === "perspective" || ft.mode === "symmetric";
+  if (hit === "pivot") return "crosshair";
   if (hit === "tl" || hit === "br") return "nwse-resize";
   if (hit === "tr" || hit === "bl") return "nesw-resize";
   if (hit === "t" || hit === "b") return skewMode ? "ew-resize" : "ns-resize";
@@ -246,16 +250,27 @@ export function getFreeTransformCursor(rawX, rawY, event) {
 
 /** Crea el controlador de interacción del mouse sobre el lienzo durante Transformación Libre. */
 export function createFreeTransformController() {
-  let dragType = null, startPos = null, startCorners = null, startAngle = 0;
+  let dragType = null, startPos = null, startCorners = null, startPivot = null, startAngle = 0;
   return {
-    onDown({ rawX, rawY, button }) {
+    onDown({ rawX, rawY, button, event }) {
       const ft = state.freeTransform;
       if (!ft || button !== 0) return false;
+      if (event?.altKey) {
+        dragType = "pivot";
+        const px = Math.round(rawX * 2) / 2, py = Math.round(rawY * 2) / 2;
+        ft.pivot = { x: px, y: py };
+        startPos = { x: rawX, y: rawY };
+        startCorners = ft.corners.map((c) => ({ ...c }));
+        startPivot = { ...ft.pivot };
+        renderAll();
+        return true;
+      }
       dragType = hitTestFreeTransform(rawX, rawY);
       startPos = { x: rawX, y: rawY };
       startCorners = ft.corners.map((c) => ({ ...c }));
-      const cx = (startCorners[0].x + startCorners[1].x + startCorners[2].x + startCorners[3].x) / 4;
-      const cy = (startCorners[0].y + startCorners[1].y + startCorners[2].y + startCorners[3].y) / 4;
+      const cx = ft.pivot?.x ?? (startCorners[0].x + startCorners[1].x + startCorners[2].x + startCorners[3].x) / 4;
+      const cy = ft.pivot?.y ?? (startCorners[0].y + startCorners[1].y + startCorners[2].y + startCorners[3].y) / 4;
+      startPivot = { x: cx, y: cy };
       startAngle = Math.atan2(rawY - cy, rawX - cx);
       return true;
     },
@@ -266,15 +281,22 @@ export function createFreeTransformController() {
       const isCtrl = Boolean(event?.ctrlKey || event?.metaKey), isShift = Boolean(event?.shiftKey);
       const effectiveMode = isCtrl && isShift ? "symmetric" : isCtrl ? "perspective" : ft.mode;
 
-      if (dragType === "move") {
+      if (dragType === "pivot") {
+        const nx = startPivot.x + dx, ny = startPivot.y + dy;
+        ft.pivot = isShift ? { x: Math.round(nx * 2) / 2, y: Math.round(ny * 2) / 2 } : { x: nx, y: ny };
+        renderAll();
+        return true;
+      } else if (dragType === "move") {
         ft.corners = isCtrl
           ? c.map((p, i) => ({ x: p.x + (i < 2 ? dx * 0.5 : -dx * 0.5), y: p.y }))
           : c.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+        if (!isCtrl && startPivot) ft.pivot = { x: startPivot.x + dx, y: startPivot.y + dy };
       } else if (dragType === "rot") {
-        const cx = (c[0].x + c[1].x + c[2].x + c[3].x) / 4, cy = (c[0].y + c[1].y + c[2].y + c[3].y) / 4;
+        const cx = startPivot?.x ?? (c[0].x + c[1].x + c[2].x + c[3].x) / 4;
+        const cy = startPivot?.y ?? (c[0].y + c[1].y + c[2].y + c[3].y) / 4;
         let delta = Math.atan2(rawY - cy, rawX - cx) - startAngle;
         if (isShift) delta = Math.round(delta / (Math.PI / 12)) * (Math.PI / 12);
-        ft.corners = rotateCornersAroundCenter(c, delta);
+        ft.corners = rotateCornersAroundPoint(c, delta, { x: cx, y: cy });
       } else if (["tl", "tr", "br", "bl"].includes(dragType)) {
         ft.corners = applyCornerDrag(c, dragType, dx, dy, effectiveMode, isShift);
       } else if (["t", "r", "b", "l"].includes(dragType)) {
@@ -284,6 +306,6 @@ export function createFreeTransformController() {
       renderAll();
       return true;
     },
-    onUp() { dragType = null; startPos = null; startCorners = null; },
+    onUp() { dragType = null; startPos = null; startCorners = null; startPivot = null; },
   };
 }

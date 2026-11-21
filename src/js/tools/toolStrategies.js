@@ -11,10 +11,12 @@ import {
   plotBrushWithMirror,
   traceBresenhamPoints,
   removeConnectedColor,
+  replaceColorInActiveLayer,
   replaceColorWithTransparent,
   restoreActiveLayerFromSnapshot,
   applyJumbleAt,
   applyBlurAt,
+  applyNoiseAt,
   applySprayAt,
 } from "./tools.js";
 import {
@@ -62,9 +64,19 @@ const strokeStrategy = (() => {
   };
 
   return {
-    onDown({ x, y, button }) {
+    onDown({ x, y, button, event }) {
       if (button !== 0 && button !== 2) return;
       cancelSelectionIfOutside(x, y);
+      if (state.currentTool === "bucket" && event?.shiftKey) {
+        const targetColor = state.grid[y]?.[x];
+        const nextColor = resolveStrokeColor(button);
+        pushLayerState();
+        if (replaceColorInActiveLayer(targetColor, nextColor)) {
+          renderAll();
+          setStatus({ key: "log.color_layer_replaced" }, false, "pixel");
+        }
+        return;
+      }
       if (state.currentTool !== "bucket") {
         pushLayerState();
       }
@@ -447,6 +459,8 @@ const filterBrushStrategy = (() => {
   const applyAt = (x, y) => {
     if (state.currentTool === "jumble") {
       applyJumbleAt(x, y, state.brushSize);
+    } else if (state.currentTool === "noise") {
+      applyNoiseAt(x, y, state.brushSize);
     } else {
       applyBlurAt(x, y, state.brushSize);
     }
@@ -503,6 +517,7 @@ export const TOOL_STRATEGIES = {
   spray: sprayStrategy,
   blur: filterBrushStrategy,
   jumble: filterBrushStrategy,
+  noise: filterBrushStrategy,
   line: lineStrategy,
   rect: createShapeStrategy(({ start, x, y }, col, filled) =>
     drawPixelRect(start.x, start.y, x, y, col, filled, state.brushSize, state.lineStyle || "solid"),

@@ -11,7 +11,7 @@ import {
   getSymmetryPoints,
 } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
-import { parseColorToRgb } from "../core/color.js";
+import { parseColorToRgb, rgbToOklab } from "../core/color.js";
 import {
   getActiveRegion,
   isInsideSelection,
@@ -29,6 +29,7 @@ import {
   floodFill,
   pickColorAt,
   removeConnectedColor,
+  replaceColorInActiveLayer,
   replaceColorWithTransparent,
 } from "./floodAndColorTools.js";
 
@@ -47,6 +48,7 @@ export {
   floodFill,
   pickColorAt,
   removeConnectedColor,
+  replaceColorInActiveLayer,
   replaceColorWithTransparent,
 };
 
@@ -310,6 +312,60 @@ export function applyJumbleAt(cx, cy, brushSize = state.brushSize) {
   state.isDirtySinceImport = true;
 }
 
+function buildPaletteColorEntries({ withOklab = false } = {}) {
+  const entries = [];
+  for (const [k, hex] of Object.entries(state.paletteMap || {})) {
+    const idx = Number(k);
+    if (idx <= 0 || !hex) continue;
+    const rgb = parseColorToRgb(hex);
+    if (!rgb) continue;
+    entries.push(withOklab ? { idx, rgb, lab: rgbToOklab(rgb[0], rgb[1], rgb[2]) } : { idx, rgb });
+  }
+  return entries;
+}
+
+function findNearestPaletteEntry(r, g, b, entries, { useOklab = false } = {}) {
+  if (!entries.length) return 0;
+  let bestIdx = entries[0].idx;
+  let bestDist = Infinity;
+  if (useOklab) {
+    const [tL, tA, tB] = rgbToOklab(r, g, b);
+    for (const entry of entries) {
+      const dL = tL - entry.lab[0];
+      const da = tA - entry.lab[1];
+      const db = tB - entry.lab[2];
+      const d = dL * dL + da * da + db * db;
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = entry.idx;
+      }
+    }
+    return bestIdx;
+  }
+  for (const entry of entries) {
+    const dr = r - entry.rgb[0];
+    const dg = g - entry.rgb[1];
+    const db = b - entry.rgb[2];
+    const d = dr * dr + dg * dg + db * db;
+    if (d < bestDist) {
+      bestDist = d;
+      bestIdx = entry.idx;
+    }
+  }
+  return bestIdx;
+}
+
+function createMulberry32(seed) {
+  let a = (Number(seed) || 1) >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /**
  * Blur Tool: suaviza píxeles dentro del pincel promediando vecindad 3×3
  * y proyectando al índice más cercano de la paleta activa.
@@ -318,13 +374,7 @@ export function applyBlurAt(cx, cy, brushSize = state.brushSize) {
   const { w: gw, h: gh } = getGridDims();
   const radius = Math.max(0, Math.floor(Math.max(1, brushSize) / 2));
 
-  const paletteEntries = [];
-  for (const [k, hex] of Object.entries(state.paletteMap)) {
-    const idx = Number(k);
-    if (idx <= 0 || !hex) continue;
-    const rgb = parseColorToRgb(hex);
-    if (rgb) paletteEntries.push({ idx, rgb });
-  }
+  const paletteEntries = buildPaletteColorEntries();
   if (paletteEntries.length === 0) return;
 
   const updates = [];
@@ -355,22 +405,7 @@ export function applyBlurAt(cx, cy, brushSize = state.brushSize) {
       }
 
       if (weightSum === 0) continue;
-      const avgR = sumR / weightSum;
-      const avgG = sumG / weightSum;
-      const avgB = sumB / weightSum;
-
-      let bestIdx = state.grid[y][x];
-      let bestDist = Infinity;
-      for (const entry of paletteEntries) {
-        const dr = avgR - entry.rgb[0];
-        const dg = avgG - entry.rgb[1];
-        const db = avgB - entry.rgb[2];
-        const d = dr * dr + dg * dg + db * db;
-        if (d < bestDist) {
-          bestDist = d;
-          bestIdx = entry.idx;
-        }
-      }
+      const bestIdx = findNearestPaletteEntry(sumR / weightSum, sumG / weightSum, sumB / weightSum, paletteEntries);
       updates.push([x, y, bestIdx]);
     }
   }
@@ -379,6 +414,83 @@ export function applyBlurAt(cx, cy, brushSize = state.brushSize) {
     state.grid[y][x] = idx;
   }
   if (updates.length > 0) state.isDirtySinceImport = true;
+}
+
+/**
+ * Noise Brush: aplica textura de ruido cuantizada en OKLab a la paleta activa dentro del pincel.
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} [brushSize=state.brushSize]
+ */
+export function applyNoiseAt(cx, cy, brushSize = state.brushSize) {
+  const { w: gw, h: gh } = getGridDims();
+  const radius = Math.max(0, Math.floor(Math.max(1, brushSize) / 2));
+  const entries = buildPaletteColorEntries({ withOklab: true });
+  if (!entries.length) return;
+
+  const updates = [];
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const x = wrapCoordX(cx + dx, gw);
+      const y = wrapCoordY(cy + dy, gh);
+      if (x < 0 || x >= gw || y < 0 || y >= gh) continue;
+      if (!isInsideSelection(x, y)) continue;
+      const curIdx = state.grid[y][x];
+      if (!curIdx) continue;
+      const rgb = parseColorToRgb(state.paletteMap[curIdx]);
+      if (!rgb) continue;
+      const delta = (Math.random() * 2 - 1) * 32;
+      const nr = Math.max(0, Math.min(255, rgb[0] + delta));
+      const ng = Math.max(0, Math.min(255, rgb[1] + delta));
+      const nb = Math.max(0, Math.min(255, rgb[2] + delta));
+      updates.push([x, y, findNearestPaletteEntry(nr, ng, nb, entries, { useOklab: true })]);
+    }
+  }
+
+  for (const [x, y, idx] of updates) {
+    state.grid[y][x] = idx;
+  }
+  if (updates.length > 0) state.isDirtySinceImport = true;
+}
+
+/**
+ * Filtro de Ruido Pixel-Art Safe para la capa o selección activa, cuantizando en OKLab
+ * a los colores de la paleta activa para no introducir colores sucios.
+ * @param {{intensity?: number, paintedOnly?: boolean, monochrome?: boolean, seed?: number}} [options]
+ * @returns {boolean} True si se modificó al menos un píxel.
+ */
+export function applyNoiseToRegion({ intensity = 25, paintedOnly = true, monochrome = true, seed = 1 } = {}) {
+  const { w: gw, h: gh } = getGridDims();
+  const entries = buildPaletteColorEntries({ withOklab: true });
+  if (!entries.length) return false;
+
+  const rand = createMulberry32(seed);
+  const strength = Math.max(0.05, Math.min(1, (Number(intensity) || 25) / 100)) * 96;
+  const fallbackRgb = parseColorToRgb(state.paletteMap[state.currentColorIndex]) || [128, 128, 128];
+  let changed = false;
+
+  for (let y = 0; y < gh; y++) {
+    for (let x = 0; x < gw; x++) {
+      if (!isInsideSelection(x, y)) continue;
+      const curIdx = state.grid[y][x];
+      if (paintedOnly && !curIdx) continue;
+      const baseRgb = curIdx ? parseColorToRgb(state.paletteMap[curIdx]) || fallbackRgb : fallbackRgb;
+      const dR = (rand() * 2 - 1) * strength;
+      const dG = monochrome ? dR : (rand() * 2 - 1) * strength;
+      const dB = monochrome ? dR : (rand() * 2 - 1) * strength;
+      const nr = Math.max(0, Math.min(255, baseRgb[0] + dR));
+      const ng = Math.max(0, Math.min(255, baseRgb[1] + dG));
+      const nb = Math.max(0, Math.min(255, baseRgb[2] + dB));
+      const nextIdx = findNearestPaletteEntry(nr, ng, nb, entries, { useOklab: true });
+      if (nextIdx !== curIdx) {
+        state.grid[y][x] = nextIdx;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) state.isDirtySinceImport = true;
+  return changed;
 }
 
 /**

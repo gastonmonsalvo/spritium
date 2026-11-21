@@ -33,7 +33,7 @@ export function syncActiveUserPalette() {
   buildPaletteUI();
 }
 
-function purgeColorFromGrid(grid, idx) {
+function purgeColorFromGrid(grid, idx, replacementIdx = 0) {
   if (!Array.isArray(grid)) return false;
   let touched = false;
   for (let y = 0; y < grid.length; y++) {
@@ -41,7 +41,7 @@ function purgeColorFromGrid(grid, idx) {
     if (!row) continue;
     for (let x = 0; x < row.length; x++) {
       if (row[x] === idx) {
-        row[x] = 0;
+        row[x] = replacementIdx;
         touched = true;
       }
     }
@@ -49,7 +49,7 @@ function purgeColorFromGrid(grid, idx) {
   return touched;
 }
 
-function purgeColorFromLayers(idx) {
+function purgeColorFromLayers(idx, replacementIdx = 0) {
   const visited = new Set();
   const layersToClean = [];
   for (const frame of state.frames || []) {
@@ -67,17 +67,39 @@ function purgeColorFromLayers(idx) {
     }
   }
   if (layersToClean.length === 0 && state.grid) {
-    purgeColorFromGrid(state.grid, idx);
+    purgeColorFromGrid(state.grid, idx, replacementIdx);
   }
   for (const ts of state.tilesets || []) {
     for (let i = 1; i < (ts?.tiles?.length || 0); i++) {
-      if (ts.tiles[i]?.grid) purgeColorFromGrid(ts.tiles[i].grid, idx);
+      if (ts.tiles[i]?.grid) purgeColorFromGrid(ts.tiles[i].grid, idx, replacementIdx);
     }
   }
   for (const layer of layersToClean) {
-    if (layer.type === "tilemap") syncTilemapLayerToGrid(layer);
-    else if (layer.grid) purgeColorFromGrid(layer.grid, idx);
+    if (layer.type === "tilemap") {
+      syncTilemapLayerToGrid(layer);
+    } else {
+      if (layer.grid) purgeColorFromGrid(layer.grid, idx, replacementIdx);
+      if (Array.isArray(layer.outOfBounds) && layer.outOfBounds.length) {
+        if (replacementIdx === 0) {
+          layer.outOfBounds = layer.outOfBounds.filter(([, , val]) => val !== idx);
+        } else {
+          for (const entry of layer.outOfBounds) {
+            if (entry[2] === idx) entry[2] = replacementIdx;
+          }
+        }
+      }
+    }
   }
+}
+
+function replacePaletteColorAcrossProject(oldIdx, newIdx, oldHex) {
+  if (oldIdx === newIdx || !state.paletteMap?.[newIdx]) return;
+  pushState();
+  purgeColorFromLayers(oldIdx, newIdx);
+  const newHex = state.paletteMap[newIdx];
+  state.isDirtySinceImport = true;
+  renderAll();
+  setStatus({ key: "log.swatch_replaced", params: { from: oldHex, to: newHex } });
 }
 
 function deletePaletteColorAndPixels(idx, hex) {
@@ -127,6 +149,20 @@ function openSwatchContextMenu(clientX, clientY, idx, hex) {
   const items = [
     { icon: "pipette", label: i18n.t("ctx.swatch_use_p1"), action: () => { state.currentColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.free_p1", params: { hex } }); } },
     { icon: "brush", label: i18n.t("ctx.swatch_use_p2"), action: () => { state.secondaryColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.free_p2", params: { hex } }); } },
+    ...(state.currentColorIndex && state.currentColorIndex !== idx && state.paletteMap?.[state.currentColorIndex]
+      ? [{
+          icon: "replace",
+          label: i18n.t("ctx.swatch_replace_p1", { hex: state.paletteMap[state.currentColorIndex] }),
+          action: () => replacePaletteColorAcrossProject(idx, state.currentColorIndex, hex),
+        }]
+      : []),
+    ...(state.secondaryColorIndex && state.secondaryColorIndex !== idx && state.paletteMap?.[state.secondaryColorIndex]
+      ? [{
+          icon: "replace",
+          label: i18n.t("ctx.swatch_replace_p2", { hex: state.paletteMap[state.secondaryColorIndex] }),
+          action: () => replacePaletteColorAcrossProject(idx, state.secondaryColorIndex, hex),
+        }]
+      : []),
     {
       icon: "x", label: i18n.t("ctx.swatch_remove_custom"),
       action: () => {

@@ -116,7 +116,7 @@ export function getToolCursorCss(toolName = state.currentTool) {
   if (toolName === "bucket" || toolName === "fill") return buildLucideButtonCursor("toolBucket", 2, 13, reticle, 16);
   if (toolName === "magicSelect") return buildLucideButtonCursor("toolMagicSelect", 13, 3, reticle, 16);
   if (toolName === "backgroundEraser") return buildLucideButtonCursor("toolBackgroundEraser", 7, 5, reticle, 16);
-  if (toolName === "blur" || toolName === "jumble") return buildLucideButtonCursor("toolFilterBrush", 8, 8, reticle, 16);
+  if (toolName === "blur" || toolName === "jumble" || toolName === "noise") return buildLucideButtonCursor("toolFilterBrush", 8, 8, reticle, 16);
   return reticle;
 }
 

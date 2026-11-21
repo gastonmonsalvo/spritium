@@ -39,6 +39,8 @@ export const TOP_MENU_ITEMS = [
       { icon: "square-plus", labelKey: "menu.canvas.outline", action: "outlineAction" },
       { icon: "square-minus", labelKey: "menu.canvas.erode", action: "erodeOutlineAction" },
       { divider: true },
+      { icon: "sparkles", labelKey: "menu.canvas.noise", action: "openNoiseModal" },
+      { divider: true },
       {
         icon: "maximize-2",
         labelKey: "menu.canvas.resolution",
@@ -101,6 +103,8 @@ export const TOP_MENU_ITEMS = [
       { divider: true },
       { icon: "square-plus", labelKey: "menu.canvas.outline", action: "outlineAction" },
       { icon: "square-minus", labelKey: "menu.canvas.erode", action: "erodeOutlineAction" },
+      { divider: true },
+      { icon: "sparkles", labelKey: "menu.canvas.noise", action: "openNoiseModal" },
     ],
   },
   {

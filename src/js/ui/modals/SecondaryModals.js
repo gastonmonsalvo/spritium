@@ -12,6 +12,7 @@ import { renderTilemapImportModal } from "./TilemapImportModal.js";
 import { renderPreferencesModal } from "./PreferencesModal.js";
 import { renderLanguageModal } from "./LanguageModal.js";
 import { renderFeedbackModal } from "./FeedbackModal.js";
+import { renderNoiseModal } from "./NoiseModal.js";
 
 /**
  * Monta en `#secondaryModalsMount` los modales secundarios si todavía no fueron insertados.
@@ -29,6 +30,7 @@ export function mountSecondaryModals() {
     renderPreferencesModal(),
     renderLanguageModal(),
     renderFeedbackModal(),
+    renderNoiseModal(),
   ].join("");
   mount.dataset.mounted = "true";
 }

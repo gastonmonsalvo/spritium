@@ -21,6 +21,7 @@ import * as fb from "../workspace/folderBrowser.js";
 import * as tx from "../workspace/timelineMatrix.js";
 import * as rm from "../workspace/recoveryModal.js";
 import * as ln from "../workspace/launcher.js";
+import * as nm from "./modals/NoiseModal.js";
 
 function buildTransformActions() {
   return {
@@ -246,6 +247,10 @@ export function registerAppActions() {
     closeImportModal: ln.closeImportModal,
     openRecoveryModal: rm.openRecoveryModal,
     closeRecoveryModal: rm.closeRecoveryModal,
+    openNoiseModal: nm.openNoiseModal,
+    closeNoiseModal: nm.closeNoiseModal,
+    applyNoiseModal: nm.applyNoiseModal,
+    randomizeNoiseSeed: nm.randomizeNoiseSeed,
     openConfigDialog: () => document.getElementById("configFileInput")?.click(),
     resetAllUserConfig: () => ui.resetAllUserConfig({
       onPalettesChanged: async () => {

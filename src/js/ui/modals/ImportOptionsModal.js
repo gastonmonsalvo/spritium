@@ -8,7 +8,7 @@ import { RESOLUTION_PRESETS } from "../components/TopMenuConfig.js";
 import { escapeHtml, renderList } from "../components/uiHtml.js";
 
 const IMPORT_CHECK_LABEL_STYLE =
-  "display: flex; align-items: center; gap: 6px; font-size: 12px; color: #d4d4d8; cursor: pointer; text-transform: none;";
+  "display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-primary); cursor: pointer; text-transform: none;";
 
 /** Genera el HTML del modal de importación de imágenes. */
 export function renderImportOptionsModal() {

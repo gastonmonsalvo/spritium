@@ -187,20 +187,40 @@ export function removeConnectedColor(startX, startY) {
 }
 
 /**
- * Reemplaza todas las ocurrencias de `targetColorIndex` por transparente (0) en la capa activa.
- * @param {number} targetColorIndex
+ * Reemplaza todas las ocurrencias de `targetColorIndex` por `replacementColorIndex` en la capa activa
+ * (respetando la selección activa si existe, e incluyendo `outOfBounds` cuando no hay selección).
+ * @param {number} targetColorIndex - Índice de color origen a reemplazar.
+ * @param {number} replacementColorIndex - Índice de color destino (0 para transparente).
  * @returns {boolean} True si hubo cambios.
  */
-export function replaceColorWithTransparent(targetColorIndex) {
-  if (targetColorIndex === undefined || targetColorIndex === 0) return false;
+export function replaceColorInActiveLayer(targetColorIndex, replacementColorIndex) {
+  if (targetColorIndex === undefined || targetColorIndex === replacementColorIndex) return false;
   const { w, h } = getGridDims();
+  const hasSelection = Boolean(state.selection);
   let changed = false;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
+      if (hasSelection && !isInsideSelection(x, y)) continue;
       if (state.grid[y][x] === targetColorIndex) {
-        state.grid[y][x] = 0;
+        state.grid[y][x] = replacementColorIndex;
         changed = true;
+      }
+    }
+  }
+
+  const activeLayer = state.layers?.[state.activeLayerIndex];
+  if (!hasSelection && Array.isArray(activeLayer?.outOfBounds) && activeLayer.outOfBounds.length) {
+    if (replacementColorIndex === 0) {
+      const before = activeLayer.outOfBounds.length;
+      activeLayer.outOfBounds = activeLayer.outOfBounds.filter(([, , val]) => val !== targetColorIndex);
+      if (activeLayer.outOfBounds.length !== before) changed = true;
+    } else {
+      for (const entry of activeLayer.outOfBounds) {
+        if (entry[2] === targetColorIndex) {
+          entry[2] = replacementColorIndex;
+          changed = true;
+        }
       }
     }
   }
@@ -209,5 +229,15 @@ export function replaceColorWithTransparent(targetColorIndex) {
     state.isDirtySinceImport = true;
   }
   return changed;
+}
+
+/**
+ * Reemplaza todas las ocurrencias de `targetColorIndex` por transparente (0) en la capa activa.
+ * @param {number} targetColorIndex
+ * @returns {boolean} True si hubo cambios.
+ */
+export function replaceColorWithTransparent(targetColorIndex) {
+  if (targetColorIndex === undefined || targetColorIndex === 0) return false;
+  return replaceColorInActiveLayer(targetColorIndex, 0);
 }
 
