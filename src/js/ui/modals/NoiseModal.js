@@ -164,8 +164,8 @@ export function renderNoiseModal() {
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="tool-btn" data-action="closeNoiseModal" data-i18n="common.cancel">${escapeHtml(i18n.t("common.cancel"))}</button>
-          <button type="button" class="btn-primary" data-action="applyNoiseModal" data-i18n="common.apply">${escapeHtml(i18n.t("common.apply"))}</button>
+          <button type="button" class="tool-btn" data-action="closeNoiseModal" data-i18n="opt.cancel">${escapeHtml(i18n.t("opt.cancel"))}</button>
+          <button type="button" class="btn-primary" data-action="applyNoiseModal" data-i18n="opt.apply">${escapeHtml(i18n.t("opt.apply"))}</button>
         </div>
       </div>
     </div>
