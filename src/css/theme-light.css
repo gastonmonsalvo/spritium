@@ -1,0 +1,203 @@
+/* --- TEMA CLARO (OVERRIDES COHERENTES) --- */
+body.theme-light,
+body.theme-light #app {
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+
+body.theme-light #topBar,
+body.theme-light #sidebar,
+body.theme-light #rightSidebar,
+body.theme-light #timelineBar {
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+body.theme-light #canvasFooterHelp {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+body.theme-light #workspace,
+body.theme-light #canvasContainer {
+  background: var(--bg-canvas-area);
+}
+
+body.theme-light #sidebarResizer,
+body.theme-light #rightSidebarResizer,
+body.theme-light .timeline-resizer {
+  background: var(--bg-canvas-area);
+  border-color: var(--border-subtle);
+}
+
+body.theme-light .timeline-resizer {
+  border-top: 1px solid var(--border-subtle);
+}
+
+body.theme-light #sidebarResizer:hover,
+body.theme-light #sidebarResizer.dragging,
+body.theme-light #rightSidebarResizer:hover,
+body.theme-light #rightSidebarResizer.dragging,
+body.theme-light .timeline-resizer:hover,
+body.theme-light .timeline-resizer.dragging {
+  background: var(--accent-primary);
+}
+
+body.theme-light .app-brand-title,
+body.theme-light .modal-header h3 {
+  color: var(--text-primary);
+}
+
+body.theme-light label {
+  color: var(--text-muted);
+}
+
+body.theme-light .panel-section-card,
+body.theme-light .menu-dropdown,
+body.theme-light .context-menu,
+body.theme-light .modal-card,
+body.theme-light .help-section,
+body.theme-light .preview-box,
+body.theme-light #palette-bar,
+body.theme-light #custom-palette-bar {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+body.theme-light #paintCanvas {
+  background-color: var(--checker-light);
+  background-image: repeating-conic-gradient(var(--checker-light) 0% 25%, var(--checker-dark) 0% 50%);
+  border-color: var(--border-strong);
+  box-shadow: 0 8px 24px rgba(42, 36, 30, 0.14);
+}
+
+body.theme-light .preview-canvas {
+  background-color: var(--checker-light);
+  background-image: repeating-conic-gradient(var(--checker-light) 0% 25%, var(--checker-dark) 0% 50%);
+  border-color: var(--border-strong);
+}
+
+body.theme-light #rulerCorner {
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+
+body.theme-light #rulerTop,
+body.theme-light #rulerLeft {
+  border-color: var(--border-subtle);
+}
+
+body.theme-light #launcherOverlay {
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+body.theme-light .brand-title,
+body.theme-light .recent-title {
+  color: var(--text-primary);
+}
+
+body.theme-light .launcher-subtitle,
+body.theme-light .recent-meta,
+body.theme-light .autosave-meta {
+  color: var(--text-secondary);
+}
+
+body.theme-light .launcher-btn-outline,
+body.theme-light .recent-item,
+body.theme-light .autosave-banner {
+  background: var(--bg-input);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+body.theme-light .recent-item:hover,
+body.theme-light .launcher-btn-outline:hover {
+  background: var(--bg-control-hover);
+  border-color: var(--border-strong);
+}
+
+body.theme-light .recent-clear-btn {
+  color: var(--text-muted);
+}
+
+body.theme-light .recent-clear-btn:hover,
+body.theme-light .recent-clear-btn:focus-visible {
+  color: #dc2626;
+}
+
+body.theme-light input[type="text"],
+body.theme-light input[type="number"],
+body.theme-light select,
+body.theme-light textarea {
+  background: var(--bg-input);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+body.theme-light .menu-trigger {
+  color: var(--text-secondary);
+}
+
+body.theme-light .menu-trigger:hover,
+body.theme-light .menu-item.open .menu-trigger {
+  background: var(--bg-control);
+  color: var(--text-primary);
+}
+
+body.theme-light .menu-action,
+body.theme-light .ctx-item {
+  color: var(--text-primary);
+}
+
+body.theme-light .tool-btn,
+body.theme-light .frame-pill,
+body.theme-light .panel-reopen-btn {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+body.theme-light .tool-btn:hover,
+body.theme-light .frame-pill:hover,
+body.theme-light .panel-reopen-btn:hover,
+body.theme-light .custom-select-trigger:hover {
+  background: var(--bg-control-hover);
+  color: var(--text-primary);
+}
+
+body.theme-light .layer-item:hover {
+  background: var(--bg-surface);
+  border-color: var(--border-strong);
+}
+
+body.theme-light .tool-btn.active,
+body.theme-light .frame-pill.active {
+  background: var(--accent-secondary-bg);
+  color: var(--accent-secondary);
+  border-color: var(--accent-secondary);
+}
+
+body.theme-light .layer-item {
+  background: var(--bg-input);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+body.theme-light .layer-item.active {
+  background: var(--accent-secondary-bg);
+  border-color: var(--accent-secondary);
+}
+
+body.theme-light .layer-item.multi-selected {
+  background: rgba(180, 83, 42, 0.14);
+  border-color: var(--accent-primary);
+}
+
+body.theme-light .help-row {
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-subtle);
+}

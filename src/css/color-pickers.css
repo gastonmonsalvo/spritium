@@ -1,0 +1,194 @@
+/* --- RUEDA DE COLOR Y ARMONÍAS --- */
+.color-wheel-collapse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+#colorWheelCanvas {
+  display: block;
+  cursor: crosshair;
+  border-radius: 50%;
+}
+
+.harmony-swatches {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+  justify-content: center;
+}
+
+.harmony-swatch {
+  flex: 1;
+  max-width: 34px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.harmony-swatch:hover {
+  transform: scale(1.1);
+}
+
+/* --- SELECTOR RGBA POPOVER --- */
+.rgba-picker-btn {
+  position: relative;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  overflow: hidden;
+  background-color: #71717a;
+  background-image:
+    linear-gradient(45deg, #d4d4d8 25%, transparent 25%),
+    linear-gradient(-45deg, #d4d4d8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d4d4d8 75%),
+    linear-gradient(-45deg, transparent 75%, #d4d4d8 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+
+.rgba-picker-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--picker-rgba, #ff0055);
+}
+
+.rgba-popover {
+  position: fixed;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 224px;
+  padding: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(8px) scale(0.96);
+  transition: opacity 0.14s cubic-bezier(0.16, 1, 0.3, 1), transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.14s;
+}
+
+.rgba-popover[data-side="left"] {
+  transform: translateX(-8px) scale(0.96);
+}
+
+.rgba-popover.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.rgba-sv-canvas {
+  width: 204px;
+  height: 126px;
+  border-radius: 5px;
+  cursor: crosshair;
+  border: 1px solid var(--border-subtle);
+}
+
+.rgba-bar-canvas {
+  width: 204px;
+  height: 12px;
+  border-radius: 999px;
+  cursor: ew-resize;
+  border: 1px solid var(--border-subtle);
+}
+
+.rgba-popover-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rgba-popover-preview {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: #71717a;
+  background-image:
+    linear-gradient(45deg, #d4d4d8 25%, transparent 25%),
+    linear-gradient(-45deg, #d4d4d8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d4d4d8 75%),
+    linear-gradient(-45deg, transparent 75%, #d4d4d8 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+}
+
+.rgba-popover-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--picker-rgba, #ff0055);
+}
+
+.rgba-readout {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.rgba-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.rgba-mode-btn {
+  font-size: 10px;
+  padding: 3px 4px;
+  font-weight: 600;
+}
+
+.rgba-fields-row {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.rgba-num-field,
+.rgba-field-single {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.rgba-num-field span,
+.rgba-field-single span {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.rgba-num-field input,
+.rgba-field-single input {
+  width: 100%;
+  padding: 2px 3px;
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  text-align: center;
+}

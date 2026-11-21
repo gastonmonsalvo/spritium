@@ -1,0 +1,150 @@
+/* --- LAUNCHER / PANTALLA DE INICIO --- */
+body.is-launching {
+  background-color: var(--bg-canvas-area);
+}
+body.is-launching #app {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#launcherOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  background-color: var(--bg-canvas-area);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 36px 16px;
+  transition: background-color 0.2s ease, opacity 0.18s ease;
+}
+
+.launcher-container {
+  margin: auto;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.recent-header .recent-title {
+  margin-bottom: 0;
+}
+
+.recent-toggle-btn {
+  padding: 2px 8px;
+  font-size: 10.5px;
+}
+
+.recent-section.recents-hidden .recent-list,
+.recent-section.recents-hidden .recent-footer {
+  display: none;
+}
+
+.recent-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+  padding-right: 4px;
+}
+
+.recent-clear-btn {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  font-size: 11px;
+  color: #8e8e93;
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.recent-clear-btn:hover,
+.recent-clear-btn:focus-visible {
+  opacity: 0.95;
+  color: #f87171;
+  outline: none;
+}
+
+.brush-size-dots {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.brush-step-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  padding: 2px 3px;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.brush-step-dot span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.brush-step-dot small {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.brush-step-dot:hover span {
+  background: var(--text-muted);
+  transform: scale(1.2);
+}
+
+.brush-step-dot.active {
+  color: var(--accent-secondary);
+}
+
+.brush-step-dot.active span {
+  background: var(--accent-secondary);
+  transform: scale(1.25);
+}
+
+#launcherOverlay.hidden {
+  display: none;
+}
+
+.launcher-top-actions {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.launcher-theme-btn {
+  padding: 7px 9px;
+}
+
+#launcherOverlay.drag-over {
+  background-color: #30363d;
+  outline: 2px dashed #3b82f6;
+  outline-offset: -14px;
+}

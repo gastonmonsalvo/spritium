@@ -1,0 +1,201 @@
+:root {
+  color-scheme: dark;
+  --font-display: "Press Start 2P", monospace;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  /* Estudio Nocturno Neutro — Fondos */
+  --bg-canvas-area: #141417;
+  --bg-panel: #1E1E22;
+  --bg-surface-hover: #2A2A30;
+  --bg-input: #18181B;
+
+  /* Bordes y divisores */
+  --border-subtle: #2E2E34;
+  --border-focus: #725AC1;
+
+  /* Acentos */
+  --accent-primary: #6D52CC;
+  --accent-primary-hover: #7E65DB;
+  --accent-secondary: #06B6D4;
+  --accent-secondary-bg: rgba(6, 182, 212, 0.15);
+
+  /* Tipografía e iconos */
+  --text-primary: #EDEDEF;
+  --text-secondary: #8E8E98;
+  --text-muted: #52525B;
+
+  /* Checkerboard */
+  --checker-dark: #222226;
+  --checker-light: #2C2C32;
+
+  /* Estados semánticos */
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-danger: #EF4444;
+
+  /* Alias internos de compatibilidad */
+  --bg-app: var(--bg-canvas-area);
+  --bg-topbar: var(--bg-panel);
+  --bg-card: var(--bg-input);
+  --bg-surface: var(--bg-surface-hover);
+  --bg-control: var(--bg-surface-hover);
+  --bg-control-hover: #35353D;
+  --border-strong: #3A3A42;
+  --text-dim: var(--text-muted);
+}
+
+body.theme-light {
+  color-scheme: light;
+  --bg-canvas-area: #DCD0BE;
+  --bg-panel: #E8DFCF;
+  --bg-surface-hover: #DDD2C0;
+  --bg-input: #EFE8DA;
+  --border-subtle: #C7B9A2;
+  --border-focus: #B4532A;
+  --accent-primary: #B4532A;
+  --accent-primary-hover: #9A4320;
+  --accent-secondary: #2F6F5E;
+  --accent-secondary-bg: rgba(47, 111, 94, 0.14);
+  --text-primary: #211A13;
+  --text-secondary: #3E3328;
+  --text-muted: #524537;
+  --checker-dark: #DDD3C1;
+  --checker-light: #EAE2D3;
+
+  --bg-app: var(--bg-canvas-area);
+  --bg-topbar: var(--bg-panel);
+  --bg-card: var(--bg-input);
+  --bg-surface: var(--bg-surface-hover);
+  --bg-control: var(--bg-surface-hover);
+  --bg-control-hover: #D0C3AE;
+  --border-strong: #A5947B;
+  --text-dim: var(--text-muted);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) var(--bg-panel);
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--bg-panel);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 999px;
+  border: 1px solid var(--bg-panel);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+body, #app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-canvas-area);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+
+/* --- ESCALAS DE INTERFAZ (ACCESIBILIDAD) --- */
+body.ui-scale-medium {
+  font-size: 13.5px;
+}
+
+body.ui-scale-medium .menu-trigger,
+body.ui-scale-medium .menu-action,
+body.ui-scale-medium .tool-btn,
+body.ui-scale-medium .doc-tab,
+body.ui-scale-medium input,
+body.ui-scale-medium select {
+  font-size: 13px;
+}
+
+body.ui-scale-medium label,
+body.ui-scale-medium .transform-sublabel,
+body.ui-scale-medium .logs-label {
+  font-size: 11.5px;
+}
+
+body.ui-scale-medium .tool-icon-btn {
+  height: 40px;
+}
+
+body.ui-scale-medium .ui-icon {
+  width: 19px;
+  height: 19px;
+}
+
+body.ui-scale-medium .ui-icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+body.ui-scale-medium #sidebar {
+  width: 300px;
+}
+
+body.ui-scale-medium #rightSidebar {
+  width: 348px;
+}
+
+body.ui-scale-large {
+  font-size: 15px;
+}
+
+body.ui-scale-large .menu-trigger,
+body.ui-scale-large .menu-action,
+body.ui-scale-large .tool-btn,
+body.ui-scale-large .doc-tab,
+body.ui-scale-large input,
+body.ui-scale-large select {
+  font-size: 14.5px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+body.ui-scale-large label,
+body.ui-scale-large .transform-sublabel,
+body.ui-scale-large .logs-label {
+  font-size: 12.5px;
+}
+
+body.ui-scale-large .tool-icon-btn {
+  height: 46px;
+}
+
+body.ui-scale-large .ui-icon {
+  width: 22px;
+  height: 22px;
+}
+
+body.ui-scale-large .ui-icon-sm {
+  width: 18px;
+  height: 18px;
+}
+
+body.ui-scale-large #sidebar {
+  width: 336px;
+}
+
+body.ui-scale-large #rightSidebar {
+  width: 386px;
+}
+

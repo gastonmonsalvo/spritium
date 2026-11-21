@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spritium Docs</title>
+    <link rel="icon" type="image/svg+xml" href="../src/assets/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../src/css/tokens.css" />
+    <link rel="stylesheet" href="../src/css/theme-light.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        margin: 0;
+        background: var(--bg-canvas-area);
+        color: var(--text-primary);
+        font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+        line-height: 1.65;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-subtle) transparent;
+      }
+      body::-webkit-scrollbar { width: 8px; height: 8px; }
+      body::-webkit-scrollbar-track { background: transparent; }
+      body::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 999px; }
+      body::-webkit-scrollbar-thumb:hover { background: var(--text-muted, #65594c); }
+      .docs-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px 20px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .docs-nav {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .docs-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-family: "Press Start 2P", monospace;
+        font-size: 12px;
+        margin-right: 8px;
+      }
+      .docs-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .docs-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-focus);
+      }
+      .docs-btn.active {
+        background: var(--accent-primary);
+        border-color: var(--accent-primary);
+        color: #fff;
+      }
+      .docs-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 6px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .docs-icon-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-focus);
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 250;
+        background: rgba(0, 0, 0, 0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .modal-backdrop.open {
+        display: flex;
+      }
+      .modal-card {
+        width: 100%;
+        max-width: 300px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-strong, var(--border-subtle));
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .modal-header h3 {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .lang-modal-option {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 12px;
+        font-size: 12.5px;
+      }
+      .lang-modal-badge {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        opacity: 0.85;
+      }
+      .docs-main {
+        width: calc(100% - 48px);
+        max-width: 1360px;
+        margin: 24px auto 64px;
+        padding: 28px 36px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+      }
+      .docs-main h1, .docs-main h2, .docs-main h3 {
+        color: var(--text-primary);
+        margin-top: 1.6em;
+        margin-bottom: 0.6em;
+        line-height: 1.35;
+      }
+      .docs-main h1 {
+        margin-top: 0;
+        font-family: "Press Start 2P", monospace;
+        font-size: 1.25rem;
+        line-height: 1.5;
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 12px;
+      }
+      .docs-main h2 {
+        font-family: "Press Start 2P", monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--accent-primary);
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 8px;
+      }
+      .docs-main h3 { font-size: 1.05rem; color: var(--accent-secondary); font-weight: 600; }
+      body.theme-light .docs-main h2 { color: var(--accent-primary); }
+      body.theme-light .docs-main h3 { color: var(--accent-secondary); }
+      body.theme-light .docs-main a { color: var(--accent-primary); }
+      .docs-main p, .docs-main li { color: var(--text-secondary); font-size: 14px; }
+      .docs-main strong { color: var(--text-primary); }
+      .docs-main a { color: var(--accent-secondary); text-decoration: none; }
+      .docs-main a:hover { text-decoration: underline; }
+      .docs-main code {
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
+        font-size: 12.5px;
+        color: var(--text-primary);
+        background: var(--bg-input);
+        padding: 2px 5px;
+        border-radius: 4px;
+        border: 1px solid var(--border-subtle);
+      }
+      .docs-main pre {
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+      }
+      .docs-main pre code {
+        border: none;
+        padding: 0;
+        background: transparent;
+      }
+      .docs-main blockquote {
+        margin: 14px 0;
+        padding: 10px 14px;
+        border-left: 3px solid var(--accent-primary);
+        background: var(--bg-input);
+        border-radius: 0 6px 6px 0;
+      }
+      .docs-main table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 13px;
+      }
+      .docs-main th, .docs-main td {
+        border: 1px solid var(--border-subtle);
+        padding: 7px 10px;
+        text-align: left;
+      }
+      .docs-main th {
+        background: var(--bg-input);
+        color: var(--text-primary);
+      }
+      .docs-main hr {
+        border: none;
+        border-top: 1px solid var(--border-subtle);
+        margin: 22px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="docs-topbar">
+      <nav class="docs-nav">
+        <a href="../index.html" class="docs-brand">
+          <img src="../src/assets/logo.svg" alt="Spritium" width="20" height="20" style="border-radius: 4px; flex-shrink: 0" />
+          <span>Spritium</span>
+        </a>
+        <a href="../index.html" class="docs-btn" id="btnBackOrigin">← Volver</a>
+        <a href="?doc=HELP.md" class="docs-btn active" data-doc-tab="HELP.md">Help</a>
+      </nav>
+      <div class="docs-nav">
+        <button type="button" class="docs-icon-btn" id="btnLangToggle" title="Idioma: Español / English" aria-label="Idioma / Language">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        </button>
+        <button type="button" class="docs-icon-btn" id="btnThemeToggle" title="Cambiar Tema Claro / Oscuro" aria-label="Cambiar Tema"></button>
+      </div>
+    </header>
+    <main class="docs-main" id="docContent">Loading...</main>
+
+    <div id="languageModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="languageModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="languageModalTitle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span id="languageModalTitleText">Idioma</span>
+          </h3>
+          <button type="button" class="docs-icon-btn" id="btnCloseLanguageModal" aria-label="Cerrar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body" id="languageModalOptions"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      const LANG_KEY = "pixel_editor_lang";
+      const THEME_KEY = "spritium_ui_theme";
+      const ORIGIN_KEY = "spritium_docs_origin";
+      const ALLOWED_DOCS = new Set(["HELP.md"]);
+
+      const params = new URLSearchParams(location.search);
+      const paramFrom = params.get("from");
+      if (paramFrom === "editor" || paramFrom === "launcher") {
+        sessionStorage.setItem(ORIGIN_KEY, paramFrom);
+      }
+      const docOrigin = sessionStorage.getItem(ORIGIN_KEY) || "launcher";
+      let currentDoc = ALLOWED_DOCS.has(params.get("doc")) ? params.get("doc") : "HELP.md";
+      let currentLang = (params.get("lang") || localStorage.getItem(LANG_KEY) || "es").toLowerCase();
+      if (!/^[a-z]{2}(-[a-z]{2})?$/.test(currentLang)) currentLang = "es";
+      let currentTheme = params.get("theme") || localStorage.getItem(THEME_KEY) || "dark";
+      if (!["dark", "light"].includes(currentTheme)) currentTheme = "dark";
+
+      const LANGUAGES = [
+        { code: "es", label: "Español", badge: "ES" },
+        { code: "en", label: "English", badge: "EN" },
+      ];
+
+      const LABELS = {
+        es: {
+          back: "← Volver",
+          "ARCHITECTURE.md": "Arquitectura",
+          "HELPER.md": "Guía Helper",
+          "HELP.md": "Guía de Uso",
+          api: "API (94 módulos)",
+          langTitle: "Cambiar idioma",
+          langModalTitle: "Idioma",
+          closeLabel: "Cerrar",
+          themeDark: "Cambiar a Tema Claro",
+          themeLight: "Cambiar a Tema Oscuro",
+        },
+        en: {
+          back: "← Back",
+          "ARCHITECTURE.md": "Architecture",
+          "HELPER.md": "Helper Guide",
+          "HELP.md": "User Guide",
+          api: "API (94 modules)",
+          langTitle: "Change language",
+          langModalTitle: "Language",
+          closeLabel: "Close",
+          themeDark: "Switch to Light Theme",
+          themeLight: "Switch to Dark Theme",
+        },
+      };
+
+      function esc(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function formatInline(raw) {
+        let out = esc(raw);
+        out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+        out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+          const cleanHref = href.trim();
+          const mdMatch = cleanHref.match(/(?:^|\/)(ARCHITECTURE\.md|HELPER\.md|HELP\.md)(?:#.*)?$/);
+          if (mdMatch) {
+            return `<a href="?doc=${mdMatch[1]}" data-nav-doc="${mdMatch[1]}">${label}</a>`;
+          }
+          return `<a href="${cleanHref}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        });
+        out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        return out;
+      }
+
+      function renderMarkdown(md) {
+        const lines = md.replace(/\r\n/g, "\n").split("\n");
+        const html = [];
+        let inCode = false;
+        let codeLines = [];
+        let inList = false;
+        let inTable = false;
+
+        const closeList = () => { if (inList) { html.push("</ul>"); inList = false; } };
+        const closeTable = () => { if (inTable) { html.push("</tbody></table>"); inTable = false; } };
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.trim().startsWith("```")) {
+            closeList();
+            closeTable();
+            if (!inCode) {
+              inCode = true;
+              codeLines = [];
+            } else {
+              html.push(`<pre><code>${esc(codeLines.join("\n"))}</code></pre>`);
+              inCode = false;
+            }
+            continue;
+          }
+          if (inCode) {
+            codeLines.push(line);
+            continue;
+          }
+          if (!line.trim()) {
+            closeList();
+            closeTable();
+            continue;
+          }
+          if (/^---+$/.test(line.trim())) {
+            closeList();
+            closeTable();
+            html.push("<hr />");
+            continue;
+          }
+          const hMatch = line.match(/^(#{1,4})\s+(.*)$/);
+          if (hMatch) {
+            closeList();
+            closeTable();
+            const lvl = hMatch[1].length;
+            html.push(`<h${lvl}>${formatInline(hMatch[2])}</h${lvl}>`);
+            continue;
+          }
+          if (line.startsWith(">")) {
+            closeList();
+            closeTable();
+            html.push(`<blockquote>${formatInline(line.replace(/^>\s?/, ""))}</blockquote>`);
+            continue;
+          }
+          if (line.trim().startsWith("|")) {
+            closeList();
+            const cells = line.trim().slice(1, -1).split("|").map((c) => c.trim());
+            const next = lines[i + 1]?.trim() || "";
+            if (!inTable && /^\|?[\s:-]+\|/.test(next)) {
+              html.push("<table><thead><tr>" + cells.map((c) => `<th>${formatInline(c)}</th>`).join("") + "</tr></thead><tbody>");
+              inTable = true;
+              i++;
+              continue;
+            }
+            if (inTable) {
+              html.push("<tr>" + cells.map((c) => `<td>${formatInline(c)}</td>`).join("") + "</tr>");
+              continue;
+            }
+          }
+          const liMatch = line.match(/^\s*[-*]\s+(.*)$/) || line.match(/^\s*\d+\.\s+(.*)$/);
+          if (liMatch) {
+            closeTable();
+            if (!inList) { html.push("<ul>"); inList = true; }
+            html.push(`<li>${formatInline(liMatch[1])}</li>`);
+            continue;
+          }
+          closeList();
+          closeTable();
+          html.push(`<p>${formatInline(line)}</p>`);
+        }
+        closeList();
+        closeTable();
+        return html.join("\n");
+      }
+
+      const SUN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+      const MOON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+
+      function applyTheme() {
+        const isLight = currentTheme === "light";
+        document.body.classList.toggle("theme-light", isLight);
+        const t = LABELS[currentLang] || LABELS.en;
+        const btn = document.getElementById("btnThemeToggle");
+        btn.innerHTML = isLight ? MOON_SVG : SUN_SVG;
+        btn.title = isLight ? t.themeLight : t.themeDark;
+        btn.setAttribute("aria-label", btn.title);
+      }
+
+      function renderLanguageOptions() {
+        const container = document.getElementById("languageModalOptions");
+        container.innerHTML = LANGUAGES.map(
+          ({ code, label, badge }) =>
+            `<button type="button" class="docs-btn lang-modal-option${code === currentLang ? " active" : ""}" data-lang="${code}">` +
+            `<span>${label}</span><span class="lang-modal-badge">${badge}</span></button>`,
+        ).join("");
+      }
+
+      function openLanguageModal() {
+        renderLanguageOptions();
+        document.getElementById("languageModal")?.classList.add("open");
+      }
+
+      function closeLanguageModal() {
+        document.getElementById("languageModal")?.classList.remove("open");
+      }
+
+      function syncChrome() {
+        document.documentElement.lang = currentLang;
+        const t = LABELS[currentLang] || LABELS.en;
+        const backBtn = document.getElementById("btnBackOrigin");
+        backBtn.textContent = t.back;
+        backBtn.href = docOrigin === "editor" ? "../index.html?view=editor" : "../index.html";
+        document.querySelectorAll("[data-doc-tab]").forEach((el) => {
+          const doc = el.dataset.docTab;
+          el.textContent = t[doc];
+          el.classList.toggle("active", doc === currentDoc);
+        });
+        const langBtn = document.getElementById("btnLangToggle");
+        langBtn.title = t.langTitle;
+        langBtn.setAttribute("aria-label", t.langTitle);
+        document.getElementById("languageModalTitleText").textContent = t.langModalTitle;
+        document.getElementById("btnCloseLanguageModal").setAttribute("aria-label", t.closeLabel);
+        renderLanguageOptions();
+        applyTheme();
+      }
+
+      const guidesCache = {};
+
+      async function fetchGuides(lang) {
+        if (guidesCache[lang]) return guidesCache[lang];
+        const url = `./data/guides.${lang}.json`;
+        let res = await fetch(url);
+        if (!res.ok && lang !== "en") {
+          res = await fetch("./data/guides.en.json");
+        }
+        if (!res.ok) return null;
+        const data = await res.json();
+        guidesCache[lang] = data;
+        return data;
+      }
+
+      async function loadDoc() {
+        syncChrome();
+        const guides = await fetchGuides(currentLang);
+        const entry = guides?.[currentDoc];
+        const text = entry?.markdown || `# Error\nCould not load ${currentDoc}`;
+        const content = document.getElementById("docContent");
+        content.innerHTML = renderMarkdown(text);
+        document.title = `Spritium — ${entry?.title || LABELS[currentLang]?.[currentDoc] || LABELS.en[currentDoc]}`;
+      }
+
+      document.getElementById("btnLangToggle").addEventListener("click", openLanguageModal);
+      document.getElementById("btnCloseLanguageModal").addEventListener("click", closeLanguageModal);
+      document.getElementById("languageModal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) {
+          closeLanguageModal();
+          return;
+        }
+        const btn = e.target.closest("[data-lang]");
+        if (!btn) return;
+        const nextLang = btn.dataset.lang;
+        if (!nextLang) return;
+        currentLang = nextLang;
+        localStorage.setItem(LANG_KEY, currentLang);
+        closeLanguageModal();
+        loadDoc();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeLanguageModal();
+      });
+
+      document.getElementById("btnThemeToggle").addEventListener("click", () => {
+        currentTheme = currentTheme === "light" ? "dark" : "light";
+        localStorage.setItem(THEME_KEY, currentTheme);
+        applyTheme();
+      });
+
+      document.getElementById("docContent").addEventListener("click", (e) => {
+        const link = e.target.closest("[data-nav-doc]");
+        if (!link) return;
+        e.preventDefault();
+        currentDoc = link.dataset.navDoc;
+        history.replaceState(null, "", `?doc=${currentDoc}`);
+        loadDoc();
+      });
+
+      loadDoc();
+    </script>
+  </body>
+</html>

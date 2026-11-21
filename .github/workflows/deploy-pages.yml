@@ -1,0 +1,62 @@
+name: Deploy Spritium to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Assemble clean public bundle
+        run: |
+          rm -rf _site
+          mkdir -p _site/docs/data
+          cp index.html _site/
+          cp -r src _site/src
+          if [ -f docs/viewer.html ]; then cp docs/viewer.html _site/docs/; fi
+          if [ -f docs/HELP.md ]; then cp docs/HELP.md _site/docs/; fi
+          if [ -f docs/data/guides.es.json ]; then cp docs/data/guides.es.json _site/docs/data/; fi
+          if [ -f docs/data/guides.en.json ]; then cp docs/data/guides.en.json _site/docs/data/; fi
+          touch _site/.nojekyll
+
+      - name: Verify critical runtime files
+        run: |
+          test -f _site/index.html
+          test -f _site/src/js/app.js
+          test -f _site/src/js/core/version.js
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

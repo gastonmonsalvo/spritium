@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="256" height="256" shape-rendering="crispEdges">
+  <rect width="16" height="16" rx="3" fill="#0D0F18" />
+
+  <!-- Aura oscura y ramificaciones secundarias -->
+  <path fill="#731024" d="
+    M 5 2 h 6 v 1 h -6 Z
+    M 3 3 h 10 v 1 h -10 Z
+    M 2 4 h 12 v 1 h -12 Z
+    M 1 5 h 14 v 1 h -14 Z
+    M 2 8 h 1 v 1 h -1 Z
+    M 4 8 h 1 v 1 h -1 Z
+    M 11 8 h 1 v 1 h -1 Z
+    M 13 8 h 1 v 1 h -1 Z
+    M 3 10 h 1 v 1 h -1 Z
+    M 12 10 h 1 v 1 h -1 Z
+    M 5 11 h 1 v 1 h -1 Z
+    M 11 11 h 1 v 1 h -1 Z
+    M 7 13 h 1 v 1 h -1 Z
+    M 10 13 h 1 v 1 h -1 Z
+    M 8 15 h 1 v 1 h -1 Z
+  " />
+
+  <!-- Cuerpo principal del rayo rojo -->
+  <path fill="#FF2A4B" d="
+    M 6 2 h 4 v 1 h -4 Z
+    M 4 3 h 8 v 1 h -8 Z
+    M 3 4 h 10 v 1 h -10 Z
+    M 2 5 h 12 v 1 h -12 Z
+    M 2 6 h 2 v 1 h -2 Z M 5 6 h 6 v 1 h -6 Z M 12 6 h 2 v 1 h -2 Z
+    M 3 7 h 1 v 1 h -1 Z M 5 7 h 1 v 1 h -1 Z M 7 7 h 2 v 1 h -2 Z M 10 7 h 1 v 1 h -1 Z M 12 7 h 1 v 1 h -1 Z
+    M 3 8 h 1 v 1 h -1 Z M 5 8 h 1 v 1 h -1 Z M 7 8 h 2 v 1 h -2 Z M 10 8 h 1 v 1 h -1 Z M 12 8 h 1 v 1 h -1 Z
+    M 2 9 h 1 v 1 h -1 Z M 5 9 h 1 v 1 h -1 Z M 7 9 h 2 v 1 h -2 Z M 11 9 h 2 v 1 h -2 Z
+    M 2 10 h 1 v 1 h -1 Z M 6 10 h 1 v 1 h -1 Z M 7 10 h 2 v 1 h -2 Z M 11 10 h 1 v 1 h -1 Z
+    M 6 11 h 1 v 1 h -1 Z M 8 11 h 1 v 1 h -1 Z M 10 11 h 1 v 1 h -1 Z
+    M 5 12 h 1 v 1 h -1 Z M 8 12 h 1 v 1 h -1 Z M 10 12 h 1 v 1 h -1 Z
+    M 8 13 h 2 v 1 h -2 Z
+    M 8 14 h 1 v 1 h -1 Z
+  " />
+
+  <!-- Núcleo interior brillante -->
+  <path fill="#FF8A9B" d="
+    M 7 4 h 2 v 1 h -2 Z
+    M 6 5 h 4 v 1 h -4 Z
+    M 7 6 h 2 v 1 h -2 Z
+    M 7 7 h 2 v 1 h -2 Z
+    M 8 8 h 1 v 1 h -1 Z
+    M 8 9 h 1 v 1 h -1 Z
+  " />
+
+  <!-- Destello central puro -->
+  <path fill="#FFFFFF" d="
+    M 7 5 h 2 v 1 h -2 Z
+    M 8 6 h 1 v 1 h -1 Z
+  " />
+</svg>

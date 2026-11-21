@@ -1,0 +1,66 @@
+# Entornos virtuales de Python
+venv/
+.venv/
+env/
+ENV/
+
+# Caché y compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Modelos de IA / Hugging Face / PyTorch descargados localmente
+models/
+checkpoints/
+weights/
+.cache/
+huggingface/
+*.safetensors
+*.ckpt
+*.bin
+*.pt
+*.pth
+*.onnx
+
+
+# Sprites generados, exportaciones y archivos temporales de prueba
+output/
+outputs/
+exports/
+generated/
+temp/
+tmp/
+uploads/
+*.png
+*.webp
+*.gif
+*.txt
+
+# Variables de entorno y claves 
+.env
+.env.local
+.env.example
+
+# Herramientas internas de administración, bots, tests y documentación técnica privada
+scripts/
+private_backup/
+docs/index.html
+docs/ARCHITECTURE.md
+docs/HELPER.md
+docs/data/api.es.json
+docs/data/api.en.json
+
+# Logs y bases de datos locales
+*.log
+*.sqlite3
+*.db
+
+# Archivos del sistema operativo y editores (Windows / Linux)
+Thumbs.db
+desktop.ini
+.DS_Store
+*~
+.vscode/
+.idea/

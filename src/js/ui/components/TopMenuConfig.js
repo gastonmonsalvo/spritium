@@ -1,0 +1,171 @@
+// @ts-check
+/**
+ * TopMenuConfig.js: Esquema de datos declarativo para la barra de menú superior.
+ */
+
+export const RESOLUTION_PRESETS = [16, 32, 64, 96, 128, 256, 512];
+
+/** @type {Array<Record<string, any>>} */
+export const TOP_MENU_ITEMS = [
+  {
+    triggerKey: "menu.file",
+    items: [
+      { icon: "file-plus", labelKey: "menu.file.new", action: "openNewDocModal", shortcut: "Alt+N" },
+      { icon: "folder-open", labelKey: "menu.file.open", action: "openProjectDialog", shortcut: "Ctrl+O" },
+      { icon: "image-plus", labelKey: "menu.file.import", action: "openImageDialog" },
+      { id: "menuReimportImage", icon: "sliders-horizontal", labelKey: "menu.file.reimport", action: "reopenImportOptions" },
+      { icon: "history", labelKey: "menu.file.recovery", action: "openRecoveryModal" },
+      { divider: true },
+      { icon: "save", labelKey: "menu.file.save", action: "saveProjectFile" },
+      { icon: "download", labelKey: "menu.file.export_png", action: "downloadCurrent" },
+      { icon: "film", labelKey: "menu.file.export_strip", action: "exportPureSpritesheetPng" },
+      { icon: "package", labelKey: "menu.file.export_atlas", action: "exportPackedAtlas" },
+    ],
+  },
+  {
+    triggerKey: "menu.edit",
+    items: [
+      { icon: "undo-2", labelKey: "menu.edit.undo", action: "undo", shortcut: "Ctrl+Z" },
+      { icon: "redo-2", labelKey: "menu.edit.redo", action: "redo", shortcut: "Ctrl+Y" },
+      { divider: true },
+      { icon: "copy", labelKey: "menu.edit.copy", action: "copyAction", shortcut: "Ctrl+C" },
+      { icon: "scissors", labelKey: "menu.edit.cut", action: "cutAction", shortcut: "Ctrl+X" },
+      { icon: "clipboard-paste", labelKey: "menu.edit.paste", action: "pasteAction", shortcut: "Ctrl+V" },
+      { divider: true },
+      { icon: "flip-horizontal-2", labelKey: "menu.edit.flip_h", action: "flipSelectionH" },
+      { icon: "flip-vertical-2", labelKey: "menu.edit.flip_v", action: "flipSelectionV" },
+      { icon: "rotate-cw", labelKey: "menu.canvas.rotate_90", action: "rotateSelection90" },
+      { icon: "scaling", labelKey: "menu.canvas.free_transform", action: "startFreeTransform", shortcut: "Shift+T" },
+      { icon: "square-plus", labelKey: "menu.canvas.outline", action: "outlineAction" },
+      { icon: "square-minus", labelKey: "menu.canvas.erode", action: "erodeOutlineAction" },
+      { divider: true },
+      {
+        icon: "maximize-2",
+        labelKey: "menu.canvas.resolution",
+        badgeId: "menuActiveResolutionBadge",
+        badgeText: "64×64 ▸",
+        submenu: [
+          ...RESOLUTION_PRESETS.map((size) => ({
+            id: `btnRes${size}`,
+            labelText: `${size}×${size} px`,
+            action: "changeResolution",
+            arg: size,
+          })),
+          { divider: true },
+          { id: "btnResCustom", labelKey: "menu.canvas.custom_res", action: "openCustomResModal" },
+        ],
+      },
+    ],
+  },
+  {
+    triggerKey: "menu.canvas",
+    items: [
+      {
+        icon: "align-center",
+        labelKey: "menu.canvas.align",
+        submenu: [
+          { icon: "crosshair", labelKey: "menu.canvas.align_center", action: "alignAction", arg: "center" },
+          { icon: "align-horizontal-justify-start", labelKey: "menu.canvas.align_left", action: "alignAction", arg: "left" },
+          { icon: "align-horizontal-justify-end", labelKey: "menu.canvas.align_right", action: "alignAction", arg: "right" },
+          { icon: "align-vertical-justify-start", labelKey: "menu.canvas.align_top", action: "alignAction", arg: "top" },
+          { icon: "align-vertical-justify-end", labelKey: "menu.canvas.align_bottom", action: "alignAction", arg: "bottom" },
+        ],
+      },
+      {
+        icon: "move",
+        labelKey: "menu.canvas.nudge",
+        submenu: [
+          { icon: "arrow-up", labelKey: "menu.canvas.align_top", action: "nudgeAction", args: [0, -1], shortcut: "↑" },
+          { icon: "arrow-down", labelKey: "menu.canvas.align_bottom", action: "nudgeAction", args: [0, 1], shortcut: "↓" },
+          { icon: "arrow-left", labelKey: "menu.canvas.align_left", action: "nudgeAction", args: [-1, 0], shortcut: "←" },
+          { icon: "arrow-right", labelKey: "menu.canvas.align_right", action: "nudgeAction", args: [1, 0], shortcut: "→" },
+        ],
+      },
+      {
+        icon: "repeat",
+        labelKey: "menu.canvas.wrap",
+        submenu: [
+          { icon: "arrow-up", labelKey: "menu.canvas.wrap_up", action: "shiftWrapAction", args: [0, -1] },
+          { icon: "arrow-down", labelKey: "menu.canvas.wrap_down", action: "shiftWrapAction", args: [0, 1] },
+          { icon: "arrow-left", labelKey: "menu.canvas.wrap_left", action: "shiftWrapAction", args: [-1, 0] },
+          { icon: "arrow-right", labelKey: "menu.canvas.wrap_right", action: "shiftWrapAction", args: [1, 0] },
+          { divider: true },
+          { icon: "grid-2x2", labelKey: "menu.canvas.offset_50", action: "shiftWrapHalf" },
+        ],
+      },
+      { divider: true },
+      { icon: "flip-horizontal-2", labelKey: "menu.edit.flip_h", action: "flipSelectionH" },
+      { icon: "flip-vertical-2", labelKey: "menu.edit.flip_v", action: "flipSelectionV" },
+      { icon: "rotate-cw", labelKey: "menu.canvas.rotate_90_cw", action: "rotateSelection90" },
+      { icon: "refresh-cw", labelKey: "menu.canvas.rotate_180", action: "rotateSelection180" },
+      { divider: true },
+      { icon: "square-plus", labelKey: "menu.canvas.outline", action: "outlineAction" },
+      { icon: "square-minus", labelKey: "menu.canvas.erode", action: "erodeOutlineAction" },
+    ],
+  },
+  {
+    triggerKey: "menu.view",
+    items: [
+      { id: "menuGrid", active: true, icon: "grid-3x3", labelKey: "menu.view.grid", action: "toggleGrid", shortcut: "G" },
+      { id: "menuRulers", active: true, icon: "ruler", labelKey: "menu.view.rulers", action: "toggleRulers" },
+      { id: "menuGridCoords", active: false, icon: "locate-fixed", labelKey: "menu.view.grid_coords", action: "toggleGridCoords" },
+      { id: "menuPixelCursor", icon: "crosshair", labelKey: "menu.view.pixel_cursor", action: "togglePixelCursor", shortcut: "V" },
+      { id: "menuTilesetPanel", icon: "layout-grid", labelKey: "menu.view.tileset", action: "toggleTilesetPanel", shortcut: "P" },
+      { id: "menuMirrorH", icon: "flip-horizontal-2", labelKey: "menu.view.mirror_h", action: "toggleMirrorH", shortcut: "X" },
+      { id: "menuMirrorV", icon: "flip-vertical-2", labelKey: "menu.view.mirror_v", action: "toggleMirrorV", shortcut: "Y" },
+      { id: "menuMirrorDiagMain", icon: "slash", labelKey: "menu.view.mirror_diag_main", action: "toggleMirrorDiagMain" },
+      { id: "menuMirrorDiagAnti", icon: "slash", labelKey: "menu.view.mirror_diag_anti", action: "toggleMirrorDiagAnti" },
+      { id: "menuMirrorRadial90", icon: "refresh-cw", labelKey: "menu.view.mirror_r90", action: "toggleMirrorRadial", arg: "rot90" },
+      { id: "menuMirrorRadial45", icon: "sparkles", labelKey: "menu.view.mirror_r45", action: "toggleMirrorRadial", arg: "oct45" },
+      { icon: "trash-2", labelKey: "menu.view.clear_guides", action: "clearRulerGuides" },
+      { divider: true },
+      { active: true, icon: "square", labelKey: "menu.view.tiled_none", action: "setTiledMode", arg: "none", attrs: { "data-tiled-mode": "none" } },
+      { icon: "grid-2x2", labelKey: "menu.view.tiled_both", action: "setTiledMode", arg: "both", attrs: { "data-tiled-mode": "both" } },
+      { icon: "columns-2", labelKey: "menu.view.tiled_x", action: "setTiledMode", arg: "x", attrs: { "data-tiled-mode": "x" } },
+      { icon: "rows-2", labelKey: "menu.view.tiled_y", action: "setTiledMode", arg: "y", attrs: { "data-tiled-mode": "y" } },
+      { divider: true },
+      { icon: "zoom-in", labelKey: "menu.view.zoom_in", action: "zoomIn" },
+      { icon: "zoom-out", labelKey: "menu.view.zoom_out", action: "zoomOut" },
+      { labelKey: "menu.view.zoom_reset", action: "resetZoom" },
+      { divider: true },
+      { id: "menuLeftPanel", active: true, icon: "panel-left", labelKey: "menu.view.panel_left", action: "toggleLeftPanel" },
+      { id: "menuRightPanel", active: true, icon: "panel-right", labelKey: "menu.view.panel_right", action: "toggleRightPanel" },
+      { id: "menuBottomPanel", active: true, icon: "panel-bottom", labelKey: "menu.view.panel_bottom", action: "toggleBottomPanel" },
+      { icon: "layout-panel-left", labelKey: "menu.view.reset_layout", action: "resetDockedPanels" },
+      { divider: true },
+      {
+        icon: "type",
+        labelKey: "menu.view.ui_scale",
+        submenu: [
+          { labelKey: "menu.view.scale_compact", action: "setUiScale", arg: "compact", attrs: { "data-ui-scale": "compact" } },
+          { labelKey: "menu.view.scale_medium", action: "setUiScale", arg: "medium", attrs: { "data-ui-scale": "medium" } },
+          { labelKey: "menu.view.scale_large", action: "setUiScale", arg: "large", attrs: { "data-ui-scale": "large" } },
+        ],
+      },
+      { icon: "sun-moon", labelKey: "menu.view.toggle_theme", action: "toggleColorTheme" },
+    ],
+  },
+  {
+    triggerKey: "menu.options",
+    items: [
+      { icon: "sliders-horizontal", labelKey: "menu.options.preferences", action: "openPreferencesModal" },
+      { divider: true },
+      { icon: "download", labelKey: "menu.options.export_cfg", action: "exportUserConfig" },
+      { icon: "upload", labelKey: "menu.options.import_cfg", action: "openConfigDialog" },
+      { divider: true },
+      { icon: "rotate-ccw", labelKey: "menu.options.reset_cfg", action: "resetAllUserConfig" },
+    ],
+  },
+  {
+    triggerKey: "menu.help",
+    items: [
+      { icon: "keyboard", labelKey: "menu.help.shortcuts", action: "openHelpModal", shortcut: "F1 / ?" },
+      { icon: "message-square-plus", labelKey: "menu.help.feedback", action: "openFeedbackModal" },
+      { icon: "discord", labelKey: "menu.help.discord", href: "https://discord.gg/cxPmhUNFPj" },
+      { divider: true },
+      { icon: "file-text", labelKey: "help.docs_guide", href: "./docs/viewer.html?doc=HELP.md&from=editor" },
+      { divider: true },
+      { icon: "info", labelKey: "menu.help.about", action: "openAboutModal" },
+    ],
+  },
+];

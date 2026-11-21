@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="app.title">Spritium — Estudio de Pixel Art</title>
+    <link rel="icon" type="image/svg+xml" href="./src/assets/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+    <style>
+      body.is-launching { background-color: #141417; margin: 0; }
+      body.is-launching #app { visibility: hidden; opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body class="is-launching">
+    <div id="launcherMount"></div>
+    <div id="primaryModalsMount"></div>
+
+    <div id="app">
+      <div id="topBarMount"></div>
+
+      <div id="editorMain">
+        <div id="leftSidebarMount"></div>
+
+        <!-- DIVISOR REDIMENSIONABLE + BOTÓN REABRIR IZQUIERDO -->
+        <div id="sidebarResizer" data-i18n-title="title.resize_panel" title="Arrastrar para redimensionar panel"></div>
+        <button
+          type="button"
+          id="btnExpandLeft"
+          class="panel-reopen-btn left"
+          data-i18n-title="panel.left_show"
+          title="Mostrar panel izquierdo"
+        >
+          <i data-lucide="panel-left-open" class="ui-icon-sm"></i>
+        </button>
+
+        <!-- ÁREA DE DIBUJO (CANVAS) -->
+        <div id="workspace">
+          <div id="docTabsBar" aria-label="Documentos abiertos">
+            <div id="docTabsList"></div>
+            <button type="button" id="btnNewDocTab" class="doc-tab-add" data-action="openNewDocModal" data-i18n-title="title.new_tab" title="Nuevo documento en pestaña">+</button>
+          </div>
+
+          <div id="canvasContainer">
+            <div class="canvas-with-rulers">
+              <div id="rulerCorner"></div>
+              <canvas id="rulerTop" width="512" height="20"></canvas>
+              <canvas id="rulerLeft" width="20" height="512"></canvas>
+              <canvas id="paintCanvas" width="512" height="512"></canvas>
+              <div id="gridOverlay" aria-hidden="true"></div>
+              <div id="gridCoordsOverlay" aria-hidden="true">
+                <div class="grid-coords-col"></div>
+                <div class="grid-coords-row"></div>
+                <div class="grid-coords-badge"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="bottomFramesMount"></div>
+
+          <button
+            type="button"
+            id="btnExpandBottom"
+            class="panel-reopen-btn bottom"
+            data-i18n-title="panel.bottom_show"
+            title="Mostrar panel de Frames y Timeline"
+          >
+            <i data-lucide="panel-bottom-open" class="ui-icon-sm"></i>
+            <span data-i18n="panel.frames">Frames</span>
+          </button>
+
+          <div id="canvasFooterHelp" data-i18n="canvas.footer_help">
+            <b>Clic Izq:</b> Pintar 1° | <b>Clic Der:</b> Color 2° / Borrar |
+            <b>Ctrl+Rueda / Espacio:</b> Zoom / Mover | <b>Shift / Ctrl+Mover:</b> Eje / Snap |
+            <b>Ctrl+Z/Y:</b> Historial | <b>F1 / ?:</b> Ayuda
+          </div>
+        </div>
+
+        <button
+          type="button"
+          id="btnExpandRight"
+          class="panel-reopen-btn right"
+          data-i18n-title="panel.right_show"
+          title="Mostrar panel de capas"
+        >
+          <i data-lucide="panel-right-open" class="ui-icon-sm"></i>
+        </button>
+
+        <div id="rightSidebarMount"></div>
+      </div>
+    </div>
+
+    <div id="layerContextMenu" class="context-menu"></div>
+    <div id="frameContextMenu" class="context-menu"></div>
+    <div id="canvasContextMenu" class="context-menu"></div>
+
+    <div id="secondaryModalsMount"></div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="./src/js/app.js"></script>
+  </body>
+</html>

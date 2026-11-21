@@ -1,0 +1,123 @@
+/* --- DISEÑO RESPONSIVO (TABLET / VENTANA ANGOSTA / MÓVIL) --- */
+@media (max-width: 1140px) {
+  #sidebar {
+    width: 232px;
+    min-width: 190px;
+    padding: 8px;
+  }
+
+  #rightSidebar {
+    width: 236px;
+    min-width: 195px;
+    padding: 8px;
+  }
+
+  #topBar .topbar-right #assetName {
+    width: 105px;
+  }
+}
+
+@media (max-width: 960px) {
+  #topBar {
+    height: auto;
+    min-height: 36px;
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .topbar-left,
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  #topMenu {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 860px) {
+  body,
+  #app {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  #editorMain {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  #app #sidebar,
+  #app #rightSidebar {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: auto;
+    max-height: 44vh;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  #rightSidebar {
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: none;
+  }
+
+  #sidebarResizer,
+  #rightSidebarResizer {
+    display: none;
+  }
+
+  #workspace {
+    height: auto;
+    min-height: 430px;
+  }
+
+  #canvasContainer {
+    padding: 10px;
+  }
+
+  #canvasFooterHelp {
+    white-space: normal;
+    line-height: 1.35;
+  }
+}
+
+@media (max-width: 560px) {
+  .launcher-container {
+    padding: 20px 16px;
+  }
+
+  .brand-title {
+    font-size: clamp(18px, 6vw, 24px);
+  }
+
+  .launcher-actions-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .launcher-btn {
+    width: 100%;
+  }
+
+  .autosave-card {
+    flex-wrap: wrap;
+  }
+
+  .app-brand-title {
+    font-size: 12px;
+  }
+
+  body .dock-module.module-floating {
+    max-width: calc(100vw - 16px);
+  }
+}
+
+
