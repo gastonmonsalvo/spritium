@@ -1,71 +1,65 @@
-# Spritium
+# Spritium (`v0.9.0-beta.1`)
 
 [English](./README.md) | [Español](./README.es.md)
 
-> **100% Client-Side Web Pixel Art Editor with OKLab perceptual quantization, layers, frames, Tilemaps, ES/EN internationalization, and multi-format export.**
+> **100% Client-Side Web Pixel Art Studio with OKLab perceptual quantization, layers, matrix animation timeline, Tilemaps, ES/EN localization, and multi-format export.**
 
-**Spritium** is a modular Vanilla JavaScript SPA (**112 ES Modules**, Zero-Build + HTML5 Canvas 2D + **19 CSS modules**) designed to create, import, quantize, animate, and export 2D sprites and tilemaps directly in the browser, ready to deploy on any static host (**GitHub Pages, Cloudflare Pages, Vercel, Netlify**) with no backend or external dependencies.
+[![Status](https://img.shields.io/badge/status-beta-orange.svg)](#beta-status)
+[![Discord](https://img.shields.io/badge/Discord-Community-5865F2.svg)](https://discord.gg/cxPmhUNFPj)
+
+**Spritium** is a zero-build, 100% client-side pixel art and sprite animation studio built on HTML5 Canvas 2D. Create, import, quantize, animate, and export sprites and tilemaps directly in your browser with local **IndexedDB** persistence — no backend, no account, and no installation required.
+
+* **Live App (GitHub Pages):** [gastonmonsalvo.github.io/spritium](https://gastonmonsalvo.github.io/spritium/)
+* **User Guide (Shortcuts, Mouse & Tools):** [User Guide](./docs/viewer.html?doc=HELP.md)
+* **Community & Support:** [Join our Discord](https://discord.gg/cxPmhUNFPj)
 
 ---
 
 ## Key Features
 
-### 1. Import and Perceptual Quantization (OKLab + Bayer 4×4 / 8×8)
-- **Supported resolutions:** presets `16×16`, `32×32`, `64×64`, `96×96`, `128×128`, `256×256`, and custom resolution `N × M` (`4–512 px`) from **Edit → Resolution ▸**.
-- **1:1 Open or Pixel Art:** open PNG sprites at native `1:1` size without altering pixels, enable **Convert to Pixel Art** (downscales to the chosen size while preserving background), or optionally **Remove connected background**.
-- **Built-in + Custom Palettes:** includes **Dawnbringer 32 (DB32)**, **Dawnbringer 16 (DB16)**, **PICO-8**, **Arne 16**, **DMG-01 (Game Boy)**, **Terminal 1-Bit**, **Grayscale (16)**, and **Indexed (16)**, using perceptual quantization in **OKLab** color space with optional **Ordered Dithering (Bayer 4×4 / 8×8)**.
-- **Adaptive Palette Reduction (`16 / 24 / 32 / 48 / 64 own colors`):** weighted K-Means++ by $\sqrt{\text{frequency}}$ in OKLab with *Farthest-Point* initialization.
-- **Non-destructive workflow:** preserves `originalImport` and `resBaseSnapshot` so you can experiment with palettes and resolutions without chained degradation.
+### 1. Import, Tilemaps & Perceptual Quantization (OKLab + Bayer)
+* **Supported resolutions:** presets from `16×16` up to `512×512`, plus custom `N × M` (`4–512 px`) from **Edit → Resolution**.
+* **1:1 Open or Pixel Art Conversion:** open PNG sprites at native `1:1` size without altering pixels, convert high-res images to pixel art with live preview, and optionally remove connected backgrounds.
+* **Tilemap Importer:** import tileset sheets or full tilemaps (`PNG + JSON` / Tiled `.tmj`) with instant tile deduplication and Drag & Drop reordering.
+* **Built-in + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Game Boy)**, **Terminal 1-Bit**, **Grayscale (16)**, and **Indexed (16)**, using **OKLab** perceptual quantization and optional **Bayer 4×4 / 8×8** ordered dithering.
+* **Adaptive Palette Reduction:** weighted K-Means++ in OKLab (`16 / 24 / 32 / 48 / 64` colors) with non-destructive re-adjustment.
 
-### 2. Advanced Layer System, Matrix Timeline, and Animation
-- **Layers (Right Panel):** Multiple layers and folders with blend modes (`Normal`, `Multiply`, `Screen`, `Overlay`, `Darken`, `Lighten`, `Color Dodge`, `Color Burn`), per-layer opacity, multi-select (`Ctrl+Click`), locking, Drag & Drop, inline renaming (`Double click` or `F2`), and **localized ES/EN context menus**.
-- **Non-Destructive Movement (`outOfBounds`):** when moving, rotating (`RotSprite`), or free-transforming (`Shift+T`) sprites beyond the canvas bounds, out-of-frame pixels are preserved per layer without clipping.
-- **Matrix Timeline (`Matrix ^`):** expandable and resizable **Layers × Frames** view with playback transport controls, **Tag Frames** (`Shift+Click` + `+ Tag` with per-tag looping), **Linked Cels**, frame/cel Drag & Drop, and **Onion Skin Pro** (`10%–80%` opacity, Prev/Next range, and **Red / Blue Mode**).
-- **Configurable Export + Pure GIF89a:** live preview, *Nearest-Neighbor* scaling (`1×–16×`), transparent or solid background, **Animated GIF (`.gif` 100% client-side LZW)**, **PNG Strip** (`Row` / `Column` / `Grid N×M`), and **Atlas (PNG + JSON)**.
+### 2. Layers, Matrix Timeline & Animation
+* **Layers & Folders:** blend modes (`Normal`, `Multiply`, `Screen`, `Overlay`, `Darken`, `Lighten`, `Color Dodge`, `Color Burn`), per-layer opacity, multi-select (`Ctrl+Click`), locking, Drag & Drop, and inline renaming (`Double click` / `F2`).
+* **Non-Destructive Movement:** moving, rotating (`RotSprite`), or free-transforming (`Shift+T`) preserves out-of-bounds pixels per layer without clipping.
+* **Matrix Timeline (`Matrix ^`):** expandable **Layers × Frames** grid with playback transport, **Frame Tags** with per-tag looping, **Linked Cels**, Drag & Drop, and **Onion Skin Pro** (adjustable opacity, Prev/Next range, and **Red / Blue** tinting).
+* **Multi-Format Export:** live preview, *Nearest-Neighbor* scaling (`1×–16×`), **Animated GIF** (100% client-side LZW), **PNG Strip** (`Row` / `Column` / `Grid N×M`), **Atlas (PNG + JSON)**, and `.spritium` project files.
 
-### 3. Tools, Custom Brushes, RGBA Color, and Cursor Preferences
-- **Drawing, Brushes, and Filters:**
-  - **Pencil (`B`)** with **Pixel-Perfect** (zero L-shapes) and **`1–256 px`** size (`[` / `]`).
-  - **Custom Brushes and Dithering:** built-in patterns (`Solid`, `Dither 50%`, `Diagonal`, `Dots`) and brushes created **from selection** (`1st Ink` or `Orig. Color`), persisted and importable/exportable as `.sbrush.json`.
-  - **Line (`L`)** (Straight with `Shift` 45° or 1–3 point Bézier Curve + Solid/Dotted/Dashed/Dash-Dot styles), **Shapes (`R`/`C`/`U`)**, **Bucket (`T`/`F`)**, **OKLab Shading (`K`)**, **Blur / Jumble**, **Spray**, **Eyedropper (`I`)**, and **Eraser (`E`)**.
-- **Primary/Secondary Color, Alpha (RGBA), and Color Wheel:** full **`#RRGGBBAA`** support, **HSV Wheel** with harmonies (**Triad**, **Analogous**, **Complementary**, **Split-Comp.**, **Tetrad**), and **`.hex`**, **`.gpl`**, **`.pal`**, and **`.json`** import/export.
-- **Boolean Selection and Free Transform:** Rectangle (`S`), Ellipse, Lasso (`Q`), Magic Wand (`W`) with boolean modifiers (`Ctrl` / `Alt` / `Ctrl+Shift`), and **Free Transform (`Shift+T`)**.
-- **Pixel Preview (`V`) and Mouse Reticle (`Preferences`):** real-time pixel/brush/bucket/wand footprint outline and customizable reticle (shape, size, thickness, gap, center dot, and outline).
+### 3. Drawing Tools, Symmetry 2.0 & Precision Guides
+* **Tools & Custom Brushes:** **Pencil (`B`)** with **Pixel-Perfect**, **Line (`L`)** (45° snap or Bézier curves), **Shapes (`R`/`C`/`U`)**, **Bucket (`T`/`F`)**, **OKLab Shading (`K`)**, **Blur / Jumble**, **Spray**, **Eyedropper (`I`)**, **Eraser (`E`)**, and custom `.sbrush.json` brushes created from selection.
+* **Symmetry 2.0:** Horizontal (`H`), Vertical (`V`), Diagonals (`╲` / `╱`), and Radial (`90°` / `45°`), with **2px even / 1px odd (Heart)** center modes, free axis positioning (`Alt+Click/Drag` or coordinates), and selection-centered symmetry.
+* **Rulers & Draggable Guides:** canvas center guides, pixel rulers, and draggable reference guides from the top/left rulers.
+* **RGBA Color & Palette Tools:** full `#RRGGBBAA`, HSV Wheel with color harmonies, and `.hex` / `.gpl` / `.pal` / `.json` import/export.
+* **Boolean Selection & Pixel Preview (`V`):** Rectangle (`S`), Ellipse, Lasso (`Q`), Magic Wand (`W`), Free Transform (`Shift+T`), live tool/bucket footprint preview, and customizable mouse reticle.
 
-### 4. Internationalization (ES / EN), Multi-Document, and Studio
-- **Live language switching (`ES / EN`):** language toggle in Launcher, Top Bar, and Preferences (`994` parity keys) with reactive translation of the DOM, palettes, context menus, autogenerated names, and log history (`LogHistory`).
-- **Multi-Document Tabs (`#docTabsBar`):** multiple sprites open in parallel with unsaved changes indicator (`•`).
-- **Media Explorer (`Media`), Launcher, and Crash Recovery:** **IndexedDB** (`Spritium_DB`) with recent projects and up to 8 automatic checkpoints.
-- **Dockable / Floating Panels and UI Scale:** drag panels between edges or float them (`spritium_layout_v2`), **Dark / Light** theme, and **UI Scale** (`100%`, `115%`, `135%`).
+### 4. Studio Experience & Localization
+* **Live ES / EN switching:** instant interface, palette, and guide translation.
+* **Multi-Document Tabs & Crash Recovery:** work on multiple sprites in parallel with automatic local checkpoints in **IndexedDB**.
+* **Dockable / Floating Panels, Themes & UI Scale:** drag panels between edges or float them, switch **Dark / Light** themes, and scale UI (`100%`, `115%`, `135%`).
 
 ---
 
-## Scope & Project Boundaries
+## Beta Status
 
-- **Target canvas & workflow:** `4×4` to `512×512 px` sprites and tilemaps (`N×M` custom sizes), discrete pixel-art rasterization (*Nearest-Neighbor*, Bresenham, Midpoint, De Casteljau), OKLab quantization, frame animation, and multi-format export (`.spritium`, `.png`, `.gif`, Strip, Atlas JSON, Tilemap JSON).
-- **Zero-Build & 100% Static:** runs directly in modern browsers with native ES Modules (`112` JS modules + `19` CSS modules), no bundler, no backend, and local **IndexedDB** persistence (`Spritium_DB`).
-- **Quick Navigation by Role:**
-  - **Users:** [User Guide](./docs/viewer.html?doc=HELP.md) (shortcuts, mouse controls, tilemaps, export).
-  - **Contributors / Reviewers:** [Architecture Guide](./docs/viewer.html?doc=ARCHITECTURE.md) (DAG, boot lifecycle, subsystems, invariants) & [Helper Guide](./docs/viewer.html?doc=HELPER.md).
-  - **API Reference:** [docs/index.html](./docs/index.html) (`484/484` JSDoc coverage, searchable ES/EN).
+Spritium is currently in **public Beta (`v0.9.0-beta.1`)**. Core features are usable, but active improvements and testing are ongoing.
+
+Found a bug or have a suggestion?
+* Use **Help → Send Feedback / Report Bug** directly inside Spritium (automatically attaches reproducible steps without leaving the editor).
+* Or join our [Discord Community](https://discord.gg/cxPmhUNFPj) / open a [GitHub Issue](https://github.com/gastonmonsalvo/spritium/issues).
 
 ---
 
-## Local Setup and Documentation
+## Running Locally
 
-To run locally (ES Modules require HTTP, not `file://`):
-```powershell
+Because Spritium uses native ES Modules, serve the folder over HTTP rather than opening `index.html` via `file://`:
+
+```bash
 python -m http.server 8000
 ```
+
 Then open [http://localhost:8000](http://localhost:8000).
-
-- **Architecture, workflow, and structure of all 112 modules:** [Architecture Guide](./docs/viewer.html?doc=ARCHITECTURE.md)
-- **Developer guide (how to modify/add UI, i18n, palettes, and actions):** [Helper Guide](./docs/viewer.html?doc=HELPER.md)
-- **Shortcuts, mouse, and tools guide:** [User Guide](./docs/viewer.html?doc=HELP.md)
-- **Data-Driven JSDoc API reference (`docs/data/api.{es,en}.json`):** [docs/index.html](./docs/index.html)
-
-### Validation & Docs Generation
-```powershell
-node scripts/smoke-test.mjs      # Architectural DAG, CSS, i18n parity & functional checks
-node scripts/generate-docs.mjs   # Rebuilds api.es.json, docs/index.html & incrementally merges api.en.json
-```
