@@ -48,6 +48,7 @@ uploads/
 
 # Herramientas internas de administración, bots, tests y documentación técnica privada
 scripts/
+config/
 private_backup/
 docs/index.html
 docs/ARCHITECTURE.md
