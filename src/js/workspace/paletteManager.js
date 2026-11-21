@@ -3,7 +3,7 @@
  */
 
 import { state } from "../core/state.js";
-import { setStatus } from "../ui/index.js";
+import { setStatus, openCustomRgbaPopover } from "../ui/index.js";
 import {
   FREE_BRUSH_IDX,
   manualCustomIndices,
@@ -56,6 +56,27 @@ export function registerColor(hex) {
   syncActiveUserPalette();
   renderCustomPaletteUI();
   return { index: newIdx, alreadyExists: false };
+}
+
+/**
+ * Abre el selector RGBA/HSLA flotante para editar directamente el color 1° o 2° desde los chips inferiores.
+ * @param {"primary"|"secondary"} slot - Slot de color a editar.
+ */
+export function openSlotColorPicker(slot = "primary") {
+  const isSecondary = slot === "secondary";
+  const anchorEl = document.getElementById(isSecondary ? "secondaryColorPreview" : "primaryColorPreview");
+  if (!anchorEl) return;
+  const curIdx = isSecondary ? (state.secondaryColorIndex ?? 0) : state.currentColorIndex;
+  const initialHex = (curIdx && state.paletteMap?.[curIdx]) || "#ff0055";
+  openCustomRgbaPopover(anchorEl, initialHex, (rgbaHex) => {
+    const { index } = registerColor(rgbaHex);
+    if (isSecondary) {
+      state.secondaryColorIndex = index;
+    } else {
+      state.currentColorIndex = index;
+    }
+    highlightCurrentSwatch();
+  });
 }
 
 /** Prepara el color libre para pintar SIN agregarlo a Personalizados hasta pintar o presionar + Muestra. */

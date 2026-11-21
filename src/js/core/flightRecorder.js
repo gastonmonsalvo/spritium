@@ -177,6 +177,43 @@ export function initFlightRecorder() {
   }
 }
 
+function detectDeviceProfile(nav, win) {
+  const ua = String(nav?.userAgent || "");
+  const maxTouchPoints = Number(nav?.maxTouchPoints || 0);
+  const isCoarse = Boolean(win?.matchMedia?.("(pointer: coarse)")?.matches);
+  const touchCapable = maxTouchPoints > 0 || isCoarse;
+
+  let os = "Unknown";
+  if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && maxTouchPoints > 1)) os = "iPadOS";
+  else if (/iPhone|iPod/i.test(ua)) os = "iOS";
+  else if (/Android/i.test(ua)) os = "Android";
+  else if (/Windows/i.test(ua)) os = "Windows";
+  else if (/CrOS/i.test(ua)) os = "ChromeOS";
+  else if (/Macintosh|Mac OS X/i.test(ua)) os = "macOS";
+  else if (/Linux/i.test(ua)) os = "Linux";
+
+  let browser = "Unknown";
+  if (/Edg\//i.test(ua)) browser = "Edge";
+  else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = "Opera";
+  else if (/Firefox\//i.test(ua)) browser = "Firefox";
+  else if (/Chrome\//i.test(ua) && !/Edg\//i.test(ua)) browser = "Chrome";
+  else if (/Safari\//i.test(ua) && !/Chrome\//i.test(ua)) browser = "Safari";
+
+  const minScreen = win ? Math.min(win.innerWidth || 9999, win.innerHeight || 9999) : 1024;
+  let formFactor = "desktop";
+  if (os === "iPadOS" || (os === "Android" && !/Mobile/i.test(ua))) {
+    formFactor = "tablet";
+  } else if (os === "iOS" || (/Android/i.test(ua) && /Mobile/i.test(ua)) || (touchCapable && minScreen <= 560)) {
+    formFactor = "mobile";
+  } else if (touchCapable && minScreen <= 900) {
+    formFactor = "tablet";
+  }
+
+  const inputMode = state.lastPointerType || (isCoarse ? "touch" : "mouse");
+  const label = `${formFactor} (${os} · ${browser} · ${inputMode}${touchCapable ? " · touch" : ""})`;
+  return { formFactor, os, browser, touchCapable, maxTouchPoints, inputMode, label };
+}
+
 /**
  * Construye una radiografía técnica anonimizada del entorno, lienzo, capas, tilesets y traza de acciones.
  * @param {{ includeBreadcrumbs?: boolean, includeErrors?: boolean }} [options]
@@ -229,6 +266,7 @@ export function buildDiagnosticReport({ includeBreadcrumbs = true, includeErrors
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     environment: {
+      device: detectDeviceProfile(nav, win),
       userAgent: nav?.userAgent || "unknown",
       language: docEl?.lang || nav?.language || "es",
       viewport: win ? `${win.innerWidth || 0}x${win.innerHeight || 0}` : "headless",

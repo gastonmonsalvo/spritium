@@ -311,16 +311,21 @@ export function initColorWheel({ onSelectColor }) {
   wheelCanvas = document.getElementById("colorWheelCanvas");
   if (!wheelCanvas) return;
 
-  wheelCanvas.addEventListener("mousedown", (e) => {
+  wheelCanvas.style.touchAction = "none";
+  wheelCanvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
+    if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault();
     dragZone = null;
     handlePointer(e);
   });
-  window.addEventListener("mousemove", (e) => {
+  window.addEventListener("pointermove", (e) => {
     if (!dragZone) return;
     handlePointer(e);
   });
-  window.addEventListener("mouseup", () => {
+  window.addEventListener("pointerup", () => {
+    dragZone = null;
+  });
+  window.addEventListener("pointercancel", () => {
     dragZone = null;
   });
 

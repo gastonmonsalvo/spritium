@@ -29,7 +29,7 @@ import {
 } from "./shapes.js";
 import { translateFromSnapshot, computeSnappedDelta } from "./transforms.js";
 import { findShadedColorIndex } from "../core/color.js";
-import { setStatus } from "../ui/index.js";
+import { setStatus, restorePreviousToolAfterEyedropper } from "../ui/index.js";
 import { highlightCurrentSwatch } from "../workspace/paletteManager.js";
 import {
   shouldFillShape,
@@ -264,6 +264,13 @@ const eyedropperStrategy = {
   onDown({ x, y, button }) {
     if (button !== 0 && button !== 2) return;
     pickColorAt(x, y, highlightCurrentSwatch, button === 2);
+    const isTouchOrMobile =
+      state.lastPointerType === "touch" ||
+      state.lastPointerType === "pen" ||
+      (typeof window !== "undefined" && window.innerWidth <= 860);
+    if (button === 0 && isTouchOrMobile) {
+      restorePreviousToolAfterEyedropper();
+    }
   },
   onMove() {},
   onUp() {},

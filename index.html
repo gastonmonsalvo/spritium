@@ -93,6 +93,36 @@
 
         <div id="rightSidebarMount"></div>
       </div>
+
+      <nav id="mobileDockBar" aria-label="Mobile quick dock">
+        <button type="button" id="btnMobileTools" class="mobile-dock-btn" data-action="toggleMobileDrawer" data-action-arg="left">
+          <i data-lucide="paintbrush" class="ui-icon-sm"></i>
+          <span data-i18n="mobile.tools">Herramientas</span>
+        </button>
+        <button type="button" id="btnMobileSwapColors" class="mobile-dock-btn" data-action="toggleMobileDrawer" data-action-arg="colors" data-i18n-title="mobile.swap_colors" title="Tocar: Paleta y Color · Mantener: 1°⇄2°">
+          <span class="mobile-color-pair" aria-hidden="true">
+            <span id="mobileP1Dot" class="mobile-color-dot primary"></span>
+            <span id="mobileP2Dot" class="mobile-color-dot secondary"></span>
+          </span>
+          <span data-i18n="mobile.colors">Colores</span>
+        </button>
+        <button type="button" id="btnMobileUndo" class="mobile-dock-btn" data-action="undo" data-i18n-title="mobile.undo" title="Deshacer">
+          <i data-lucide="undo-2" class="ui-icon-sm"></i>
+          <span data-i18n="mobile.undo">Deshacer</span>
+        </button>
+        <button type="button" id="btnMobileRedo" class="mobile-dock-btn" data-action="redo" data-i18n-title="mobile.redo" title="Rehacer">
+          <i data-lucide="redo-2" class="ui-icon-sm"></i>
+          <span data-i18n="mobile.redo">Rehacer</span>
+        </button>
+        <button type="button" id="btnMobileLayers" class="mobile-dock-btn" data-action="toggleMobileDrawer" data-action-arg="right">
+          <i data-lucide="layers" class="ui-icon-sm"></i>
+          <span data-i18n="mobile.layers">Capas</span>
+        </button>
+        <button type="button" id="btnMobileFrames" class="mobile-dock-btn" data-action="toggleMobileDrawer" data-action-arg="bottom">
+          <i data-lucide="film" class="ui-icon-sm"></i>
+          <span data-i18n="mobile.frames">Frames</span>
+        </button>
+      </nav>
     </div>
 
     <div id="layerContextMenu" class="context-menu"></div>

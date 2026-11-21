@@ -355,6 +355,23 @@ export function getGridCoordinates(e, canvasElement, { unclampedTiled = false, u
  * Aplica el nivel de zoom (50% a 800%), ajusta el tamaño del canvas y actualiza reglas.
  * @param {number} newZoom
  */
+/**
+ * Ajusta el zoom del lienzo para que entre completo y centrado dentro del contenedor visible.
+ */
+export function fitZoomToViewport() {
+  const container = document.getElementById("canvasContainer");
+  if (!container || container.clientWidth <= 0 || container.clientHeight <= 0) return;
+  const { baseW, baseH } = getCanvasBasePx();
+  const availW = Math.max(96, container.clientWidth - 40);
+  const availH = Math.max(96, container.clientHeight - 40);
+  const targetZoom = Math.min(availW / baseW, availH / baseH);
+  applyZoom(Math.max(0.25, Math.min(4, targetZoom)));
+}
+
+/**
+ * Aplica un factor de zoom (`0.25–16`), redimensionando el canvas y actualizando reglas/overlays.
+ * @param {number} newZoom
+ */
 export function applyZoom(newZoom) {
   state.zoom = Math.max(0.25, Math.min(16, Number(Number(newZoom).toFixed(2))));
 

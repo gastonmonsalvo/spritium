@@ -122,12 +122,12 @@ export function renderRightSidebarHtml() {
           </div>
 
           <div id="activeColorDual" class="dual-color-bar">
-            <div class="dual-color-slot" data-i18n-title="title.primary_color" title="${tAttr("title.primary_color")}">
+            <div class="dual-color-slot" data-action="openSlotColorPicker" data-action-arg="primary" style="cursor: pointer" data-i18n-title="title.primary_color" title="${tAttr("title.primary_color")}">
               <span class="dual-color-label">1°</span>
               <div id="primaryColorPreview" class="dual-color-chip"></div>
             </div>
             <button type="button" class="tool-btn dual-swap-btn" data-action="swapPrimarySecondaryColors" data-i18n-title="title.swap_colors" title="${tAttr("title.swap_colors")}">⇄</button>
-            <div class="dual-color-slot" data-action="resetSecondaryColorToTransparent" style="cursor: pointer" data-i18n-title="title.secondary_color" title="${tAttr("title.secondary_color")}">
+            <div class="dual-color-slot" data-action="openSlotColorPicker" data-action-arg="secondary" style="cursor: pointer" data-i18n-title="title.secondary_color" title="${tAttr("title.secondary_color")}">
               <span class="dual-color-label">2°</span>
               <div id="secondaryColorPreview" class="dual-color-chip is-transparent"></div>
             </div>

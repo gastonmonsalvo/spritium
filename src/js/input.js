@@ -13,7 +13,7 @@ import { syncLinkedCelsForActiveLayer } from "./workspace/timelineMatrix.js";
 import { isTilemapTileModeActive, getTilemapToolStrategy, reconcileActiveTilemapLayer } from "./workspace/tilemap.js";
 import { pickColorAt, isInsideSelection } from "./tools/tools.js";
 import { TOOL_STRATEGIES } from "./tools/toolStrategies.js";
-import { getToolCursorCss, setStatus, applySymmetryAxisFromCanvasPoint, syncSymmetryControlsUI } from "./ui/index.js";
+import { getToolCursorCss, setStatus, applySymmetryAxisFromCanvasPoint, syncSymmetryControlsUI, closeMobileDrawers } from "./ui/index.js";
 import { highlightCurrentSwatch, syncCanvasColorsToPalette } from "./workspace/paletteManager.js";
 import { closeCanvasContextMenu, openCanvasContextMenu } from "./ui/canvasContextMenu.js";
 import { getActiveFocusZone, performUndo, performRedo, setupKeyboardShortcuts } from "./keyboardShortcuts.js";
@@ -283,8 +283,12 @@ export function setupMouseEvents(canvas) {
     lastCursorCellKey: null, ftController: createFreeTransformController(),
   };
 
+  const touchPointers = new Map();
+  let pinchState = null;
+
+  canvas.style.touchAction = "none";
   setupSpacePanAndContextGuards(canvas, ptr);
-  canvas.addEventListener("mouseleave", () => {
+  canvas.addEventListener("pointerleave", () => {
     state.cursorPos = null; ptr.lastHoverTileKey = null; ptr.lastCursorCellKey = null;
     renderRulers();
     renderGridCoordsOverlay();
@@ -293,9 +297,52 @@ export function setupMouseEvents(canvas) {
   canvas.addEventListener("wheel", (e) => {
     if (e.ctrlKey || state.currentTool === "zoom") { e.preventDefault(); applyZoom(state.zoom + (e.deltaY < 0 ? 0.25 : -0.25)); }
   }, { passive: false });
-  canvas.addEventListener("mousedown", (e) => handleCanvasMouseDown(e, canvas, ptr));
-  canvas.addEventListener("mousemove", (e) => handleCanvasMouseMove(e, canvas, ptr));
-  window.addEventListener("mousemove", (e) => {
+  canvas.addEventListener("pointerdown", (e) => {
+    state.lastPointerType = e.pointerType || "mouse";
+    if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault();
+    if (closeMobileDrawers()) return;
+    if (e.pointerType === "touch") {
+      touchPointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+      if (touchPointers.size === 2) {
+        ptr.isMouseDown = false;
+        ptr.activeStrategy = null;
+        const pts = [...touchPointers.values()];
+        const container = document.getElementById("canvasContainer");
+        pinchState = {
+          startDist: Math.max(10, Math.hypot(pts[1].clientX - pts[0].clientX, pts[1].clientY - pts[0].clientY)),
+          startZoom: state.zoom || 1,
+          midX: (pts[0].clientX + pts[1].clientX) / 2,
+          midY: (pts[0].clientY + pts[1].clientY) / 2,
+          scrollLeft: container?.scrollLeft || 0,
+          scrollTop: container?.scrollTop || 0,
+        };
+        return;
+      }
+      if (touchPointers.size > 2) return;
+    }
+    handleCanvasMouseDown(e, canvas, ptr);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch" && touchPointers.has(e.pointerId)) {
+      touchPointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+      if (pinchState && touchPointers.size === 2) {
+        const pts = [...touchPointers.values()];
+        const dist = Math.max(10, Math.hypot(pts[1].clientX - pts[0].clientX, pts[1].clientY - pts[0].clientY));
+        const midX = (pts[0].clientX + pts[1].clientX) / 2;
+        const midY = (pts[0].clientY + pts[1].clientY) / 2;
+        applyZoom(pinchState.startZoom * (dist / pinchState.startDist));
+        const container = document.getElementById("canvasContainer");
+        if (container) {
+          container.scrollLeft = pinchState.scrollLeft - (midX - pinchState.midX);
+          container.scrollTop = pinchState.scrollTop - (midY - pinchState.midY);
+        }
+        return;
+      }
+    }
+    if (pinchState) return;
+    handleCanvasMouseMove(e, canvas, ptr);
+  });
+  window.addEventListener("pointermove", (e) => {
     if (state.activeGuideDrag) {
       const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
       const { w, h } = getGridDims();
@@ -318,15 +365,22 @@ export function setupMouseEvents(canvas) {
     const { x, y } = getGridCoordinates(e, canvas, { unclampedTiled: state.tiledMode !== "none", unclamped: state.currentTool === "move" });
     ptr.activeStrategy.onMove({ x, y, button: ptr.mouseButton, event: e });
   });
-  window.addEventListener("mouseup", (e) => handleWindowMouseUp(e, canvas, ptr), { capture: true });
-  window.addEventListener("blur", () => { ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
+  const clearTouchPointer = (e) => {
+    if (e.pointerType !== "touch") return;
+    touchPointers.delete(e.pointerId);
+    if (touchPointers.size < 2) pinchState = null;
+  };
+  window.addEventListener("pointerup", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
+  window.addEventListener("pointercancel", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
+  window.addEventListener("blur", () => { touchPointers.clear(); pinchState = null; ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
 
   // Arrastrar desde #rulerTop o #rulerLeft para crear guías de referencia (clic derecho quita la guía cercana)
   const bindRulerGuideEvents = (rulerId, axis) => {
     const el = document.getElementById(rulerId);
     if (!el) return;
     el.style.cursor = axis === "h" ? "row-resize" : "col-resize";
-    el.addEventListener("mousedown", (e) => {
+    el.style.touchAction = "none";
+    el.addEventListener("pointerdown", (e) => {
       if (e.button === 2) {
         const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
         const targetPos = axis === "h" ? rawY : rawX;

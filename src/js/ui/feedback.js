@@ -244,6 +244,8 @@ export function formatFeedbackAsMarkdown(payload) {
   const lines = [
     `## [${String(payload.category || "bug").toUpperCase()}] ${payload.title || "Spritium Feedback"}`,
     `- **ID:** \`${payload.reportId}\``,
+    `- **Version:** \`v${payload.diagnostics?.appVersion || "unknown"}\``,
+    `- **Device:** ${payload.diagnostics?.environment?.device?.label || "unknown"} (${payload.diagnostics?.environment?.viewport || "?"})`,
     `- **Date:** ${payload.createdAt}`,
   ];
 

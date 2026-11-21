@@ -79,20 +79,38 @@ const HELP_SECTIONS = [
       ["help.r45", "Supr / Clic Der"],
     ],
   },
+  {
+    titleKey: "help.h4.touch",
+    className: "help-section--touch",
+    rows: [
+      ["help.t0", "help.tk0"],
+      ["help.t1", "help.tk1"],
+      ["help.t2", "help.tk2"],
+      ["help.t3", "help.tk3"],
+      ["help.t4", "help.tk4"],
+      ["help.t5", "help.tk5"],
+      ["help.t6", "help.tk6"],
+    ],
+  },
 ];
 
 function renderHelpSection(section) {
   const rowsHtml = renderList(
     section.rows,
-    ([key, kbd]) => `
+    ([key, kbd]) => {
+      const isKbdKey = kbd.startsWith("help.tk");
+      const kbdText = isKbdKey ? i18n.t(kbd) : kbd;
+      const kbdAttr = isKbdKey ? ` data-i18n="${escapeHtml(kbd)}"` : "";
+      return `
       <div class="help-row">
         <span data-i18n="${escapeHtml(key)}">${escapeHtml(i18n.t(key))}</span>
-        <span class="help-kbd">${escapeHtml(kbd)}</span>
-      </div>`,
+        <span class="help-kbd"${kbdAttr}>${escapeHtml(kbdText)}</span>
+      </div>`;
+    },
   );
 
   return `
-    <div class="help-section">
+    <div class="help-section${section.className ? ` ${section.className}` : ""}">
       <h4 data-i18n="${escapeHtml(section.titleKey)}">${escapeHtml(i18n.t(section.titleKey))}</h4>
       ${rowsHtml}
     </div>`;

@@ -354,13 +354,18 @@ function ensurePopoverDom() {
     btn.addEventListener("click", () => setColorPickerMode(btn.dataset.mode));
   });
 
-  svCanvas.addEventListener("mousedown", (e) => { activeDrag = "sv"; handleDragAt(e); });
-  hueCanvas.addEventListener("mousedown", (e) => { activeDrag = "hue"; handleDragAt(e); });
-  alphaCanvas.addEventListener("mousedown", (e) => { activeDrag = "alpha"; handleDragAt(e); });
+  svCanvas.style.touchAction = "none";
+  hueCanvas.style.touchAction = "none";
+  alphaCanvas.style.touchAction = "none";
 
-  window.addEventListener("mousemove", handleDragAt);
-  window.addEventListener("mouseup", () => { activeDrag = null; });
-  document.addEventListener("mousedown", (e) => {
+  svCanvas.addEventListener("pointerdown", (e) => { if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault(); activeDrag = "sv"; handleDragAt(e); });
+  hueCanvas.addEventListener("pointerdown", (e) => { if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault(); activeDrag = "hue"; handleDragAt(e); });
+  alphaCanvas.addEventListener("pointerdown", (e) => { if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault(); activeDrag = "alpha"; handleDragAt(e); });
+
+  window.addEventListener("pointermove", handleDragAt);
+  window.addEventListener("pointerup", () => { activeDrag = null; });
+  window.addEventListener("pointercancel", () => { activeDrag = null; });
+  document.addEventListener("pointerdown", (e) => {
     if (!isOpen) return;
     const btn = activeAnchorEl || document.getElementById("customColorPickerBtn");
     if (popoverEl.contains(e.target) || btn?.contains(e.target)) return;

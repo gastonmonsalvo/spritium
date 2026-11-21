@@ -20,7 +20,7 @@ import {
   buildPaletteUI,
   renderCustomPaletteUI,
 } from "./paletteManager.js";
-import { renderAll, applyZoom } from "../canvas/canvas.js";
+import { renderAll, applyZoom, fitZoomToViewport } from "../canvas/canvas.js";
 import { renderRulers } from "../canvas/rulers.js";
 import { setStatus, updateResolutionButtons } from "../ui/index.js";
 import { i18n } from "../i18n/I18nService.js";
@@ -75,6 +75,9 @@ export function hideLauncher() {
   document.body?.classList.remove("is-launching");
   const overlay = document.getElementById("launcherOverlay");
   if (overlay) overlay.classList.add("hidden");
+  if (typeof window !== "undefined" && window.innerWidth <= 860) {
+    requestAnimationFrame(() => fitZoomToViewport());
+  }
 }
 
 /**

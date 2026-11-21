@@ -293,11 +293,63 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   }
 }
 
+const MOBILE_TOOL_ICONS = {
+  pencil: "pencil",
+  eraser: "eraser",
+  bucket: "paint-bucket",
+  eyedropper: "pipette",
+  pan: "hand",
+  move: "move",
+  line: "slash",
+  rect: "square",
+  circle: "circle",
+  triangle: "triangle",
+  select: "square-dashed",
+  ellipseSelect: "circle",
+  lasso: "lasso",
+  magicSelect: "wand-sparkles",
+  spray: "spray-can",
+  shading: "sun-dim",
+  blur: "droplet",
+  jumble: "shuffle",
+  noise: "sparkles",
+  backgroundEraser: "eraser",
+};
+
+let previousToolBeforeEyedropper = "pencil";
+
+function syncMobileToolButtonIcon(toolName) {
+  const btn = document.getElementById("btnMobileTools");
+  if (!btn) return;
+  const iconEl = btn.querySelector("i, svg");
+  const iconName = MOBILE_TOOL_ICONS[toolName] || "paintbrush";
+  if (iconEl) {
+    const nextIcon = document.createElement("i");
+    nextIcon.setAttribute("data-lucide", iconName);
+    nextIcon.className = "ui-icon-sm";
+    iconEl.replaceWith(nextIcon);
+    refreshIcons(btn);
+  }
+}
+
+/**
+ * Vuelve automáticamente a la herramienta previa luego de usar el Gotero en pantallas táctiles.
+ */
+export function restorePreviousToolAfterEyedropper() {
+  const nextTool = previousToolBeforeEyedropper && previousToolBeforeEyedropper !== "eyedropper"
+    ? previousToolBeforeEyedropper
+    : "pencil";
+  setTool(nextTool);
+}
+
 /**
  * Cambia la herramienta activa, actualiza botones, opciones contextuales y estado.
  * @param {string} toolName
  */
 export function setTool(toolName) {
+  if (toolName === "eyedropper" && state.currentTool && state.currentTool !== "eyedropper") {
+    previousToolBeforeEyedropper = state.currentTool;
+  }
   if (state.freeTransform) {
     commitFreeTransform();
   }
@@ -337,6 +389,7 @@ export function setTool(toolName) {
     document.getElementById(targetId)?.classList.add("active");
   }
   updateToolOptionsUI(toolName);
+  syncMobileToolButtonIcon(toolName);
   setStatus({ key: "log.tool_selected", params: { toolKey: toolName, tool: toolName } });
 }
 

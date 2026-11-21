@@ -195,6 +195,30 @@ function openSwatchContextMenu(clientX, clientY, idx, hex) {
   menu.style.top = `${Math.min(clientY, window.innerHeight - (menu.offsetHeight || 130) - 8)}px`;
 }
 
+function bindTouchLongPress(el, onLongPress) {
+  let timer = null;
+  const clear = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  el.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    clear();
+    const cx = e.clientX;
+    const cy = e.clientY;
+    timer = setTimeout(() => {
+      timer = null;
+      if (typeof navigator !== "undefined") navigator.vibrate?.(12);
+      onLongPress(cx, cy);
+    }, 450);
+  });
+  el.addEventListener("pointerup", clear);
+  el.addEventListener("pointercancel", clear);
+  el.addEventListener("pointermove", clear);
+}
+
 /** Renderiza los swatches de la paleta activa en `#palette-bar`. */
 export function buildPaletteUI() {
   const bar = document.getElementById("palette-bar");
@@ -218,6 +242,7 @@ export function buildPaletteUI() {
     swatch.title = `[#${idx}] ${rampName} (${hexColor}) · Clic Izq: 1° | Clic Der: 2°`;
     swatch.addEventListener("click", () => { state.currentColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.swatch_p1", params: { idx, ramp: rampName, hex: hexColor } }); });
     swatch.addEventListener("contextmenu", (e) => { e.preventDefault(); state.secondaryColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.swatch_p2", params: { idx, ramp: rampName, hex: hexColor } }); });
+    bindTouchLongPress(swatch, () => { state.secondaryColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.swatch_p2", params: { idx, ramp: rampName, hex: hexColor } }); });
     attachSwatchDeleteButton(swatch, idx, hexColor);
     bar.appendChild(swatch);
   }
@@ -257,6 +282,7 @@ export function renderCustomPaletteUI() {
     if (state.secondaryColorIndex === idx) swatch.classList.add("secondary-active");
     swatch.onclick = () => { state.currentColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.free_sel", params: { hex: col } }); };
     swatch.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); openSwatchContextMenu(e.clientX, e.clientY, idx, col); });
+    bindTouchLongPress(swatch, (cx, cy) => openSwatchContextMenu(cx, cy, idx, col));
     attachSwatchDeleteButton(swatch, idx, col);
     container.appendChild(swatch);
   }
@@ -266,17 +292,21 @@ export function renderCustomPaletteUI() {
 export function renderActiveColorsIndicator() {
   const pEl = document.getElementById("primaryColorPreview");
   const sEl = document.getElementById("secondaryColorPreview");
+  const pCol = state.paletteMap?.[state.currentColorIndex];
+  const sIdx = state.secondaryColorIndex ?? 0;
+  const sCol = sIdx !== 0 ? state.paletteMap?.[sIdx] : null;
   if (pEl) {
-    const pCol = state.paletteMap?.[state.currentColorIndex];
     pEl.classList.toggle("is-transparent", !pCol || state.currentColorIndex === 0);
     pEl.style.backgroundColor = pCol && state.currentColorIndex !== 0 ? pCol : "";
   }
   if (sEl) {
-    const sIdx = state.secondaryColorIndex ?? 0;
-    const sCol = sIdx !== 0 ? state.paletteMap?.[sIdx] : null;
     sEl.classList.toggle("is-transparent", !sCol);
     sEl.style.backgroundColor = sCol || "";
   }
+  const mP1 = document.getElementById("mobileP1Dot");
+  const mP2 = document.getElementById("mobileP2Dot");
+  if (mP1) mP1.style.backgroundColor = pCol && state.currentColorIndex !== 0 ? pCol : "transparent";
+  if (mP2) mP2.style.backgroundColor = sCol || "transparent";
 }
 
 /** Intercambia el color primario (1°) y secundario (2°) si el secundario no es transparente. */
