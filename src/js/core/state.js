@@ -176,6 +176,7 @@ export const state = {
   snapGuides: null, // { x?: number, y?: number } líneas guía al hacer snap con Ctrl
   zoom: 1,
   showGrid: true,
+  showCenterGuides: true,
   showRulers: true,
   showGridCoords: false,
   gridCoordsConfig: {

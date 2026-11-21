@@ -36,6 +36,9 @@ uploads/
 *.png
 *.webp
 *.gif
+!src/assets/*.png
+!src/assets/*.webp
+!src/assets/*.gif
 *.txt
 
 # Variables de entorno y claves 

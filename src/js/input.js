@@ -31,6 +31,27 @@ function wantsSymmetryAxisDrag(e) {
   return Boolean(e?.altKey && !e?.ctrlKey && !e?.shiftKey && !ALT_SELECTION_TOOLS.has(state.currentTool));
 }
 
+function findRulerGuideHit(e, canvas) {
+  const guides = state.rulerGuides;
+  if (!Array.isArray(guides) || !guides.length || !canvas) return null;
+  const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
+  const { w } = getGridDims();
+  const cellPx = Math.max(1, (canvas.clientWidth || w) / Math.max(1, w));
+  const tol = Math.max(0.35, 8 / cellPx);
+
+  let bestIndex = -1;
+  let bestDist = Infinity;
+  for (let i = 0; i < guides.length; i++) {
+    const g = guides[i];
+    const dist = g.axis === "v" ? Math.abs(rawX - g.pos) : Math.abs(rawY - g.pos);
+    if (dist <= tol && dist < bestDist) {
+      bestDist = dist;
+      bestIndex = i;
+    }
+  }
+  return bestIndex !== -1 ? { index: bestIndex, guide: guides[bestIndex] } : null;
+}
+
 function wantsRegionPreview() {
   return Boolean(state.showPixelCursor) && REGION_TOOLS.has(state.currentTool) && state.pixelCursorConfig?.fillPreview !== false;
 }
@@ -113,6 +134,30 @@ function handleCanvasMouseDown(e, canvas, ptr) {
     canvas.style.cursor = "grabbing";
     return;
   }
+  if (
+    e.button === 0 &&
+    e.altKey &&
+    !e.ctrlKey &&
+    !e.shiftKey &&
+    !state.isMovingSymmetryAxis &&
+    !ALT_SELECTION_TOOLS.has(state.currentTool)
+  ) {
+    const hitGuide = findRulerGuideHit(e, canvas);
+    if (hitGuide) {
+      e.preventDefault();
+      ptr.isMouseDown = false;
+      ptr.activeStrategy = null;
+      state.activeGuideDrag = {
+        axis: hitGuide.guide.axis,
+        pos: hitGuide.guide.pos,
+        valid: true,
+        editingIndex: hitGuide.index,
+      };
+      canvas.style.cursor = hitGuide.guide.axis === "h" ? "row-resize" : "col-resize";
+      renderAll();
+      return;
+    }
+  }
   if (e.button === 0 && wantsSymmetryAxisDrag(e)) {
     e.preventDefault();
     ptr.isDraggingSymmetry = true;
@@ -157,7 +202,15 @@ function handleCanvasMouseMove(e, canvas, ptr) {
     if (ptr.isMouseDown && ptr.mouseButton !== 1) ptr.ftController.onMove({ rawX, rawY, event: e });
     return;
   }
-  const toolCursor = wantsSymmetryAxisDrag(e) ? "move" : getToolCursorCss(state.currentTool);
+  const altGuideHover =
+    e.altKey && !e.ctrlKey && !e.shiftKey && !state.isMovingSymmetryAxis && !ALT_SELECTION_TOOLS.has(state.currentTool)
+      ? findRulerGuideHit(e, canvas)
+      : null;
+  const toolCursor = altGuideHover
+    ? (altGuideHover.guide.axis === "h" ? "row-resize" : "col-resize")
+    : wantsSymmetryAxisDrag(e)
+      ? "move"
+      : getToolCursorCss(state.currentTool);
   if (canvas.style.cursor !== toolCursor) canvas.style.cursor = toolCursor;
   if (state.currentTool === "line" && TOOL_STRATEGIES.line?.isBending?.()) {
     TOOL_STRATEGIES.line.onMove({ x, y, button: 0, event: e });
@@ -189,11 +242,20 @@ function handleWindowMouseUp(e, canvas, ptr) {
   if (state.activeGuideDrag) {
     const drag = state.activeGuideDrag;
     state.activeGuideDrag = null;
-    if (drag.valid) {
+    if (drag.editingIndex != null && Array.isArray(state.rulerGuides) && state.rulerGuides[drag.editingIndex]) {
+      if (drag.valid) {
+        state.rulerGuides[drag.editingIndex].pos = drag.pos;
+        setStatus({ key: "status.guide_moved", params: { axis: drag.axis === "v" ? "X" : "Y", pos: drag.pos } });
+      } else {
+        state.rulerGuides.splice(drag.editingIndex, 1);
+        setStatus({ key: "status.guide_removed" });
+      }
+    } else if (drag.valid) {
       if (!Array.isArray(state.rulerGuides)) state.rulerGuides = [];
       state.rulerGuides.push({ id: Date.now() + Math.random(), axis: drag.axis, pos: drag.pos });
       setStatus({ key: "status.guide_added", params: { axis: drag.axis === "v" ? "X" : "Y", pos: drag.pos } });
     }
+    canvas.style.cursor = getToolCursorCss(state.currentTool);
     renderAll();
     return;
   }
@@ -243,6 +305,9 @@ export function setupMouseEvents(canvas) {
       const snapped = e.altKey ? Math.round(raw * 2) / 2 : Math.round(raw);
       drag.pos = Math.max(0, Math.min(limit, snapped));
       drag.valid = raw >= 0 && raw <= limit;
+      if (drag.editingIndex != null && drag.valid && state.rulerGuides?.[drag.editingIndex]) {
+        state.rulerGuides[drag.editingIndex].pos = drag.pos;
+      }
       renderAll();
       return;
     }

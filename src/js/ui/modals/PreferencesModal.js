@@ -139,6 +139,10 @@ export function renderPreferencesModal() {
               <span data-i18n="pref.show_grid_html">${escapeHtml(i18n.t("pref.show_grid_html"))}</span>
             </label>
             <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="chkPrefShowCenterGuides" />
+              <span data-i18n="pref.show_center_guides">${escapeHtml(i18n.t("pref.show_center_guides"))}</span>
+            </label>
+            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px;">
               <input type="checkbox" id="chkPrefShowRulers" />
               <span data-i18n="pref.show_rulers">${escapeHtml(i18n.t("pref.show_rulers"))}</span>
             </label>

@@ -180,6 +180,7 @@ export function registerAppActions() {
     resetSymmetryAxes: ui.resetSymmetryAxes,
     clearRulerGuides: ui.clearRulerGuides,
     toggleGrid: ui.toggleGrid,
+    toggleCenterGuides: ui.toggleCenterGuides,
     toggleRulers: ui.toggleRulers,
     toggleGridCoords: ui.toggleGridCoords,
     togglePixelCursor: ui.togglePixelCursor,

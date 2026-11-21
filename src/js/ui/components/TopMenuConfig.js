@@ -107,6 +107,7 @@ export const TOP_MENU_ITEMS = [
     triggerKey: "menu.view",
     items: [
       { id: "menuGrid", active: true, icon: "grid-3x3", labelKey: "menu.view.grid", action: "toggleGrid", shortcut: "G" },
+      { id: "menuCenterGuides", active: true, icon: "crosshair", labelKey: "menu.view.center_guides", action: "toggleCenterGuides" },
       { id: "menuRulers", active: true, icon: "ruler", labelKey: "menu.view.rulers", action: "toggleRulers" },
       { id: "menuGridCoords", active: false, icon: "locate-fixed", labelKey: "menu.view.grid_coords", action: "toggleGridCoords" },
       { id: "menuPixelCursor", icon: "crosshair", labelKey: "menu.view.pixel_cursor", action: "togglePixelCursor", shortcut: "V" },

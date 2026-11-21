@@ -13,6 +13,7 @@ export const USER_PREFS_STORAGE_KEY = "spritium_user_prefs_v1";
 export const DEFAULT_USER_PREFS = Object.freeze({
   showPixelCursor: false,
   showGrid: true,
+  showCenterGuides: true,
   showRulers: true,
   showGridCoords: false,
   pixelCursorConfig: Object.freeze({
@@ -82,6 +83,7 @@ export function normalizeUserPreferences(raw) {
   return {
     showPixelCursor: typeof raw?.showPixelCursor === "boolean" ? raw.showPixelCursor : DEFAULT_USER_PREFS.showPixelCursor,
     showGrid: typeof raw?.showGrid === "boolean" ? raw.showGrid : DEFAULT_USER_PREFS.showGrid,
+    showCenterGuides: typeof raw?.showCenterGuides === "boolean" ? raw.showCenterGuides : DEFAULT_USER_PREFS.showCenterGuides,
     showRulers: typeof raw?.showRulers === "boolean" ? raw.showRulers : DEFAULT_USER_PREFS.showRulers,
     showGridCoords: typeof raw?.showGridCoords === "boolean" ? raw.showGridCoords : DEFAULT_USER_PREFS.showGridCoords,
     pixelCursorConfig: {
@@ -129,6 +131,7 @@ export function getUserPreferencesPayload() {
   return normalizeUserPreferences({
     showPixelCursor: state.showPixelCursor,
     showGrid: state.showGrid,
+    showCenterGuides: state.showCenterGuides,
     showRulers: state.showRulers,
     showGridCoords: state.showGridCoords,
     pixelCursorConfig: state.pixelCursorConfig,
@@ -145,6 +148,7 @@ export function syncViewTogglesUI() {
     document.getElementById(id)?.classList.toggle("active", Boolean(active));
   };
   toggleActive("menuGrid", state.showGrid !== false);
+  toggleActive("menuCenterGuides", state.showCenterGuides !== false);
   toggleActive("menuRulers", state.showRulers !== false);
   toggleActive("menuGridCoords", Boolean(state.showGridCoords));
   toggleActive("menuPixelCursor", Boolean(state.showPixelCursor));
@@ -171,6 +175,7 @@ export function applyUserPreferencesObject(raw, { persist = true } = {}) {
   const prefs = normalizeUserPreferences(raw);
   state.showPixelCursor = prefs.showPixelCursor;
   state.showGrid = prefs.showGrid;
+  state.showCenterGuides = prefs.showCenterGuides;
   state.showRulers = prefs.showRulers;
   state.showGridCoords = prefs.showGridCoords;
   state.pixelCursorConfig = { ...prefs.pixelCursorConfig };
@@ -278,6 +283,7 @@ export function syncPreferencesModalControls() {
 
   // 3. Lienzo y Guías
   setChecked("chkPrefShowGrid", state.showGrid !== false);
+  setChecked("chkPrefShowCenterGuides", state.showCenterGuides !== false);
   setChecked("chkPrefShowRulers", state.showRulers !== false);
   setChecked("chkPrefShowGridCoords", Boolean(state.showGridCoords));
   const gc = state.gridCoordsConfig || DEFAULT_USER_PREFS.gridCoordsConfig;
@@ -387,6 +393,7 @@ export function initPreferencesModal() {
   bindCheck("chkPrefFillPreview", (v) => { state.pixelCursorConfig.fillPreview = v; });
   bindCheck("chkPrefCenterDot", (v) => { state.pixelCursorConfig.showCenterDot = v; });
   bindCheck("chkPrefShowGrid", (v) => { state.showGrid = v; });
+  bindCheck("chkPrefShowCenterGuides", (v) => { state.showCenterGuides = v; renderRulers(); });
   bindCheck("chkPrefShowRulers", (v) => { state.showRulers = v; });
   bindCheck("chkPrefShowGridCoords", (v) => { state.showGridCoords = v; });
   bindCheck("chkPrefGridCoordsGuides", (v) => {

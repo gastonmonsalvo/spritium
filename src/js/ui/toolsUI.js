@@ -613,6 +613,18 @@ export function toggleRulers() {
 }
 
 /**
+ * Muestra u oculta las líneas guía centrales del lienzo (marcas rojas del punto medio).
+ */
+export function toggleCenterGuides() {
+  state.showCenterGuides = state.showCenterGuides === false;
+  saveUserPreferences();
+  syncViewTogglesUI();
+  renderAll();
+  renderRulers();
+  setStatus({ key: state.showCenterGuides ? "status.center_guides_on" : "status.center_guides_off" });
+}
+
+/**
  * Muestra u oculta las coordenadas de cuadrícula bajo el cursor.
  */
 export function toggleGridCoords() {

@@ -138,29 +138,31 @@ export function renderRulers() {
   }
 
   // Marca central rojiza ligeramente más larga en las reglas para ubicar el medio del lienzo
-  const centerTickColor = "rgba(239, 68, 68, 0.8)";
-  if (w >= 4) {
-    const midCoordX = w % 2 === 0 ? w / 2 : Math.floor(w / 2) + 0.5;
-    tCtx.strokeStyle = centerTickColor;
-    tCtx.lineWidth = 1.5;
-    for (let tx = 0; tx < tilesX; tx++) {
-      const pos = Math.floor((tx * w + midCoordX) * cellPx) + 0.5;
-      tCtx.beginPath();
-      tCtx.moveTo(pos, thickness);
-      tCtx.lineTo(pos, thickness - 13);
-      tCtx.stroke();
+  if (state.showCenterGuides !== false) {
+    const centerTickColor = "rgba(239, 68, 68, 0.8)";
+    if (w >= 4) {
+      const midCoordX = w % 2 === 0 ? w / 2 : Math.floor(w / 2) + 0.5;
+      tCtx.strokeStyle = centerTickColor;
+      tCtx.lineWidth = 1.5;
+      for (let tx = 0; tx < tilesX; tx++) {
+        const pos = Math.floor((tx * w + midCoordX) * cellPx) + 0.5;
+        tCtx.beginPath();
+        tCtx.moveTo(pos, thickness);
+        tCtx.lineTo(pos, thickness - 13);
+        tCtx.stroke();
+      }
     }
-  }
-  if (h >= 4) {
-    const midCoordY = h % 2 === 0 ? h / 2 : Math.floor(h / 2) + 0.5;
-    lCtx.strokeStyle = centerTickColor;
-    lCtx.lineWidth = 1.5;
-    for (let ty = 0; ty < tilesY; ty++) {
-      const pos = Math.floor((ty * h + midCoordY) * cellPx) + 0.5;
-      lCtx.beginPath();
-      lCtx.moveTo(thickness, pos);
-      lCtx.lineTo(thickness - 13, pos);
-      lCtx.stroke();
+    if (h >= 4) {
+      const midCoordY = h % 2 === 0 ? h / 2 : Math.floor(h / 2) + 0.5;
+      lCtx.strokeStyle = centerTickColor;
+      lCtx.lineWidth = 1.5;
+      for (let ty = 0; ty < tilesY; ty++) {
+        const pos = Math.floor((ty * h + midCoordY) * cellPx) + 0.5;
+        lCtx.beginPath();
+        lCtx.moveTo(thickness, pos);
+        lCtx.lineTo(thickness - 13, pos);
+        lCtx.stroke();
+      }
     }
   }
 
