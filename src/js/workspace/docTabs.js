@@ -241,10 +241,6 @@ export function markActiveTabSaved() {
  * @param {string} tabId
  */
 export function closeDocTab(tabId) {
-  if (tabs.length <= 1) {
-    setStatus({ key: "log.tab_min_one" }, true);
-    return;
-  }
   const idx = tabs.findIndex((t) => t.id === tabId);
   if (idx === -1) return;
 
@@ -255,6 +251,12 @@ export function closeDocTab(tabId) {
     typeof window.confirm === "function" &&
     !window.confirm(i18n.t("tabs.confirm_close", { name: targetTab.name }))
   ) {
+    return;
+  }
+
+  if (tabs.length <= 1) {
+    document.body?.classList.add("is-launching");
+    document.getElementById("launcherOverlay")?.classList.remove("hidden");
     return;
   }
 
@@ -324,9 +326,7 @@ export function renderDocTabsUI() {
 
     pill.appendChild(label);
     pill.appendChild(sizeBadge);
-    if (tabs.length > 1) {
-      pill.appendChild(closeBtn);
-    }
+    pill.appendChild(closeBtn);
     list.appendChild(pill);
   }
 }

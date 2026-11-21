@@ -136,11 +136,8 @@ function handleCanvasMouseDown(e, canvas, ptr) {
   }
   if (
     e.button === 0 &&
-    e.altKey &&
-    !e.ctrlKey &&
-    !e.shiftKey &&
     !state.isMovingSymmetryAxis &&
-    !ALT_SELECTION_TOOLS.has(state.currentTool)
+    (state.currentTool === "move" || (e.altKey && !e.ctrlKey && !e.shiftKey && !ALT_SELECTION_TOOLS.has(state.currentTool)))
   ) {
     const hitGuide = findRulerGuideHit(e, canvas);
     if (hitGuide) {
@@ -374,19 +371,26 @@ export function setupMouseEvents(canvas) {
   window.addEventListener("pointercancel", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
   window.addEventListener("blur", () => { touchPointers.clear(); pinchState = null; ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
 
-  // Arrastrar desde #rulerTop o #rulerLeft para crear guías de referencia (clic derecho quita la guía cercana)
+  // Arrastrar desde #rulerTop o #rulerLeft para crear/mover guías (clic derecho o soltar fuera quita la guía)
   const bindRulerGuideEvents = (rulerId, axis) => {
     const el = document.getElementById(rulerId);
     if (!el) return;
     el.style.cursor = axis === "h" ? "row-resize" : "col-resize";
     el.style.touchAction = "none";
+    const findGuideAlongRuler = (e) => {
+      const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
+      const { w } = getGridDims();
+      const cellPx = Math.max(1, (canvas.clientWidth || w) / Math.max(1, w));
+      const tol = Math.max(0.5, 10 / cellPx);
+      const targetAxis = axis === "h" ? "v" : "h";
+      const targetPos = axis === "h" ? rawX : rawY;
+      return (state.rulerGuides || []).findIndex(
+        (g) => g.axis === targetAxis && Math.abs(g.pos - targetPos) <= tol,
+      );
+    };
     el.addEventListener("pointerdown", (e) => {
       if (e.button === 2) {
-        const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
-        const targetPos = axis === "h" ? rawY : rawX;
-        const idx = (state.rulerGuides || []).findIndex(
-          (g) => g.axis === (axis === "h" ? "v" : "h") && Math.abs(g.pos - targetPos) <= 2,
-        );
+        const idx = findGuideAlongRuler(e);
         if (idx !== -1) {
           state.rulerGuides.splice(idx, 1);
           renderAll();
@@ -396,7 +400,13 @@ export function setupMouseEvents(canvas) {
       }
       if (e.button !== 0) return;
       e.preventDefault();
-      state.activeGuideDrag = { axis, pos: 0, valid: false };
+      const hitIdx = findGuideAlongRuler(e);
+      if (hitIdx !== -1) {
+        const g = state.rulerGuides[hitIdx];
+        state.activeGuideDrag = { axis: g.axis, pos: g.pos, valid: true, editingIndex: hitIdx };
+      } else {
+        state.activeGuideDrag = { axis, pos: 0, valid: false };
+      }
     });
   };
   bindRulerGuideEvents("rulerTop", "h");
