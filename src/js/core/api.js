@@ -15,6 +15,11 @@ import {
 } from "./imageProcessor.js";
 import { snapMessyPixelArt } from "./pixelSnapper.js";
 import { MAX_GRID_DIM } from "./stateStore.js";
+import {
+  resolveImportTargetDims,
+  buildSpriteHistoryList,
+  buildUploadedAssetResult,
+} from "./apiCore.js";
 
 const LOCAL_SPRITES_KEY = "spritium_local_sprites_v1";
 
@@ -29,17 +34,8 @@ function readLocalSprites() {
 
 function saveSpriteToLocalHistory(name, size, grid, palette) {
   try {
-    const cleanName = `${(name || "sprite").trim().replace(/\s+/g, "_")}_${size}x${size}.png`;
-    const list = readLocalSprites().filter((s) => s.name !== cleanName);
-    list.unshift({
-      name: cleanName,
-      category: `${size}x${size}`,
-      path: `local://${cleanName}`,
-      size,
-      grid,
-      palette,
-    });
-    localStorage.setItem(LOCAL_SPRITES_KEY, JSON.stringify(list.slice(0, 10)));
+    const next = buildSpriteHistoryList(readLocalSprites(), { name, size, grid, palette }, 10);
+    localStorage.setItem(LOCAL_SPRITES_KEY, JSON.stringify(next));
   } catch {
     // Ignorar si se supera la cuota de localStorage
   }
@@ -91,8 +87,10 @@ export async function requestUploadImage(
   let imgData;
   let width;
   let height;
-  const resolvedW = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetWidth) || Number(targetSize) || 64)));
-  const resolvedH = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetHeight) || Number(targetSize) || 64)));
+  const { w: resolvedW, h: resolvedH } = resolveImportTargetDims(
+    { targetSize, targetWidth, targetHeight },
+    MAX_GRID_DIM,
+  );
 
   if (pixelSnapper) {
     const raw = await loadRawSpriteImageData(file, null, null);
@@ -124,41 +122,24 @@ export async function requestUploadImage(
     height = raw.height;
   }
 
-  const size = Math.max(width, height);
-  const themeKey = (paletteTheme || "original").toLowerCase().trim();
-
-  let result;
-  let quantized = false;
-
-  if (customPalette && typeof customPalette === "object") {
-    result = quantizeImageDataToPalette(imgData, customPalette, {
-      alphaThreshold: 16,
-      dither: Boolean(dither),
-    });
-    quantized = true;
-  } else if (quantize && themeKey !== "original" && THEME_PALETTES[themeKey]) {
-    result = quantizeImageDataToPalette(imgData, THEME_PALETTES[themeKey].colors, {
-      alphaThreshold: 16,
-      dither: Boolean(dither),
-    });
-    quantized = true;
-  } else {
-    result = imageDataToDynamicGrid(imgData, 16);
-  }
-
-  if (saveToHistory) {
-    saveSpriteToLocalHistory(assetName, size, result.grid, result.paletteMap);
-  }
-
-  return {
-    size,
+  const asset = buildUploadedAssetResult({
+    imgData,
     width,
     height,
-    grid: result.grid,
-    palette: result.paletteMap,
-    quantized,
-    theme: quantized ? themeKey : "original",
-  };
+    paletteTheme,
+    quantize,
+    dither,
+    customPalette,
+    themePalettes: THEME_PALETTES,
+    quantizeFn: quantizeImageDataToPalette,
+    extractFn: imageDataToDynamicGrid,
+  });
+
+  if (saveToHistory) {
+    saveSpriteToLocalHistory(assetName, asset.size, asset.grid, asset.palette);
+  }
+
+  return asset;
 }
 
 /**
