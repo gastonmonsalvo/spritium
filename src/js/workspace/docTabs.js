@@ -12,6 +12,14 @@ import { applyZoom } from "../canvas/canvas.js";
 import { setTiledMode, setStatus, updateToolOptionsUI } from "../ui/index.js";
 import { highlightCurrentSwatch } from "./paletteManager.js";
 import { i18n } from "../i18n/I18nService.js";
+import {
+  normalizeDocTabName,
+  captureRuntimeExtrasFromState,
+  applyTabExtrasToState,
+  isInitialPristineTab,
+  computeTabClosePlan,
+  formatDocTabViewModel,
+} from "./docTabsCore.js";
 
 if (typeof window !== "undefined") {
   i18n.addEventListener("langchange", () => {
@@ -28,26 +36,7 @@ function nextTabId() {
 }
 
 function captureRuntimeExtras() {
-  return {
-    zoom: state.zoom || 1,
-    tiledMode: state.tiledMode || "none",
-    currentColorIndex: state.currentColorIndex ?? 1,
-    secondaryColorIndex: state.secondaryColorIndex ?? 0,
-    sourceImageFile: state.sourceImageFile || null,
-    sourceImportOptions: state.sourceImportOptions ? { ...state.sourceImportOptions } : null,
-    resBaseSnapshot: state.resBaseSnapshot || null,
-    originalImport: state.originalImport || null,
-    hasCustomReducedPalette: Boolean(state.hasCustomReducedPalette),
-    tilesets: cloneTilesets(state.tilesets),
-    activeTilesetId: state.activeTilesetId || null,
-    activeTileIndex: state.activeTileIndex ?? 1,
-    tilemapMode: state.tilemapMode || "tiles",
-    tileFlipH: Boolean(state.tileFlipH),
-    tileFlipV: Boolean(state.tileFlipV),
-    tileRot: Number(state.tileRot || 0),
-    undoStack: Array.isArray(state.undoStack) ? [...state.undoStack] : [],
-    redoStack: Array.isArray(state.redoStack) ? [...state.redoStack] : [],
-  };
+  return captureRuntimeExtrasFromState(state, cloneTilesets);
 }
 
 /**
@@ -94,14 +83,7 @@ export function initDocTabs() {
  * @returns {string} ID de la nueva pestaña
  */
 export function openNewDocTab(name = "nuevo_proyecto") {
-  const onlyInitialPristine =
-    tabs.length === 1 &&
-    !tabs[0].dirty &&
-    tabs[0].name === "nuevo_proyecto" &&
-    (!state.undoStack || state.undoStack.length === 0) &&
-    !state.isDirtySinceImport;
-
-  if (onlyInitialPristine) {
+  if (isInitialPristineTab(tabs, state)) {
     tabs[0].name = name;
     tabs[0].gridSize = state.gridSize;
     tabs[0].gridWidth = state.gridWidth || state.gridSize;
@@ -191,24 +173,7 @@ export function switchToTab(tabId) {
     const assetEl = document.getElementById("assetName");
     if (assetEl) assetEl.value = target.name;
   }
-  state.undoStack = Array.isArray(target.undoStack) ? [...target.undoStack] : [];
-  state.redoStack = Array.isArray(target.redoStack) ? [...target.redoStack] : [];
-  state.sourceImageFile = target.sourceImageFile || null;
-  state.sourceImportOptions = target.sourceImportOptions ? { ...target.sourceImportOptions } : null;
-  state.resBaseSnapshot = target.resBaseSnapshot || null;
-  state.originalImport = target.originalImport || null;
-  state.hasCustomReducedPalette = Boolean(target.hasCustomReducedPalette);
-  if (Array.isArray(target.tilesets)) {
-    state.tilesets = cloneTilesets(target.tilesets);
-  }
-  state.activeTilesetId = target.activeTilesetId || state.tilesets[0]?.id || null;
-  state.activeTileIndex = target.activeTileIndex ?? 1;
-  state.tilemapMode = target.tilemapMode || "tiles";
-  state.tileFlipH = Boolean(target.tileFlipH);
-  state.tileFlipV = Boolean(target.tileFlipV);
-  state.tileRot = Number(target.tileRot || 0);
-  state.currentColorIndex = target.currentColorIndex ?? 1;
-  state.secondaryColorIndex = target.secondaryColorIndex ?? 0;
+  applyTabExtrasToState(target, state, cloneTilesets);
   setTiledMode(target.tiledMode || "none");
   applyZoom(target.zoom || 1);
   highlightCurrentSwatch();
@@ -241,10 +206,10 @@ export function markActiveTabSaved() {
  * @param {string} tabId
  */
 export function closeDocTab(tabId) {
-  const idx = tabs.findIndex((t) => t.id === tabId);
-  if (idx === -1) return;
+  const plan = computeTabClosePlan(tabs, activeTabId, tabId);
+  if (plan.action === "noop") return;
 
-  const targetTab = tabs[idx];
+  const targetTab = tabs[plan.index];
   if (
     targetTab.dirty &&
     typeof window !== "undefined" &&
@@ -254,7 +219,7 @@ export function closeDocTab(tabId) {
     return;
   }
 
-  if (tabs.length <= 1) {
+  if (plan.action === "launch") {
     if (typeof document !== "undefined") {
       document.body?.classList.add("is-launching");
       document.getElementById("launcherOverlay")?.classList.remove("hidden");
@@ -262,13 +227,11 @@ export function closeDocTab(tabId) {
     return;
   }
 
-  const wasActive = tabId === activeTabId;
-  tabs.splice(idx, 1);
+  tabs.splice(plan.index, 1);
 
-  if (wasActive) {
-    const nextTab = tabs[Math.min(idx, tabs.length - 1)];
+  if (plan.wasActive && plan.nextTabId) {
     activeTabId = null;
-    switchToTab(nextTab.id);
+    switchToTab(plan.nextTabId);
   } else {
     renderDocTabsUI();
   }
@@ -281,7 +244,7 @@ export function closeDocTab(tabId) {
 export function renameActiveDocTab(name) {
   const tab = tabs.find((t) => t.id === activeTabId);
   if (!tab) return;
-  tab.name = (name || "").trim() || "nuevo_proyecto";
+  tab.name = normalizeDocTabName(name);
   renderDocTabsUI();
 }
 
@@ -295,19 +258,18 @@ export function renderDocTabsUI() {
   list.innerHTML = "";
 
   for (const tab of tabs) {
-    const tw = tab.gridWidth || tab.gridSize || state.gridWidth || state.gridSize;
-    const th = tab.gridHeight || tab.gridSize || state.gridHeight || state.gridSize;
+    const vm = formatDocTabViewModel(tab, tab.id === activeTabId, state);
     const pill = document.createElement("div");
-    pill.className = `doc-tab${tab.id === activeTabId ? " active" : ""}`;
-    pill.title = `${tab.name} (${tw}×${th})`;
+    pill.className = `doc-tab${vm.isActive ? " active" : ""}`;
+    pill.title = vm.title;
 
     const label = document.createElement("span");
     label.className = "doc-tab-label";
-    label.textContent = tab.dirty ? `• ${tab.name}` : `${tab.name}`;
+    label.textContent = vm.labelText;
 
     const sizeBadge = document.createElement("span");
     sizeBadge.className = "doc-tab-size";
-    sizeBadge.textContent = tw === th ? `${tw}` : `${tw}×${th}`;
+    sizeBadge.textContent = vm.sizeText;
 
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";

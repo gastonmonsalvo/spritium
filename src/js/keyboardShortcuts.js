@@ -221,36 +221,31 @@ function handleNavigationAndTools(e, key, isMod) {
   else if (e.key === "]" && !isMod) { e.preventDefault(); setBrushSize((state.brushSize || 1) + 1); }
 }
 
-const KONAMI_SEQUENCE = [
-  "arrowup", "arrowup", "arrowdown", "arrowdown",
-  "arrowleft", "arrowright", "arrowleft", "arrowright",
-  "b", "a",
-];
-let konamiIndex = 0;
-let konamiLastKeyAt = 0;
+const WIN98_CODE_SEQUENCE = ["w", "i", "n", "9", "8"];
+let win98CodeIndex = 0;
+let win98LastKeyAt = 0;
 
-function handleKonamiKey(e) {
+function handleWin98CodeKey(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) {
-    konamiIndex = 0;
+    win98CodeIndex = 0;
     return false;
   }
   const now = Date.now();
-  if (now - konamiLastKeyAt > 2500) konamiIndex = 0;
-  konamiLastKeyAt = now;
+  if (now - win98LastKeyAt > 2500) win98CodeIndex = 0;
+  win98LastKeyAt = now;
 
   const key = e.key.toLowerCase();
-  if (key === KONAMI_SEQUENCE[konamiIndex]) {
-    konamiIndex += 1;
-    if (konamiIndex === KONAMI_SEQUENCE.length) {
-      konamiIndex = 0;
+  if (key === WIN98_CODE_SEQUENCE[win98CodeIndex]) {
+    win98CodeIndex += 1;
+    if (win98CodeIndex === WIN98_CODE_SEQUENCE.length) {
+      win98CodeIndex = 0;
       e.preventDefault();
       toggleWin98Theme();
       return true;
     }
     return false;
   }
-  // Si repite ↑ al inicio de ↑↑↓↓..., conservar prefijo válido
-  konamiIndex = key === KONAMI_SEQUENCE[0] ? (konamiIndex === 2 ? 2 : 1) : 0;
+  win98CodeIndex = key === WIN98_CODE_SEQUENCE[0] ? 1 : 0;
   return false;
 }
 
@@ -264,7 +259,7 @@ export function setupKeyboardShortcuts() {
 
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT" || e.target.isContentEditable) return;
-    if (handleKonamiKey(e)) return;
+    if (handleWin98CodeKey(e)) return;
     if (!document.getElementById("launcherOverlay")?.classList.contains("hidden")) return;
     if (handleSpecialKeyAndModes(e) || handleDeleteKey(e)) return;
 

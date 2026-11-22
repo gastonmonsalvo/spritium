@@ -17,6 +17,23 @@ import { setStatus, refreshIcons } from "../ui/status.js";
 import { selectFrame, syncActiveFrame, renderFramesUI, addFrame } from "./frames.js";
 import { renderLayersUI, syncActiveLayerGrid } from "./layers.js";
 import { reconcileLayerTilemap } from "./tilemap.js";
+import {
+  celKey,
+  getSelectedCelsListCore,
+  selectCelRectCore,
+  computeTagRange,
+  createFrameTagRecord,
+  removeFrameTagCore,
+  resolveInlineRenameTagId,
+  linkCelLayers,
+  linkCelsBatchCore,
+  unlinkCelsBatchCore,
+  buildCelClipboardPayload,
+  pasteCelClipboardCore,
+  clearCelsCore,
+} from "./timelineTagsAndCelsCore.js";
+
+export { celKey };
 
 let celClipboard = null;
 let celContextTarget = null;
@@ -41,42 +58,11 @@ export function setCelAnchor(next) {
 }
 
 /**
- * Genera la clave única `"layerIdx:frameIdx"` para identificar una celda en el Set de selección.
- * @param {number} layerIdx
- * @param {number} frameIdx
- * @returns {string}
- */
-export function celKey(layerIdx, frameIdx) {
-  return `${layerIdx}:${frameIdx}`;
-}
-
-/**
  * Devuelve la lista ordenada de celdas `(layerIdx, frameIdx)` actualmente seleccionadas.
  * @returns {Array<{layerIdx: number, frameIdx: number}>}
  */
 export function getSelectedCelsList() {
-  const frameCount = state.frames?.length || 0;
-  const maxLayers = Math.max(
-    state.layers?.length || 0,
-    ...(state.frames || []).map((fr) => fr.layers?.length || 0),
-  );
-  const out = [];
-  for (const key of selectedCels) {
-    const [lStr, fStr] = key.split(":");
-    const layerIdx = Number(lStr);
-    const frameIdx = Number(fStr);
-    if (
-      Number.isInteger(layerIdx) &&
-      Number.isInteger(frameIdx) &&
-      layerIdx >= 0 &&
-      layerIdx < maxLayers &&
-      frameIdx >= 0 &&
-      frameIdx < frameCount
-    ) {
-      out.push({ layerIdx, frameIdx });
-    }
-  }
-  return out;
+  return getSelectedCelsListCore(selectedCels, state.frames || [], state.layers || []);
 }
 
 /**
@@ -98,16 +84,7 @@ export function selectSingleCel(layerIdx, frameIdx) {
  * @param {number} f1
  */
 export function selectCelRect(l0, f0, l1, f1) {
-  selectedCels.clear();
-  const minL = Math.min(l0, l1);
-  const maxL = Math.max(l0, l1);
-  const minF = Math.min(f0, f1);
-  const maxF = Math.max(f0, f1);
-  for (let l = minL; l <= maxL; l++) {
-    for (let f = minF; f <= maxF; f++) {
-      selectedCels.add(celKey(l, f));
-    }
-  }
+  selectCelRectCore(selectedCels, l0, f0, l1, f1);
 }
 /**
  * Abre el modal para crear un Frame Tag sobre el rango especificado o seleccionado.
@@ -129,8 +106,7 @@ export function createFrameTagDialog(fromOverride = null, toOverride = null) {
     : getSelectedFrameRange()
       ? getSelectedFrameRange().to
       : rawFrom;
-  const from = Math.max(0, Math.min(count - 1, Math.min(rawFrom, rawTo)));
-  const to = Math.max(from, Math.min(count - 1, Math.max(rawFrom, rawTo)));
+  const { from, to } = computeTagRange(rawFrom, rawTo, count);
 
   const fromEl = document.getElementById("tagFromInput");
   const toEl = document.getElementById("tagToInput");
@@ -166,28 +142,21 @@ export function closeTagModal() {
 export function confirmCreateFrameTag() {
   const count = state.frames.length;
   const name = (document.getElementById("tagNameInput")?.value || "").trim();
-  if (!name) {
+  const rawFrom = Number(document.getElementById("tagFromInput")?.value || 1) - 1;
+  const rawTo = Number(document.getElementById("tagToInput")?.value || rawFrom + 1) - 1;
+  const color = document.getElementById("tagColorInput")?.value || "#2563eb";
+  const record = createFrameTagRecord({ name, color, rawFrom, rawTo, framesCount: count });
+  if (!record) {
     setStatus({ key: "log.tag_name_req" }, true);
     return;
   }
-  const rawFrom = Number(document.getElementById("tagFromInput")?.value || 1) - 1;
-  const rawTo = Number(document.getElementById("tagToInput")?.value || rawFrom + 1) - 1;
-  const from = Math.max(0, Math.min(count - 1, rawFrom));
-  const to = Math.max(from, Math.min(count - 1, rawTo));
-  const color = document.getElementById("tagColorInput")?.value || "#2563eb";
 
   if (!Array.isArray(state.frameTags)) state.frameTags = [];
-  state.frameTags.push({
-    id: `tag_${Date.now()}`,
-    name: name.slice(0, 20),
-    color,
-    from,
-    to,
-  });
+  state.frameTags.push(record);
   setSelectedFrameRange(null);
   closeTagModal();
   notify("timeline:render");
-  setStatus({ key: "log.tag_created", params: { name, from: from + 1, to: to + 1 } });
+  setStatus({ key: "log.tag_created", params: { name: record.name, from: record.from + 1, to: record.to + 1 } });
 }
 
 /**
@@ -195,8 +164,9 @@ export function confirmCreateFrameTag() {
  * @param {string} tagId
  */
 export function deleteFrameTag(tagId) {
-  state.frameTags = (state.frameTags || []).filter((t) => t.id !== tagId);
-  if (state.activeTagId === tagId) state.activeTagId = null;
+  const res = removeFrameTagCore(state.frameTags || [], state.activeTagId, tagId);
+  state.frameTags = res.frameTags;
+  state.activeTagId = res.activeTagId;
   notify("timeline:render");
 }
 
@@ -243,18 +213,9 @@ export function startInlineTagRename(chipEl, tagId) {
  * @returns {boolean} True si se encontró el chip y se abrió el editor inline.
  */
 export function renameActiveTagInline() {
-  let tagId = state.activeTagId;
-  if (!tagId && Array.isArray(state.frameTags) && state.frameTags.length > 0) {
-    const fIdx = state.activeFrameIndex || 0;
-    const match =
-      state.frameTags.find((t) => fIdx >= t.from && fIdx <= t.to) ||
-      state.frameTags[0];
-    if (match) {
-      tagId = match.id;
-      state.activeTagId = tagId;
-    }
-  }
+  const tagId = resolveInlineRenameTagId(state.frameTags || [], state.activeTagId, state.activeFrameIndex || 0);
   if (!tagId) return false;
+  state.activeTagId = tagId;
   const chip = document.querySelector(`#timelineTagsRow .tm-tag-chip[data-tag-id="${tagId}"]`);
   if (!chip) return false;
   startInlineTagRename(chip, tagId);
@@ -293,13 +254,7 @@ export function linkCelWithPrevious(frameIdx, layerIdx) {
   const curLayer = state.frames[frameIdx]?.layers?.[layerIdx];
   if (!prevLayer || !curLayer) return;
 
-  const groupId = prevLayer.celGroupId || `cel_${Date.now()}_${layerIdx}`;
-  prevLayer.celGroupId = groupId;
-  curLayer.celGroupId = groupId;
-  curLayer.grid = cloneGrid(prevLayer.grid);
-  curLayer.outOfBounds = Array.isArray(prevLayer.outOfBounds)
-    ? prevLayer.outOfBounds.map((p) => [...p])
-    : [];
+  linkCelLayers(prevLayer, curLayer, `cel_${Date.now()}_${layerIdx}`, cloneGrid);
 
   if (frameIdx === state.activeFrameIndex) {
     syncActiveLayerGrid();
@@ -336,26 +291,7 @@ function handleCelAction(action) {
     if (hasMulti) {
       syncActiveFrame();
       pushState();
-      const byLayer = new Map();
-      for (const item of batch) {
-        if (!byLayer.has(item.layerIdx)) byLayer.set(item.layerIdx, []);
-        byLayer.get(item.layerIdx).push(item.frameIdx);
-      }
-      for (const [lIdx, fList] of byLayer.entries()) {
-        fList.sort((a, b) => a - b);
-        const baseLayer = state.frames[fList[0]]?.layers?.[lIdx];
-        if (!baseLayer) continue;
-        const gid = baseLayer.celGroupId || `cel_${Date.now()}_${lIdx}`;
-        for (const fIdx of fList) {
-          const dst = state.frames[fIdx]?.layers?.[lIdx];
-          if (!dst) continue;
-          dst.celGroupId = gid;
-          dst.grid = cloneGrid(baseLayer.grid);
-          dst.outOfBounds = Array.isArray(baseLayer.outOfBounds)
-            ? baseLayer.outOfBounds.map((p) => [...p])
-            : [];
-        }
-      }
+      linkCelsBatchCore(state.frames, batch, cloneGrid);
       syncActiveLayerGrid();
       renderAll();
       notify("timeline:render");
@@ -366,10 +302,7 @@ function handleCelAction(action) {
   } else if (action === "unlink") {
     if (hasMulti) {
       pushState();
-      for (const { layerIdx: l, frameIdx: f } of batch) {
-        const cur = state.frames[f]?.layers?.[l];
-        if (cur?.celGroupId) delete cur.celGroupId;
-      }
+      unlinkCelsBatchCore(state.frames, batch);
       notify("timeline:render");
       setStatus({ key: "log.cels_unlinked_batch", params: { count: batch.length } });
       return;
@@ -377,58 +310,31 @@ function handleCelAction(action) {
     unlinkCelAt(frameIdx, layerIdx);
   } else if (action === "copy") {
     syncActiveFrame();
+    const coords = hasMulti ? batch : [{ layerIdx, frameIdx }];
+    celClipboard = buildCelClipboardPayload(state.frames, coords, cloneGrid, hasMulti);
     if (hasMulti) {
-      const minL = Math.min(...batch.map((c) => c.layerIdx));
-      const minF = Math.min(...batch.map((c) => c.frameIdx));
-      const items = [];
-      for (const { layerIdx: l, frameIdx: f } of batch) {
-        const lObj = state.frames[f]?.layers?.[l];
-        if (!lObj) continue;
-        items.push({
-          dl: l - minL,
-          df: f - minF,
-          grid: cloneGrid(lObj.grid),
-          outOfBounds: Array.isArray(lObj.outOfBounds) ? lObj.outOfBounds.map((p) => [...p]) : [],
-        });
-      }
-      celClipboard = { isBatch: true, items };
-      setStatus({ key: "log.cels_copied_clip", params: { count: items.length } });
-      return;
+      setStatus({ key: "log.cels_copied_clip", params: { count: celClipboard?.items?.length || 0 } });
+    } else {
+      setStatus({ key: "log.cel_copied_clip" });
     }
-    celClipboard = {
-      isBatch: false,
-      grid: cloneGrid(targetLayer.grid),
-      outOfBounds: Array.isArray(targetLayer.outOfBounds)
-        ? targetLayer.outOfBounds.map((p) => [...p])
-        : [],
-    };
-    setStatus({ key: "log.cel_copied_clip" });
   } else if (action === "paste") {
     if (!celClipboard) return;
     pushState();
-    if (celClipboard.isBatch && Array.isArray(celClipboard.items)) {
-      let pasted = 0;
-      for (const item of celClipboard.items) {
-        const dstF = frameIdx + item.df;
-        const dstL = layerIdx + item.dl;
-        const dst = state.frames[dstF]?.layers?.[dstL];
-        if (!dst) continue;
-        delete dst.celGroupId;
-        dst.grid = cloneGrid(item.grid);
-        dst.outOfBounds = item.outOfBounds.map((p) => [...p]);
-        if (dst.type === "tilemap") reconcileLayerTilemap(dst, "auto");
-        pasted++;
-      }
+    const pasted = pasteCelClipboardCore(
+      state.frames,
+      frameIdx,
+      layerIdx,
+      celClipboard,
+      cloneGrid,
+      (dst) => reconcileLayerTilemap(dst, "auto"),
+    );
+    if (celClipboard.isBatch) {
       syncActiveLayerGrid();
       renderAll();
       notify("timeline:render");
       setStatus({ key: "log.cels_pasted", params: { count: pasted } }, false, "pixel");
       return;
     }
-    delete targetLayer.celGroupId;
-    targetLayer.grid = cloneGrid(celClipboard.grid);
-    targetLayer.outOfBounds = celClipboard.outOfBounds.map((p) => [...p]);
-    if (targetLayer.type === "tilemap") reconcileLayerTilemap(targetLayer, "auto");
     if (frameIdx === state.activeFrameIndex) syncActiveLayerGrid();
     renderAll();
     notify("timeline:render");
@@ -436,29 +342,23 @@ function handleCelAction(action) {
   } else if (action === "clear") {
     pushState();
     const { w, h } = getGridDims();
-    if (hasMulti) {
-      for (const { layerIdx: l, frameIdx: f } of batch) {
-        const dst = state.frames[f]?.layers?.[l];
-        if (!dst) continue;
-        delete dst.celGroupId;
-        dst.grid = createEmptyGrid(w, h);
-        dst.outOfBounds = [];
-        if (dst.type === "tilemap") reconcileLayerTilemap(dst, "auto");
-      }
-      syncActiveLayerGrid();
-      renderAll();
-      notify("timeline:render");
-      setStatus({ key: "log.cels_cleared", params: { count: batch.length } }, false, "pixel");
-      return;
-    }
-    delete targetLayer.celGroupId;
-    targetLayer.grid = createEmptyGrid(w, h);
-    targetLayer.outOfBounds = [];
-    if (targetLayer.type === "tilemap") reconcileLayerTilemap(targetLayer, "auto");
-    if (frameIdx === state.activeFrameIndex) syncActiveLayerGrid();
+    const coords = hasMulti ? batch : [{ layerIdx, frameIdx }];
+    clearCelsCore(
+      state.frames,
+      coords,
+      w,
+      h,
+      createEmptyGrid,
+      (dst) => reconcileLayerTilemap(dst, "auto"),
+    );
+    if (hasMulti || frameIdx === state.activeFrameIndex) syncActiveLayerGrid();
     renderAll();
     notify("timeline:render");
-    setStatus({ key: "log.cel_cleared" }, false, "pixel");
+    if (hasMulti) {
+      setStatus({ key: "log.cels_cleared", params: { count: batch.length } }, false, "pixel");
+    } else {
+      setStatus({ key: "log.cel_cleared" }, false, "pixel");
+    }
   } else if (action === "createTag") {
     const frames = hasMulti ? batch.map((c) => c.frameIdx) : [frameIdx];
     const minF = Math.min(...frames);

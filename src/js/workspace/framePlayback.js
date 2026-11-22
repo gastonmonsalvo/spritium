@@ -6,6 +6,12 @@ import { subscribe, state } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import { setStatus, refreshIcons } from "../ui/index.js";
 import { selectFrame } from "./frameOperations.js";
+import {
+  applyOnionSkinOption,
+  computeNextPlaybackFrame,
+  computePlaybackDelayMs,
+  computeStepFrameIndex,
+} from "./framePlaybackCore.js";
 
 let playTimer = null;
 
@@ -26,27 +32,15 @@ export function toggleOnionSkin() {
  * @param {string|number} value
  */
 export function setOnionSkinOption(key, value) {
-  if (!state.onionSkinConfig) {
-    state.onionSkinConfig = { prevCount: 1, nextCount: 0, opacity: 0.3, mode: "normal" };
-  }
-  if (key === "mode") {
-    state.onionSkinConfig.mode = value === "redblue" ? "redblue" : "normal";
-    if (typeof document !== "undefined") {
-      document.getElementById("onionModeNormal")?.classList.toggle("active", state.onionSkinConfig.mode === "normal");
-      document.getElementById("onionModeRedBlue")?.classList.toggle("active", state.onionSkinConfig.mode === "redblue");
+  const { onionSkinConfig } = applyOnionSkinOption(state, key, value);
+  if (typeof document !== "undefined") {
+    if (key === "mode") {
+      document.getElementById("onionModeNormal")?.classList.toggle("active", onionSkinConfig.mode === "normal");
+      document.getElementById("onionModeRedBlue")?.classList.toggle("active", onionSkinConfig.mode === "redblue");
+    } else if (key === "opacity") {
+      const label = document.getElementById("onionOpacityVal");
+      if (label) label.textContent = `${Math.round(onionSkinConfig.opacity * 100)}%`;
     }
-  } else if (key === "opacity") {
-    const op = Math.max(0.1, Math.min(0.8, Number(value) || 0.3));
-    state.onionSkinConfig.opacity = op;
-    const label = typeof document !== "undefined" ? document.getElementById("onionOpacityVal") : null;
-    if (label) label.textContent = `${Math.round(op * 100)}%`;
-  } else if (key === "prevCount") {
-    state.onionSkinConfig.prevCount = Math.max(0, Math.min(3, Math.round(Number(value) || 0)));
-  } else if (key === "nextCount") {
-    state.onionSkinConfig.nextCount = Math.max(0, Math.min(2, Math.round(Number(value) || 0)));
-  }
-  if (!state.onionSkin) {
-    state.onionSkin = true;
     document.getElementById("btnOnionSkin")?.classList.add("active");
   }
   renderAll();
@@ -83,7 +77,7 @@ export function togglePlayAnimation() {
     return;
   }
   state.isPlaying = true;
-  const btn = document.getElementById("btnPlayAnim");
+  const btn = typeof document !== "undefined" ? document.getElementById("btnPlayAnim") : null;
   if (btn) {
     btn.classList.add("active");
     btn.innerHTML = `<i data-lucide="square" class="ui-icon-sm"></i><span>Stop</span>`;
@@ -92,17 +86,17 @@ export function togglePlayAnimation() {
 
   const step = () => {
     if (!state.isPlaying) return;
-    const tag = state.activeTagId
-      ? (state.frameTags || []).find((t) => t.id === state.activeTagId)
-      : null;
-    const minIdx = tag ? Math.max(0, tag.from) : 0;
-    const maxIdx = tag ? Math.min(state.frames.length - 1, tag.to) : state.frames.length - 1;
-    let nextIdx = state.activeFrameIndex + 1;
-    if (nextIdx > maxIdx || nextIdx < minIdx) nextIdx = minIdx;
+    const nextIdx = computeNextPlaybackFrame({
+      activeFrameIndex: state.activeFrameIndex,
+      framesCount: state.frames.length,
+      frameTags: state.frameTags || [],
+      activeTagId: state.activeTagId,
+    });
     selectFrame(nextIdx);
-    const fpsInput = /** @type {HTMLInputElement|null} */ (document.getElementById("animFpsInput"));
-    const fps = Math.max(1, Math.min(60, Number(fpsInput?.value || 8)));
-    playTimer = setTimeout(step, Math.round(1000 / fps));
+    const fpsInput = typeof document !== "undefined"
+      ? /** @type {HTMLInputElement|null} */ (document.getElementById("animFpsInput"))
+      : null;
+    playTimer = setTimeout(step, computePlaybackDelayMs(fpsInput?.value));
   };
   step();
 }
@@ -120,8 +114,8 @@ export function goToFirstFrame() {
  */
 export function goToPrevFrame() {
   stopAnimation();
-  if (state.frames.length === 0) return;
-  selectFrame((state.activeFrameIndex - 1 + state.frames.length) % state.frames.length);
+  const next = computeStepFrameIndex(state.activeFrameIndex, state.frames.length, -1);
+  if (next !== null) selectFrame(next);
 }
 
 /**
@@ -129,8 +123,8 @@ export function goToPrevFrame() {
  */
 export function goToNextFrame() {
   stopAnimation();
-  if (state.frames.length === 0) return;
-  selectFrame((state.activeFrameIndex + 1) % state.frames.length);
+  const next = computeStepFrameIndex(state.activeFrameIndex, state.frames.length, 1);
+  if (next !== null) selectFrame(next);
 }
 
 /**
