@@ -346,6 +346,81 @@ body.theme-win98 .log-current-badge {
   color: #ffffff;
 }
 
+/* Pantalla de inicio (Launcher) como ventana / box Windows 98 */
+body.theme-win98 #launcherOverlay {
+  background-color: #008080;
+  color: #000000;
+}
+
+body.theme-win98 .launcher-container {
+  background: #c0c0c0;
+  color: #000000;
+  padding: 24px 28px;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .brand-title,
+body.theme-win98 .recent-title,
+body.theme-win98 .autosave-title {
+  color: #000000;
+}
+
+body.theme-win98 .launcher-subtitle,
+body.theme-win98 .brand-tag,
+body.theme-win98 .recent-meta,
+body.theme-win98 .autosave-meta {
+  color: #333333;
+}
+
+body.theme-win98 .launcher-btn-primary,
+body.theme-win98 .launcher-btn-outline {
+  background: #c0c0c0;
+  color: #000000;
+  border: 1px solid transparent;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .launcher-btn-primary {
+  font-weight: 700;
+  outline: 1px dotted #000000;
+  outline-offset: -4px;
+}
+
+body.theme-win98 .launcher-btn-primary:hover,
+body.theme-win98 .launcher-btn-outline:hover {
+  background: #d4d0c8;
+  color: #000000;
+}
+
+body.theme-win98 .drop-hint {
+  background: #dfdfdf;
+  color: #000000;
+  border: 1px dashed #808080;
+  border-radius: 0;
+}
+
+body.theme-win98 .drop-hint:hover,
+body.theme-win98 .drop-hint:focus-visible {
+  background: #ffffff;
+  color: #000080;
+}
+
+body.theme-win98 .recent-item,
+body.theme-win98 .autosave-card {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid transparent;
+  border-radius: 0;
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 .recent-item:hover {
+  background: #000080;
+  color: #ffffff;
+}
+
 body.theme-win98 .menu-divider {
   border-top: 1px solid #808080;
   border-bottom: 1px solid #ffffff;
@@ -500,6 +575,112 @@ body.theme-win98 #toolShapes { --win98-icon: 12; }
 body.theme-win98 #shapeBtnRect { --win98-icon: 12; }
 body.theme-win98 #shapeBtnCircle { --win98-icon: 14; }
 
+/* Íconos Win98 custom (herramientas adicionales, filtros y simetría) */
+body.theme-win98 #toolShading,
+body.theme-win98 #toolBackgroundEraser,
+body.theme-win98 #toolMagicSelect,
+body.theme-win98 #toolPan,
+body.theme-win98 #toolFilterBrush {
+  position: relative;
+}
+
+body.theme-win98 #toolShading svg.lucide,
+body.theme-win98 #toolBackgroundEraser svg.lucide,
+body.theme-win98 #toolMagicSelect svg.lucide,
+body.theme-win98 #toolPan svg.lucide,
+body.theme-win98 #toolFilterBrush svg.lucide {
+  opacity: 0;
+}
+
+body.theme-win98 #toolShading::before,
+body.theme-win98 #toolBackgroundEraser::before,
+body.theme-win98 #toolMagicSelect::before,
+body.theme-win98 #toolPan::before,
+body.theme-win98 #toolFilterBrush::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+}
+
+body.theme-win98 #filterBtnBlur svg.lucide,
+body.theme-win98 #filterBtnJumble svg.lucide,
+body.theme-win98 #filterBtnNoise svg.lucide,
+body.theme-win98 #toolMirrorH svg.lucide,
+body.theme-win98 #toolMirrorV svg.lucide,
+body.theme-win98 #toolMirrorRadial90 svg.lucide,
+body.theme-win98 #toolMirrorRadial45 svg.lucide,
+body.theme-win98 .tool-btn[data-action="rotSpriteAction"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="startFreeTransform"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="flipSelectionH"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="flipSelectionV"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="rotateSelection90"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="rotateSelection180"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="outlineAction"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="erodeOutlineAction"] svg.lucide,
+body.theme-win98 .tool-btn[data-action="alignAction"] svg.lucide {
+  display: none;
+}
+
+body.theme-win98 #filterBtnBlur::before,
+body.theme-win98 #filterBtnJumble::before,
+body.theme-win98 #filterBtnNoise::before,
+body.theme-win98 #toolMirrorH::before,
+body.theme-win98 #toolMirrorV::before,
+body.theme-win98 #toolMirrorRadial90::before,
+body.theme-win98 #toolMirrorRadial45::before,
+body.theme-win98 .tool-btn[data-action="rotSpriteAction"]::before,
+body.theme-win98 .tool-btn[data-action="startFreeTransform"]::before,
+body.theme-win98 .tool-btn[data-action="flipSelectionH"]::before,
+body.theme-win98 .tool-btn[data-action="flipSelectionV"]::before,
+body.theme-win98 .tool-btn[data-action="rotateSelection90"]::before,
+body.theme-win98 .tool-btn[data-action="rotateSelection180"]::before,
+body.theme-win98 .tool-btn[data-action="outlineAction"]::before,
+body.theme-win98 .tool-btn[data-action="erodeOutlineAction"]::before,
+body.theme-win98 .tool-btn[data-action="alignAction"]::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  flex-shrink: 0;
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+body.theme-win98 #toolShading::before { background-image: url("../assets/win98/shading.svg"); }
+body.theme-win98 #toolBackgroundEraser::before { background-image: url("../assets/win98/bg-eraser.svg"); }
+body.theme-win98 #toolMagicSelect::before { background-image: url("../assets/win98/magic-wand.svg"); }
+body.theme-win98 #toolPan::before { background-image: url("../assets/win98/pan.svg"); }
+body.theme-win98 #toolFilterBrush::before { background-image: url("../assets/win98/blur.svg"); }
+body.theme-win98 #filterBtnBlur::before { background-image: url("../assets/win98/blur.svg"); }
+body.theme-win98 #filterBtnJumble::before { background-image: url("../assets/win98/jumble.svg"); }
+body.theme-win98 #filterBtnNoise::before { background-image: url("../assets/win98/noise.svg"); }
+body.theme-win98 #toolMirrorH::before { background-image: url("../assets/win98/mirror-x.svg"); }
+body.theme-win98 #toolMirrorV::before { background-image: url("../assets/win98/mirror-y.svg"); }
+body.theme-win98 #toolMirrorRadial90::before { background-image: url("../assets/win98/sym-90.svg"); }
+body.theme-win98 #toolMirrorRadial45::before { background-image: url("../assets/win98/sym-45.svg"); }
+body.theme-win98 .tool-btn[data-action="rotSpriteAction"]::before { background-image: url("../assets/win98/rotsprite.svg"); }
+body.theme-win98 .tool-btn[data-action="startFreeTransform"]::before { background-image: url("../assets/win98/free-transform.svg"); }
+body.theme-win98 .tool-btn[data-action="flipSelectionH"]::before { background-image: url("../assets/win98/flip-h.svg"); }
+body.theme-win98 .tool-btn[data-action="flipSelectionV"]::before { background-image: url("../assets/win98/flip-v.svg"); }
+body.theme-win98 .tool-btn[data-action="rotateSelection90"]::before { background-image: url("../assets/win98/rotate-90.svg"); }
+body.theme-win98 .tool-btn[data-action="rotateSelection180"]::before { background-image: url("../assets/win98/rotate-180.svg"); }
+body.theme-win98 .tool-btn[data-action="outlineAction"]::before { background-image: url("../assets/win98/outline-add.svg"); }
+body.theme-win98 .tool-btn[data-action="erodeOutlineAction"]::before { background-image: url("../assets/win98/outline-erode.svg"); }
+body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="center"]::before { background-image: url("../assets/win98/align-center.svg"); }
+body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="left"]::before { background-image: url("../assets/win98/align-left.svg"); }
+body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="right"]::before { background-image: url("../assets/win98/align-right.svg"); }
+body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="top"]::before { background-image: url("../assets/win98/align-top.svg"); }
+body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="bottom"]::before { background-image: url("../assets/win98/align-bottom.svg"); }
+
 /* Íconos de acciones y menú con assets clásicos de JS Paint */
 body.theme-win98 #btnUndo svg.lucide,
 body.theme-win98 #btnRedo svg.lucide,
@@ -513,7 +694,11 @@ body.theme-win98 .menu-action[data-action="pasteAction"] svg.lucide,
 body.theme-win98 .menu-action[data-action="flipSelectionH"] svg.lucide,
 body.theme-win98 .menu-action[data-action="flipSelectionV"] svg.lucide,
 body.theme-win98 .menu-action[data-action="rotateSelection90"] svg.lucide,
-body.theme-win98 .menu-action[data-action="erodeOutlineAction"] svg.lucide {
+body.theme-win98 .menu-action[data-action="rotateSelection180"] svg.lucide,
+body.theme-win98 .menu-action[data-action="startFreeTransform"] svg.lucide,
+body.theme-win98 .menu-action[data-action="outlineAction"] svg.lucide,
+body.theme-win98 .menu-action[data-action="erodeOutlineAction"] svg.lucide,
+body.theme-win98 .menu-action[data-action="alignAction"] svg.lucide {
   display: none;
 }
 
@@ -550,7 +735,11 @@ body.theme-win98 .menu-action[data-action="pasteAction"] .menu-action-label::bef
 body.theme-win98 .menu-action[data-action="flipSelectionH"] .menu-action-label::before,
 body.theme-win98 .menu-action[data-action="flipSelectionV"] .menu-action-label::before,
 body.theme-win98 .menu-action[data-action="rotateSelection90"] .menu-action-label::before,
-body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before {
+body.theme-win98 .menu-action[data-action="rotateSelection180"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="startFreeTransform"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="outlineAction"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="alignAction"] .menu-action-label::before {
   content: "";
   width: 16px;
   height: 16px;
@@ -589,17 +778,49 @@ body.theme-win98 .menu-action[data-action="pasteAction"] .menu-action-label::bef
 }
 
 body.theme-win98 .menu-action[data-action="flipSelectionH"] .menu-action-label::before {
-  background-image: url("../assets/win98/p_fliph.png");
+  background-image: url("../assets/win98/flip-h.svg");
 }
 
 body.theme-win98 .menu-action[data-action="flipSelectionV"] .menu-action-label::before {
-  background-image: url("../assets/win98/p_flipv.png");
+  background-image: url("../assets/win98/flip-v.svg");
 }
 
 body.theme-win98 .menu-action[data-action="rotateSelection90"] .menu-action-label::before {
-  background-image: url("../assets/win98/p_rotate_cw.png");
+  background-image: url("../assets/win98/rotate-90.svg");
+}
+
+body.theme-win98 .menu-action[data-action="rotateSelection180"] .menu-action-label::before {
+  background-image: url("../assets/win98/rotate-180.svg");
+}
+
+body.theme-win98 .menu-action[data-action="outlineAction"] .menu-action-label::before {
+  background-image: url("../assets/win98/outline-add.svg");
 }
 
 body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before {
-  background-image: url("../assets/win98/p_delete.png");
+  background-image: url("../assets/win98/outline-erode.svg");
+}
+
+body.theme-win98 .menu-action[data-action="alignAction"][data-action-arg="center"] .menu-action-label::before {
+  background-image: url("../assets/win98/align-center.svg");
+}
+
+body.theme-win98 .menu-action[data-action="alignAction"][data-action-arg="left"] .menu-action-label::before {
+  background-image: url("../assets/win98/align-left.svg");
+}
+
+body.theme-win98 .menu-action[data-action="alignAction"][data-action-arg="right"] .menu-action-label::before {
+  background-image: url("../assets/win98/align-right.svg");
+}
+
+body.theme-win98 .menu-action[data-action="alignAction"][data-action-arg="top"] .menu-action-label::before {
+  background-image: url("../assets/win98/align-top.svg");
+}
+
+body.theme-win98 .menu-action[data-action="alignAction"][data-action-arg="bottom"] .menu-action-label::before {
+  background-image: url("../assets/win98/align-bottom.svg");
+}
+
+body.theme-win98 .menu-action[data-action="startFreeTransform"] .menu-action-label::before {
+  background-image: url("../assets/win98/free-transform.svg");
 }

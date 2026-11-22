@@ -190,20 +190,8 @@ export function resetWin98EasterEggClicks() {
   win98EggLastClickAt = 0;
 }
 
-/**
- * Activa o desactiva el tema easter egg Windows 98 al clickear 7 veces el logo en About (solo por sesión).
- */
-export function triggerWin98EasterEgg() {
-  const now = Date.now();
-  if (now - win98EggLastClickAt > 2500) {
-    win98EggClicks = 0;
-  }
-  win98EggLastClickAt = now;
-  win98EggClicks += 1;
-
-  if (win98EggClicks < 7) return;
-  resetWin98EasterEggClicks();
-
+/** Alterna el tema easter egg Windows 98 solo para la sesión actual. */
+export function toggleWin98Theme() {
   const isWin98 = document.body?.classList.contains("theme-win98");
   if (isWin98) {
     let saved = "dark";
@@ -219,6 +207,22 @@ export function triggerWin98EasterEgg() {
     document.getElementById("aboutModal")?.classList.remove("open");
     setStatus("Spritium 98 activado (solo esta sesión)");
   }
+}
+
+/**
+ * Activa o desactiva el tema easter egg Windows 98 al clickear 7 veces el logo en About (solo por sesión).
+ */
+export function triggerWin98EasterEgg() {
+  const now = Date.now();
+  if (now - win98EggLastClickAt > 2500) {
+    win98EggClicks = 0;
+  }
+  win98EggLastClickAt = now;
+  win98EggClicks += 1;
+
+  if (win98EggClicks < 7) return;
+  resetWin98EasterEggClicks();
+  toggleWin98Theme();
 }
 
 /**

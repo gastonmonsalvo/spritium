@@ -39,6 +39,7 @@ import {
   toggleMirrorV,
   toggleGrid,
   togglePixelCursor,
+  toggleWin98Theme,
 } from "./ui/index.js";
 import { syncCanvasColorsToPalette } from "./workspace/paletteManager.js";
 
@@ -220,6 +221,39 @@ function handleNavigationAndTools(e, key, isMod) {
   else if (e.key === "]" && !isMod) { e.preventDefault(); setBrushSize((state.brushSize || 1) + 1); }
 }
 
+const KONAMI_SEQUENCE = [
+  "arrowup", "arrowup", "arrowdown", "arrowdown",
+  "arrowleft", "arrowright", "arrowleft", "arrowright",
+  "b", "a",
+];
+let konamiIndex = 0;
+let konamiLastKeyAt = 0;
+
+function handleKonamiKey(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey) {
+    konamiIndex = 0;
+    return false;
+  }
+  const now = Date.now();
+  if (now - konamiLastKeyAt > 2500) konamiIndex = 0;
+  konamiLastKeyAt = now;
+
+  const key = e.key.toLowerCase();
+  if (key === KONAMI_SEQUENCE[konamiIndex]) {
+    konamiIndex += 1;
+    if (konamiIndex === KONAMI_SEQUENCE.length) {
+      konamiIndex = 0;
+      e.preventDefault();
+      toggleWin98Theme();
+      return true;
+    }
+    return false;
+  }
+  // Si repite ↑ al inicio de ↑↑↓↓..., conservar prefijo válido
+  konamiIndex = key === KONAMI_SEQUENCE[0] ? (konamiIndex === 2 ? 2 : 1) : 0;
+  return false;
+}
+
 /** Registra atajos de teclado globales del editor. */
 export function setupKeyboardShortcuts() {
   document.addEventListener("mousedown", (e) => {
@@ -229,7 +263,8 @@ export function setupKeyboardShortcuts() {
   }, { capture: true });
 
   window.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT" || e.target.isContentEditable) return;
+    if (handleKonamiKey(e)) return;
     if (!document.getElementById("launcherOverlay")?.classList.contains("hidden")) return;
     if (handleSpecialKeyAndModes(e) || handleDeleteKey(e)) return;
 
