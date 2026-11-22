@@ -45,7 +45,7 @@ import { syncCanvasColorsToPalette } from "./workspace/paletteManager.js";
 const CLOSE_MODAL_IDS = [
   "helpModal", "preferencesModal", "languageModal", "aboutModal",
   "tilemapModal", "tilemapImportModal", "newDocModal", "importOptionsModal", "recoveryModal",
-  "tagModal", "newPaletteModal", "folderBrowserModal", "exportScaleModal", "customResModal",
+  "tagModal", "newPaletteModal", "folderBrowserModal", "exportScaleModal", "customResModal", "noiseFilterModal", "normalMapModal",
 ];
 
 const SINGLE_KEY_TOOL_MAP = {

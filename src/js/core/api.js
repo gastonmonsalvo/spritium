@@ -13,6 +13,7 @@ import {
   quantizeImageDataToPalette,
   reduceGridColorsClient,
 } from "./imageProcessor.js";
+import { snapMessyPixelArt } from "./pixelSnapper.js";
 
 const LOCAL_SPRITES_KEY = "spritium_local_sprites_v1";
 
@@ -65,7 +66,7 @@ export async function fetchHistory() {
 /**
  * Procesa una imagen externa (conversión pixel-art opcional y cuantización a paleta) y la guarda localmente.
  * @param {File} file
- * @param {{assetName?: string, paletteTheme?: string, quantize?: boolean, dither?: boolean, targetSize?: number, pixelArtConvert?: boolean, removeBackground?: boolean, keepNativeSize?: boolean, customPalette?: Object|null}} [options]
+ * @param {{assetName?: string, paletteTheme?: string, quantize?: boolean, dither?: boolean, targetSize?: number, pixelArtConvert?: boolean, pixelSnapper?: boolean, removeBackground?: boolean, keepNativeSize?: boolean, customPalette?: Object|null}} [options]
  * @returns {Promise<{ok: boolean, asset: Object, quantized: boolean}>}
  */
 export async function requestUploadImage(
@@ -77,6 +78,7 @@ export async function requestUploadImage(
     dither = false,
     targetSize = 64,
     pixelArtConvert = false,
+    pixelSnapper = false,
     removeBackground = false,
     keepNativeSize = false,
     customPalette = null,
@@ -87,7 +89,17 @@ export async function requestUploadImage(
   let width;
   let height;
 
-  if (keepNativeSize && !pixelArtConvert) {
+  if (pixelSnapper) {
+    const raw = await loadRawSpriteImageData(file, null, null);
+    const cleaned = removeBackground ? removeConnectedBackground(raw.imgData, 40) : raw.imgData;
+    const snapped = snapMessyPixelArt(cleaned, {
+      targetSize: keepNativeSize ? null : Math.max(4, Math.min(512, Number(targetSize) || 64)),
+      maxColors: 32,
+    });
+    imgData = snapped.imgData;
+    width = snapped.width;
+    height = snapped.height;
+  } else if (keepNativeSize && !pixelArtConvert) {
     const raw = await loadRawSpriteImageData(file, null, null);
     imgData = removeBackground ? removeConnectedBackground(raw.imgData, 40) : raw.imgData;
     width = raw.width;

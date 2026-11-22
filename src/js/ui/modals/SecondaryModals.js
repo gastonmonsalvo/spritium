@@ -13,6 +13,10 @@ import { renderPreferencesModal } from "./PreferencesModal.js";
 import { renderLanguageModal } from "./LanguageModal.js";
 import { renderFeedbackModal } from "./FeedbackModal.js";
 import { renderNoiseModal } from "./NoiseModal.js";
+import { renderNormalMapModal } from "./NormalMapModal.js";
+import { renderHslModal } from "./HslModal.js";
+import { renderDropShadowModal } from "./DropShadowModal.js";
+import { renderConfirmModal } from "./ConfirmModal.js";
 
 /**
  * Monta en `#secondaryModalsMount` los modales secundarios si todavía no fueron insertados.
@@ -31,6 +35,10 @@ export function mountSecondaryModals() {
     renderLanguageModal(),
     renderFeedbackModal(),
     renderNoiseModal(),
+    renderNormalMapModal(),
+    renderHslModal(),
+    renderDropShadowModal(),
+    renderConfirmModal(),
   ].join("");
   mount.dataset.mounted = "true";
 }

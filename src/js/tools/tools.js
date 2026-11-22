@@ -495,6 +495,117 @@ export function applyNoiseToRegion({ intensity = 25, paintedOnly = true, monochr
   return changed;
 }
 
+function rgbToHsl(r, g, b) {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
+  else if (max === gn) h = ((bn - rn) / d + 2) / 6;
+  else h = ((rn - gn) / d + 4) / 6;
+  return [h, s, l];
+}
+
+function hslToRgb(h, s, l) {
+  if (s <= 0) {
+    const v = Math.round(l * 255);
+    return [v, v, v];
+  }
+  const hue2rgb = (p, q, t) => {
+    let tt = t;
+    if (tt < 0) tt += 1;
+    if (tt > 1) tt -= 1;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  return [
+    Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
+    Math.round(hue2rgb(p, q, h) * 255),
+    Math.round(hue2rgb(p, q, h - 1 / 3) * 255),
+  ];
+}
+
+/**
+ * Ajusta Tono (H), Saturación (S) y Brillo (L) sobre la capa o selección activa.
+ * @param {{ hueShift?: number, satShift?: number, lightShift?: number, snapToPalette?: boolean }} [opts]
+ * @returns {boolean}
+ */
+export function applyHslToRegion({ hueShift = 0, satShift = 0, lightShift = 0, snapToPalette = true } = {}) {
+  if (hueShift === 0 && satShift === 0 && lightShift === 0) return false;
+  const { w: gw, h: gh } = getGridDims();
+  const entries = snapToPalette ? buildPaletteColorEntries() : [];
+  if (snapToPalette && entries.length === 0) return false;
+
+  const existingByHex = new Map();
+  let maxIdx = 39;
+  if (!snapToPalette) {
+    for (const [k, hex] of Object.entries(state.paletteMap || {})) {
+      const n = Number(k);
+      if (n !== 0 && n < 9000 && hex) {
+        existingByHex.set(hex.toLowerCase(), n);
+        if (n > maxIdx) maxIdx = n;
+      }
+    }
+  }
+
+  const remap = new Map();
+  let changed = false;
+  const toHex = (r, g, b) =>
+    `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toLowerCase()}`;
+
+  for (let y = 0; y < gh; y++) {
+    for (let x = 0; x < gw; x++) {
+      if (!isInsideSelection(x, y)) continue;
+      const curIdx = state.grid[y][x];
+      if (!curIdx) continue;
+
+      let nextIdx = remap.get(curIdx);
+      if (nextIdx === undefined) {
+        const rgb = parseColorToRgb(state.paletteMap[curIdx]);
+        if (!rgb) {
+          nextIdx = curIdx;
+        } else {
+          const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+          const nh = (((h + hueShift / 360) % 1) + 1) % 1;
+          const ns = Math.max(0, Math.min(1, s + satShift / 100));
+          const nl = Math.max(0, Math.min(1, l + lightShift / 100));
+          const [nr, ng, nb] = hslToRgb(nh, ns, nl);
+
+          if (snapToPalette) {
+            nextIdx = findNearestPaletteEntry(nr, ng, nb, entries, { useOklab: true });
+          } else {
+            const hex = toHex(nr, ng, nb);
+            nextIdx = existingByHex.get(hex);
+            if (nextIdx === undefined) {
+              maxIdx += 1;
+              state.paletteMap[maxIdx] = hex;
+              existingByHex.set(hex, maxIdx);
+              if (!state.customColorIndices.includes(maxIdx)) state.customColorIndices.push(maxIdx);
+              nextIdx = maxIdx;
+            }
+          }
+        }
+        remap.set(curIdx, nextIdx);
+      }
+
+      if (nextIdx !== curIdx) {
+        state.grid[y][x] = nextIdx;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) state.isDirtySinceImport = true;
+  return changed;
+}
+
 /**
  * Spray Tool (Aerógrafo): rocía píxeles aleatorios dentro de un disco de diámetro `brushSize`
  * con distribución uniforme (`r = R * sqrt(random)`).

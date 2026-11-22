@@ -31,6 +31,7 @@ import { resetFramesWithCurrentLayers, syncActiveFrame } from "./frames.js";
 import { ensureLayerTileGridDimensions, syncTilemapLayerToGrid } from "../state/TilemapModel.js";
 import { saveRecentProject } from "../core/storage.js";
 import { openNewDocTab, syncActiveTabSnapshot } from "./docTabs.js";
+import { showConfirmDialog } from "../ui/modals/ConfirmModal.js";
 
 /**
  * Actualiza la lista del historial local si existe el selector en el DOM.
@@ -89,6 +90,7 @@ export async function handleUploadExternalFile(file, options = {}) {
       : !options.asNewLayer && !options.targetSize && !options.pixelArtConvert;
   const targetSize = Number(options.targetSize || resSelect?.value || state.gridSize || 64) || 64;
   const pixelArtConvert = Boolean(options.pixelArtConvert);
+  const pixelSnapper = Boolean(options.pixelSnapper);
   const removeBackground = Boolean(options.removeBackground);
 
   setStatus(
@@ -107,6 +109,7 @@ export async function handleUploadExternalFile(file, options = {}) {
       dither,
       targetSize,
       pixelArtConvert,
+      pixelSnapper,
       removeBackground,
       keepNativeSize,
     });
@@ -124,11 +127,25 @@ export async function handleUploadExternalFile(file, options = {}) {
         if (Number(idxStr) !== 0 && col) existingByHex.set(col.toLowerCase(), Number(idxStr));
       }
       let maxIdx = Math.max(39, ...Object.keys(state.paletteMap).map(Number).filter((n) => n < 9000));
-      const { w: gw, h: gh } = getGridDims();
-      const newGrid = Array.from({ length: gh }, () => new Array(gw).fill(0));
-      const newOutOfBounds = [];
+      let { w: gw, h: gh } = getGridDims();
       const srcH = data.grid.length;
       const srcW = data.grid[0]?.length || 0;
+      if (
+        (srcW > gw || srcH > gh) &&
+        srcW <= 512 &&
+        srcH <= 512 &&
+        (await showConfirmDialog({
+          title: i18n.t("import.confirm_expand_title"),
+          message: i18n.t("import.confirm_expand_canvas", { imgW: srcW, imgH: srcH, curW: gw, curH: gh }),
+          confirmText: i18n.t("import.confirm_expand_yes"),
+          cancelText: i18n.t("import.confirm_expand_no"),
+        }))
+      ) {
+        await changeResolution(Math.max(gw, srcW), Math.max(gh, srcH));
+        ({ w: gw, h: gh } = getGridDims());
+      }
+      const newGrid = Array.from({ length: gh }, () => new Array(gw).fill(0));
+      const newOutOfBounds = [];
       const offX = srcW !== gw ? Math.floor((gw - srcW) / 2) : 0;
       const offY = srcH !== gh ? Math.floor((gh - srcH) / 2) : 0;
 
@@ -170,6 +187,7 @@ export async function handleUploadExternalFile(file, options = {}) {
         keepNativeSize,
         targetSize,
         pixelArtConvert,
+        pixelSnapper,
         removeBackground,
         paletteTheme: requestedTheme,
         dither,
@@ -194,6 +212,7 @@ export async function handleUploadExternalFile(file, options = {}) {
       keepNativeSize,
       targetSize,
       pixelArtConvert,
+      pixelSnapper,
       removeBackground,
       paletteTheme: requestedTheme,
       dither,

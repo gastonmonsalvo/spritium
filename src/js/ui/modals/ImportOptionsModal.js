@@ -61,6 +61,11 @@ export function renderImportOptionsModal() {
               <span data-i18n="pm.import_pa_label">${escapeHtml(i18n.t("pm.import_pa_label"))}</span>
             </label>
 
+            <label style="${IMPORT_CHECK_LABEL_STYLE}" data-i18n-title="pm.import_snapper_title" title="${escapeHtml(i18n.t("pm.import_snapper_title"))}">
+              <input type="checkbox" id="importPixelSnapperChk" />
+              <span data-i18n="pm.import_snapper_label">${escapeHtml(i18n.t("pm.import_snapper_label"))}</span>
+            </label>
+
             <label style="${IMPORT_CHECK_LABEL_STYLE}" data-i18n-title="pm.import_rmbg_title" title="${escapeHtml(i18n.t("pm.import_rmbg_title"))}">
               <input type="checkbox" id="importRemoveBgChk" />
               <span data-i18n="pm.import_rmbg_label">${escapeHtml(i18n.t("pm.import_rmbg_label"))}</span>

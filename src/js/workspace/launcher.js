@@ -297,6 +297,10 @@ export function openImportModal(file, { asNewLayer = false, isReimport = false }
   if (convertChk) {
     convertChk.checked = Boolean(savedOpts?.pixelArtConvert);
   }
+  const snapperChk = document.getElementById("importPixelSnapperChk");
+  if (snapperChk) {
+    snapperChk.checked = Boolean(savedOpts?.pixelSnapper);
+  }
   const removeBgChk = document.getElementById("importRemoveBgChk");
   if (removeBgChk) {
     removeBgChk.checked = Boolean(savedOpts?.removeBackground);
@@ -337,6 +341,7 @@ function readImportFormOptions() {
   const keepNativeSize = rawRes === "native";
   const targetSize = keepNativeSize ? state.gridSize || 64 : Number(rawRes || state.gridSize || 64);
   const pixelArtConvert = Boolean(document.getElementById("importConvertPixelArtChk")?.checked);
+  const pixelSnapper = Boolean(document.getElementById("importPixelSnapperChk")?.checked);
   const removeBackground = Boolean(document.getElementById("importRemoveBgChk")?.checked);
   const paletteTheme = document.getElementById("importThemeSelect")?.value || "original";
   const dither = Boolean(document.getElementById("importDitherChk")?.checked);
@@ -346,6 +351,7 @@ function readImportFormOptions() {
     targetSize,
     keepNativeSize,
     pixelArtConvert,
+    pixelSnapper,
     removeBackground,
     paletteTheme,
     quantize: paletteTheme !== "original",
@@ -580,6 +586,7 @@ export function initLauncher() {
       "importResSelect",
       "importThemeSelect",
       "importConvertPixelArtChk",
+      "importPixelSnapperChk",
       "importRemoveBgChk",
       "importDitherChk",
     ];

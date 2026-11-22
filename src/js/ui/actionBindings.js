@@ -22,6 +22,10 @@ import * as tx from "../workspace/timelineMatrix.js";
 import * as rm from "../workspace/recoveryModal.js";
 import * as ln from "../workspace/launcher.js";
 import * as nm from "./modals/NoiseModal.js";
+import * as nrm from "./modals/NormalMapModal.js";
+import * as hsl from "./modals/HslModal.js";
+import * as dsm from "./modals/DropShadowModal.js";
+import * as cm from "./modals/ConfirmModal.js";
 
 function buildTransformActions() {
   return {
@@ -253,6 +257,21 @@ export function registerAppActions() {
     closeNoiseModal: nm.closeNoiseModal,
     applyNoiseModal: nm.applyNoiseModal,
     randomizeNoiseSeed: nm.randomizeNoiseSeed,
+    openHslModal: hsl.openHslModal,
+    closeHslModal: hsl.closeHslModal,
+    applyHslModal: hsl.applyHslModal,
+    resetHslModal: hsl.resetHslModal,
+    openDropShadowModal: dsm.openDropShadowModal,
+    closeDropShadowModal: dsm.closeDropShadowModal,
+    applyDropShadowModal: dsm.applyDropShadowModal,
+    resolveConfirmDialog: cm.resolveConfirmDialog,
+    openNormalMapModal: nrm.openNormalMapModal,
+    closeNormalMapModal: nrm.closeNormalMapModal,
+    setNormalViewMode: nrm.setNormalViewMode,
+    toggleNormalAnimPreview: nrm.toggleNormalAnimPreview,
+    openNormalMapInNewTab: nrm.openNormalMapInNewTab,
+    exportNormalMapPng: nrm.exportNormalMapPng,
+    exportNormalMapStrip: nrm.exportNormalMapStrip,
     openConfigDialog: () => document.getElementById("configFileInput")?.click(),
     resetAllUserConfig: () => ui.resetAllUserConfig({
       onPalettesChanged: async () => {

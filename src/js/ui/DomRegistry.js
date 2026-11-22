@@ -94,11 +94,19 @@ export function initDeclarativeActions(root = typeof document !== "undefined" ? 
   if (!root || delegationInitialized) return;
   delegationInitialized = true;
 
+  let pointerDownTarget = null;
+  root.addEventListener("pointerdown", (e) => {
+    pointerDownTarget = e.target;
+  });
+
   root.addEventListener("click", (e) => {
     const target = /** @type {HTMLElement | null} */ (e.target);
 
     const backdrop = target?.matches?.("[data-backdrop-close]") ? target : null;
     if (backdrop) {
+      const startedOnBackdrop = pointerDownTarget === null || pointerDownTarget === backdrop;
+      pointerDownTarget = null;
+      if (!startedOnBackdrop) return;
       const closeAction = backdrop.getAttribute("data-backdrop-close");
       if (closeAction === "self") {
         backdrop.classList.remove("open");
