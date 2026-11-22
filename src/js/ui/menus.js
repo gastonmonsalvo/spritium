@@ -4,6 +4,7 @@
 
 import { refreshIcons } from "./status.js";
 import { i18n } from "../i18n/I18nService.js";
+import { resetWin98EasterEggClicks } from "./theme.js";
 
 /** Abre el modal de atajos de teclado y refresca sus íconos. */
 export function openHelpModal() {
@@ -37,6 +38,7 @@ export function openAboutModal() {
  */
 export function closeAboutModal() {
   document.getElementById("aboutModal")?.classList.remove("open");
+  resetWin98EasterEggClicks();
 }
 
 /**

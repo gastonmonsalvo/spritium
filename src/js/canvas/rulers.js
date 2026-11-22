@@ -64,9 +64,11 @@ export function renderRulers() {
   const tCtx = topCanvas.getContext("2d");
   const lCtx = leftCanvas.getContext("2d");
   const isLight = document.body?.classList.contains("theme-light");
-  const bg = isLight ? "#E8DFCF" : "#18181B";
-  const tickColor = isLight ? "#A5947B" : "#52525B";
-  const labelColor = isLight ? "#574A3B" : "#8E8E98";
+  const isWin98 = document.body?.classList.contains("theme-win98");
+  const bg = isWin98 ? "#c0c0c0" : isLight ? "#E8DFCF" : "#18181B";
+  const tickColor = isWin98 ? "#808080" : isLight ? "#A5947B" : "#52525B";
+  const labelColor = isWin98 ? "#000000" : isLight ? "#574A3B" : "#8E8E98";
+  const cursorHighlight = isWin98 ? "rgba(0, 0, 128, 0.28)" : "rgba(59, 130, 246, 0.35)";
 
   tCtx.fillStyle = bg;
   tCtx.fillRect(0, 0, displayW, thickness);
@@ -77,12 +79,12 @@ export function renderRulers() {
   if (state.cursorPos) {
     const cx = Math.floor(state.cursorPos.x * cellPx);
     const cw = Math.max(1, Math.floor((state.cursorPos.x + 1) * cellPx) - cx);
-    tCtx.fillStyle = "rgba(59, 130, 246, 0.35)";
+    tCtx.fillStyle = cursorHighlight;
     tCtx.fillRect(cx, 0, cw, thickness);
 
     const cy = Math.floor(state.cursorPos.y * cellPx);
     const ch = Math.max(1, Math.floor((state.cursorPos.y + 1) * cellPx) - cy);
-    lCtx.fillStyle = "rgba(59, 130, 246, 0.35)";
+    lCtx.fillStyle = cursorHighlight;
     lCtx.fillRect(0, cy, thickness, ch);
   }
 

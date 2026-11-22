@@ -1,0 +1,605 @@
+/* --- TEMA EASTER EGG WINDOWS 98 / MS PAINT (SCOPED, SOLO SESIÓN) --- */
+/* Inspirado en 98.css (MIT, Jordan Scales) e íconos clásicos de JS Paint (MIT, Isaiah Odhner). */
+
+body.theme-win98 {
+  color-scheme: light;
+  --font-display: "MS Sans Serif", "Tahoma", "Segoe UI", sans-serif;
+  --font-ui: "MS Sans Serif", "Tahoma", "Segoe UI", sans-serif;
+  --font-mono: "Fixedsys", "Consolas", "Lucida Console", monospace;
+
+  --bg-canvas-area: #808080;
+  --bg-panel: #c0c0c0;
+  --bg-surface-hover: #d4d0c8;
+  --bg-input: #ffffff;
+
+  --border-subtle: #808080;
+  --border-focus: #000080;
+
+  --accent-primary: #000080;
+  --accent-primary-hover: #1084d0;
+  --accent-secondary: #008080;
+  --accent-secondary-bg: rgba(0, 128, 128, 0.16);
+
+  --text-primary: #000000;
+  --text-secondary: #222222;
+  --text-muted: #555555;
+
+  --status-success: #008000;
+  --status-warning: #808000;
+  --status-danger: #800000;
+
+  --bg-app: #808080;
+  --bg-topbar: #c0c0c0;
+  --bg-card: #c0c0c0;
+  --bg-surface: #c0c0c0;
+  --bg-control: #c0c0c0;
+  --bg-control-hover: #d4d0c8;
+  --border-strong: #0a0a0a;
+  --text-dim: #555555;
+
+  --win98-raised: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+  --win98-pressed: inset -1px -1px #ffffff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;
+  --win98-sunken: inset -1px -1px #ffffff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+  --win98-titlebar: linear-gradient(90deg, #000080, #1084d0);
+
+  background: #808080;
+  color: #000000;
+  font-family: var(--font-ui);
+}
+
+body.theme-win98 #app {
+  background: #808080;
+  color: #000000;
+}
+
+/* Superficies y paneles con bisel 3D elevado */
+body.theme-win98 #topBar,
+body.theme-win98 #sidebar,
+body.theme-win98 #rightSidebar,
+body.theme-win98 #timelineBar,
+body.theme-win98 .panel-section-card,
+body.theme-win98 .menu-dropdown,
+body.theme-win98 .context-menu,
+body.theme-win98 .modal-card,
+body.theme-win98 .floating-panel {
+  background: #c0c0c0;
+  color: #000000;
+  border-color: #808080;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 #topBar {
+  border-bottom: 1px solid #808080;
+}
+
+body.theme-win98 .topbar-brand-btn {
+  background: var(--win98-titlebar);
+  color: #ffffff;
+  border-radius: 0;
+  padding: 3px 8px;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .topbar-brand-btn .app-brand-title {
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+body.theme-win98 .modal-header {
+  background: var(--win98-titlebar);
+  color: #ffffff;
+  padding: 5px 8px;
+  border-radius: 0;
+}
+
+body.theme-win98 .modal-header h3 {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body.theme-win98 #workspace,
+body.theme-win98 #canvasContainer {
+  background: #808080;
+}
+
+body.theme-win98 #canvasContainer {
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 #paintCanvas {
+  background-color: var(--checker-light);
+  background-image: repeating-conic-gradient(var(--checker-light) 0% 25%, var(--checker-dark) 0% 50%);
+  border: 1px solid #000000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+body.theme-win98 #rulerCorner {
+  background: #c0c0c0;
+  border-color: #808080;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 #rulerTop,
+body.theme-win98 #rulerLeft {
+  border-color: #808080;
+}
+
+body.theme-win98 #canvasFooterHelp {
+  background: #c0c0c0;
+  color: #000000;
+  border-top: 1px solid #808080;
+  box-shadow: inset 0 1px #ffffff;
+}
+
+body.theme-win98 #sidebarResizer,
+body.theme-win98 #rightSidebarResizer,
+body.theme-win98 .timeline-resizer {
+  background: #c0c0c0;
+  border-color: #808080;
+}
+
+body.theme-win98 #sidebarResizer:hover,
+body.theme-win98 #sidebarResizer.dragging,
+body.theme-win98 #rightSidebarResizer:hover,
+body.theme-win98 #rightSidebarResizer.dragging,
+body.theme-win98 .timeline-resizer:hover,
+body.theme-win98 .timeline-resizer.dragging {
+  background: #000080;
+}
+
+/* Botones clásicos 3D Win98 (sin desplazar layout) */
+body.theme-win98 .tool-btn,
+body.theme-win98 .menu-trigger,
+body.theme-win98 .btn-primary,
+body.theme-win98 .btn-secondary,
+body.theme-win98 .custom-select-trigger,
+body.theme-win98 .launcher-btn {
+  background: #c0c0c0;
+  color: #000000;
+  border: 1px solid transparent;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .tool-btn:hover,
+body.theme-win98 .menu-trigger:hover,
+body.theme-win98 .btn-primary:hover,
+body.theme-win98 .btn-secondary:hover,
+body.theme-win98 .custom-select-trigger:hover,
+body.theme-win98 .launcher-btn:hover {
+  background: #d4d0c8;
+  color: #000000;
+}
+
+body.theme-win98 .tool-btn:active,
+body.theme-win98 .tool-btn.active,
+body.theme-win98 .menu-trigger[aria-expanded="true"],
+body.theme-win98 .btn-primary:active,
+body.theme-win98 .btn-secondary:active {
+  box-shadow: var(--win98-pressed);
+  background-color: #dfdfdf;
+  background-image: repeating-conic-gradient(#ffffff 0% 25%, #c0c0c0 0% 50%);
+  background-size: 2px 2px;
+  color: #000000;
+}
+
+body.theme-win98 .btn-primary {
+  font-weight: 700;
+  outline: 1px dotted #000000;
+  outline-offset: -4px;
+}
+
+/* Menú desplegable estilo Win98 */
+body.theme-win98 .menu-action {
+  color: #000000;
+  border-radius: 0;
+}
+
+body.theme-win98 .menu-action:hover {
+  background: #000080;
+  color: #ffffff;
+}
+
+body.theme-win98 .menu-action:hover .menu-shortcut {
+  color: #dfdfdf;
+}
+
+body.theme-win98 .menu-shortcut {
+  color: #444444;
+  font-family: var(--font-ui);
+}
+
+/* Atajos de teclado (Modal Ayuda / Launcher) estilo teclas 3D Win98 */
+body.theme-win98 .help-section {
+  background: #c0c0c0;
+  border: 1px solid #808080;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .help-section h4 {
+  color: #000080;
+}
+
+body.theme-win98 .help-row {
+  color: #000000;
+  border-bottom-color: #a0a0a0;
+}
+
+body.theme-win98 .help-kbd,
+body.theme-win98 .launcher-shortcut {
+  background: #dfdfdf;
+  color: #000000;
+  border: 1px solid transparent;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+  font-family: var(--font-ui);
+  font-weight: 700;
+}
+
+/* Controles nativos y custom selects estilo Windows 98 */
+body.theme-win98 input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  background: #ffffff;
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--win98-sunken);
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+body.theme-win98 input[type="checkbox"]:checked {
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' viewBox='0 0 7 7'%3E%3Cpath fill='%23000' d='M6 0L2.5 3.5L1 2L0 3L2.5 5.5L7 1z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+body.theme-win98 input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  background: #ffffff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--win98-sunken);
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+body.theme-win98 input[type="radio"]:checked {
+  background-color: #ffffff;
+  background-image: radial-gradient(circle, #000000 0%, #000000 38%, transparent 45%);
+}
+
+body.theme-win98 input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  height: 20px;
+}
+
+body.theme-win98 input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #c0c0c0;
+  box-shadow: var(--win98-sunken);
+  border-radius: 0;
+}
+
+body.theme-win98 input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 11px;
+  height: 19px;
+  margin-top: -8px;
+  background: #c0c0c0;
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+  cursor: pointer;
+}
+
+body.theme-win98 .custom-select-option {
+  color: #000000;
+  border-radius: 0;
+}
+
+body.theme-win98 .custom-select-option:hover,
+body.theme-win98 .custom-select-option.selected {
+  background: #000080;
+  color: #ffffff;
+}
+
+/* Historial de logs (LogHistory) adaptado a Win98 */
+body.theme-win98 .log-history-item {
+  border-radius: 0;
+}
+
+body.theme-win98 .log-history-item.log-pixel {
+  color: #000080;
+  background: rgba(0, 0, 128, 0.08);
+  border-left-color: #000080;
+}
+
+body.theme-win98 .log-history-item.log-jumpable:hover {
+  filter: none;
+  background: #000080;
+  color: #ffffff;
+}
+
+body.theme-win98 .log-history-item.log-current {
+  outline: 1px solid #000080;
+}
+
+body.theme-win98 .log-current-badge {
+  border-radius: 0;
+  background: #000080;
+  color: #ffffff;
+}
+
+body.theme-win98 .menu-divider {
+  border-top: 1px solid #808080;
+  border-bottom: 1px solid #ffffff;
+  background: transparent;
+  height: 2px;
+}
+
+/* Inputs, selects y contenedores hundidos */
+body.theme-win98 input[type="text"],
+body.theme-win98 input[type="number"],
+body.theme-win98 input[type="search"],
+body.theme-win98 textarea,
+body.theme-win98 select,
+body.theme-win98 #palette-bar,
+body.theme-win98 #custom-palette-bar,
+body.theme-win98 .preview-box,
+body.theme-win98 .custom-select-menu {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid transparent;
+  border-radius: 0;
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 .swatch {
+  border-radius: 0;
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 .swatch.active {
+  outline: 2px solid #000080;
+  outline-offset: 1px;
+}
+
+body.theme-win98 .panel-header-row,
+body.theme-win98 .layer-item,
+body.theme-win98 .frame-cell,
+body.theme-win98 .doc-tab {
+  border-radius: 0;
+}
+
+body.theme-win98 .doc-tab.active,
+body.theme-win98 .layer-item.active,
+body.theme-win98 .frame-cell.active {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  box-shadow: var(--win98-pressed);
+}
+
+body.theme-win98 .layer-item.active .layer-name,
+body.theme-win98 .layer-item.active.locked .layer-name {
+  color: #ffffff;
+}
+
+body.theme-win98 .layer-mini-btn {
+  background: #c0c0c0;
+  color: #000000;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: var(--win98-raised);
+}
+
+/* Scrollbars clásicas Win98 */
+body.theme-win98 ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+body.theme-win98 ::-webkit-scrollbar-track {
+  background: repeating-conic-gradient(#ffffff 0% 25%, #c0c0c0 0% 50%);
+  background-size: 2px 2px;
+}
+
+body.theme-win98 ::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  box-shadow: var(--win98-raised);
+}
+
+/* --- ÍCONOS CLÁSICOS DE JS PAINT (HERRAMIENTAS + MENÚ) --- */
+
+body.theme-win98 #toolLasso,
+body.theme-win98 #toolSelect,
+body.theme-win98 #toolEraser,
+body.theme-win98 #toolBucket,
+body.theme-win98 #toolEyedropper,
+body.theme-win98 #toolPencil,
+body.theme-win98 #toolSpray,
+body.theme-win98 #toolLine,
+body.theme-win98 #lineModeCurve,
+body.theme-win98 #toolShapes,
+body.theme-win98 #shapeBtnRect,
+body.theme-win98 #shapeBtnCircle {
+  position: relative;
+}
+
+body.theme-win98 #toolLasso svg.lucide,
+body.theme-win98 #toolSelect svg.lucide,
+body.theme-win98 #toolEraser svg.lucide,
+body.theme-win98 #toolBucket svg.lucide,
+body.theme-win98 #toolEyedropper svg.lucide,
+body.theme-win98 #toolPencil svg.lucide,
+body.theme-win98 #toolSpray svg.lucide,
+body.theme-win98 #toolLine svg.lucide,
+body.theme-win98 #lineModeCurve svg.lucide,
+body.theme-win98 #toolShapes svg.lucide,
+body.theme-win98 #shapeBtnRect svg.lucide,
+body.theme-win98 #shapeBtnCircle svg.lucide {
+  opacity: 0;
+}
+
+body.theme-win98 #toolLasso::before,
+body.theme-win98 #toolSelect::before,
+body.theme-win98 #toolEraser::before,
+body.theme-win98 #toolBucket::before,
+body.theme-win98 #toolEyedropper::before,
+body.theme-win98 #toolPencil::before,
+body.theme-win98 #toolSpray::before,
+body.theme-win98 #toolLine::before,
+body.theme-win98 #lineModeCurve::before,
+body.theme-win98 #toolShapes::before,
+body.theme-win98 #shapeBtnRect::before,
+body.theme-win98 #shapeBtnCircle::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-image: url("../assets/win98/tools.svg");
+  background-repeat: no-repeat;
+  background-position: calc(-16px * (var(--win98-icon, 0) * 2 + 1)) -16px;
+  pointer-events: none;
+}
+
+body.theme-win98 #lineModeCurve::before {
+  position: static;
+  transform: none;
+  flex-shrink: 0;
+}
+
+body.theme-win98 #toolLasso { --win98-icon: 0; }
+body.theme-win98 #toolSelect { --win98-icon: 1; }
+body.theme-win98 #toolEraser { --win98-icon: 2; }
+body.theme-win98 #toolBucket { --win98-icon: 3; }
+body.theme-win98 #toolEyedropper { --win98-icon: 4; }
+body.theme-win98 #toolPencil { --win98-icon: 6; }
+body.theme-win98 #toolSpray { --win98-icon: 8; }
+body.theme-win98 #toolLine { --win98-icon: 10; }
+body.theme-win98 #lineModeCurve { --win98-icon: 11; }
+body.theme-win98 #toolShapes { --win98-icon: 12; }
+body.theme-win98 #shapeBtnRect { --win98-icon: 12; }
+body.theme-win98 #shapeBtnCircle { --win98-icon: 14; }
+
+/* Íconos de acciones y menú con assets clásicos de JS Paint */
+body.theme-win98 #btnUndo svg.lucide,
+body.theme-win98 #btnRedo svg.lucide,
+body.theme-win98 .menu-action[data-action="undo"] svg.lucide,
+body.theme-win98 .menu-action[data-action="redo"] svg.lucide,
+body.theme-win98 .menu-action[data-action="openNewDocModal"] svg.lucide,
+body.theme-win98 .menu-action[data-action="openProjectDialog"] svg.lucide,
+body.theme-win98 .menu-action[data-action="openImageDialog"] svg.lucide,
+body.theme-win98 .menu-action[data-action="cutAction"] svg.lucide,
+body.theme-win98 .menu-action[data-action="pasteAction"] svg.lucide,
+body.theme-win98 .menu-action[data-action="flipSelectionH"] svg.lucide,
+body.theme-win98 .menu-action[data-action="flipSelectionV"] svg.lucide,
+body.theme-win98 .menu-action[data-action="rotateSelection90"] svg.lucide,
+body.theme-win98 .menu-action[data-action="erodeOutlineAction"] svg.lucide {
+  display: none;
+}
+
+body.theme-win98 #btnUndo,
+body.theme-win98 #btnRedo {
+  position: relative;
+  min-width: 28px;
+  min-height: 26px;
+}
+
+body.theme-win98 #btnUndo::before,
+body.theme-win98 #btnRedo::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  background-image: url("../assets/win98/undo.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+body.theme-win98 #btnRedo::before {
+  transform: scaleX(-1);
+}
+
+body.theme-win98 .menu-action[data-action="undo"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="redo"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="openNewDocModal"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="openProjectDialog"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="openImageDialog"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="cutAction"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="pasteAction"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="flipSelectionH"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="flipSelectionV"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="rotateSelection90"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  flex-shrink: 0;
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
+
+body.theme-win98 .menu-action[data-action="undo"] .menu-action-label::before {
+  background-image: url("../assets/win98/undo.svg");
+}
+
+body.theme-win98 .menu-action[data-action="redo"] .menu-action-label::before {
+  background-image: url("../assets/win98/undo.svg");
+  transform: scaleX(-1);
+}
+
+body.theme-win98 .menu-action[data-action="openNewDocModal"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_blank.png");
+}
+
+body.theme-win98 .menu-action[data-action="openProjectDialog"] .menu-action-label::before,
+body.theme-win98 .menu-action[data-action="openImageDialog"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_open.png");
+}
+
+body.theme-win98 .menu-action[data-action="cutAction"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_cut.png");
+}
+
+body.theme-win98 .menu-action[data-action="pasteAction"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_paste.png");
+}
+
+body.theme-win98 .menu-action[data-action="flipSelectionH"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_fliph.png");
+}
+
+body.theme-win98 .menu-action[data-action="flipSelectionV"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_flipv.png");
+}
+
+body.theme-win98 .menu-action[data-action="rotateSelection90"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_rotate_cw.png");
+}
+
+body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before {
+  background-image: url("../assets/win98/p_delete.png");
+}

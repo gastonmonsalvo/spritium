@@ -115,17 +115,25 @@ export function initCanvasBgIntensity() {
 }
 
 /**
- * Aplica el tema visual oscuro o claro y redibuja lienzo y reglas.
+ * Aplica el tema visual oscuro, claro o win98 (solo sesión) y redibuja lienzo y reglas.
  * @param {string} mode
  */
 export function applyColorTheme(mode) {
   const isLight = mode === "light";
+  const isWin98 = mode === "win98";
   document.body?.classList.toggle("theme-light", isLight);
+  document.body?.classList.toggle("theme-win98", isWin98);
+
+  const brandTitle = document.querySelector("#topBar .app-brand-title");
+  if (brandTitle) {
+    brandTitle.textContent = isWin98 ? "Spritium 98" : "Spritium";
+  }
+
   ["btnThemeToggle", "btnLauncherThemeToggle"].forEach((id) => {
     const btn = document.getElementById(id);
     if (btn) {
-      btn.innerHTML = `<i data-lucide="${isLight ? "moon" : "sun"}" class="ui-icon-sm"></i>`;
-      btn.title = i18n.t(isLight ? "theme.to_dark" : "theme.to_light");
+      btn.innerHTML = `<i data-lucide="${isLight || isWin98 ? "moon" : "sun"}" class="ui-icon-sm"></i>`;
+      btn.title = i18n.t(isLight || isWin98 ? "theme.to_dark" : "theme.to_light");
       refreshIcons(btn);
     }
   });
@@ -143,15 +151,27 @@ export function initColorTheme() {
   } catch {
     saved = "dark";
   }
+  if (saved !== "light") saved = "dark";
   applyColorTheme(saved);
 }
 
 /**
  * Alterna entre tema oscuro y claro persistiendo la preferencia.
+ * Si está activo el easter egg Win98, vuelve al último tema guardado.
  */
 export function toggleColorTheme() {
-  const isCurrentlyLight = document.body?.classList.contains("theme-light");
-  const next = isCurrentlyLight ? "dark" : "light";
+  const isWin98 = document.body?.classList.contains("theme-win98");
+  let next;
+  if (isWin98) {
+    try {
+      next = localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
+    } catch {
+      next = "dark";
+    }
+  } else {
+    const isCurrentlyLight = document.body?.classList.contains("theme-light");
+    next = isCurrentlyLight ? "dark" : "light";
+  }
   applyColorTheme(next);
   try {
     localStorage.setItem(THEME_STORAGE_KEY, next);
@@ -159,6 +179,46 @@ export function toggleColorTheme() {
     // ignore storage quota errors
   }
   setStatus({ key: next === "light" ? "theme.light_on" : "theme.dark_on" });
+}
+
+let win98EggClicks = 0;
+let win98EggLastClickAt = 0;
+
+/** Reinicia el contador de clicks del easter egg Win98. */
+export function resetWin98EasterEggClicks() {
+  win98EggClicks = 0;
+  win98EggLastClickAt = 0;
+}
+
+/**
+ * Activa o desactiva el tema easter egg Windows 98 al clickear 7 veces el logo en About (solo por sesión).
+ */
+export function triggerWin98EasterEgg() {
+  const now = Date.now();
+  if (now - win98EggLastClickAt > 2500) {
+    win98EggClicks = 0;
+  }
+  win98EggLastClickAt = now;
+  win98EggClicks += 1;
+
+  if (win98EggClicks < 7) return;
+  resetWin98EasterEggClicks();
+
+  const isWin98 = document.body?.classList.contains("theme-win98");
+  if (isWin98) {
+    let saved = "dark";
+    try {
+      saved = localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
+    } catch {
+      saved = "dark";
+    }
+    applyColorTheme(saved);
+    setStatus({ key: saved === "light" ? "theme.light_on" : "theme.dark_on" });
+  } else {
+    applyColorTheme("win98");
+    document.getElementById("aboutModal")?.classList.remove("open");
+    setStatus("Spritium 98 activado (solo esta sesión)");
+  }
 }
 
 /**

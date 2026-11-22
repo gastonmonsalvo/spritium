@@ -201,6 +201,7 @@ export function registerAppActions() {
     toggleMobileDrawer: ui.toggleMobileDrawer,
     resetDockedPanels: ui.resetDockedPanels,
     toggleColorTheme: ui.toggleColorTheme,
+    triggerWin98EasterEgg: ui.triggerWin98EasterEgg,
     exportUserConfig: ui.exportUserConfig,
     openHelpModal: ui.openHelpModal,
     closeHelpModal: ui.closeHelpModal,

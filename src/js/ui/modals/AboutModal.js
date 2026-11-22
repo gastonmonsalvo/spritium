@@ -20,7 +20,7 @@ export function renderAboutModal() {
         </div>
 
         <div class="panel-section-card" style="gap: 8px; padding: 12px">
-          <div style="display: flex; align-items: center; gap: 10px">
+          <div id="aboutEasterEggTarget" data-action="triggerWin98EasterEgg" style="display: flex; align-items: center; gap: 10px; width: fit-content; user-select: none; cursor: pointer">
             <img src="./src/assets/logo-64x64.png" alt="Spritium Logo" class="logo-pixelart logo-pixelart--about" />
             <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
               <div style="font-family: var(--font-display); font-size: 15px; color: var(--text-primary)">Spritium</div>
