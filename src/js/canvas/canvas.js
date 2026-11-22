@@ -375,6 +375,7 @@ export function fitZoomToViewport() {
 export function applyZoom(newZoom) {
   state.zoom = Math.max(0.25, Math.min(16, Number(Number(newZoom).toFixed(2))));
 
+  if (typeof document === "undefined") return;
   const canvas = document.getElementById("paintCanvas");
   const container = document.getElementById("canvasContainer");
   if (!canvas) return;

@@ -17,6 +17,7 @@ function getTickStep(gridSize, cellPx) {
  * Dibuja las reglas superior e izquierda alineadas con el tamaño visual actual del canvas.
  */
 export function renderRulers() {
+  if (typeof document === "undefined") return;
   const topCanvas = document.getElementById("rulerTop");
   const leftCanvas = document.getElementById("rulerLeft");
   if (!topCanvas || !leftCanvas) return;

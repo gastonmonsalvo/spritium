@@ -124,6 +124,7 @@ export function openFrameContextMenu(e, frameIndex, frameRange = null) {
  * Renderiza las píldoras de frames en la barra de línea de tiempo.
  */
 export function renderFramesUI() {
+  if (typeof document === "undefined") return;
   const list = document.getElementById("frames-list");
   if (!list) return;
   if (!list.dataset.wheelBound) {

@@ -54,6 +54,8 @@ dev-docs/
 node_modules/
 coverage/
 .vitest/
+.stryker-tmp/
+reports/
 
 # Logs y bases de datos locales
 *.log

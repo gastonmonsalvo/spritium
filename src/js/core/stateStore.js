@@ -3,6 +3,7 @@
  */
 
 export const CANVAS_PX = 512;
+export const MAX_GRID_DIM = 1024;
 
 /**
  * Crea una matriz bidimensional height×width inicializada en 0 (transparente).
@@ -276,8 +277,8 @@ export function getGridDims() {
  * @param {number} [newHeight=newWidth]
  */
 export function setGridSize(newWidth, newHeight = newWidth) {
-  const w = Math.max(4, Math.min(512, Math.round(Number(newWidth) || 64)));
-  const h = Math.max(4, Math.min(512, Math.round(Number(newHeight) || w)));
+  const w = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(newWidth) || 64)));
+  const h = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(newHeight) || w)));
   state.gridWidth = w;
   state.gridHeight = h;
   state.gridSize = Math.max(w, h);

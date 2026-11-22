@@ -6,6 +6,7 @@
 import { fetchHistory, requestLoadSprite } from "../core/api.js";
 import {
   state,
+  MAX_GRID_DIM,
   pushState,
   setGridSize,
   createEmptyGrid,
@@ -123,10 +124,10 @@ function createNewDocumentFromModal(e) {
   const rawSize = sizeSelect?.value || "64";
   const isCustom = rawSize === "custom";
   const w = isCustom
-    ? Math.max(4, Math.min(512, Math.round(Number(document.getElementById("newDocCustomW")?.value || 64))))
+    ? Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(document.getElementById("newDocCustomW")?.value || 64))))
     : Number(rawSize || 64);
   const h = isCustom
-    ? Math.max(4, Math.min(512, Math.round(Number(document.getElementById("newDocCustomH")?.value || 64))))
+    ? Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(document.getElementById("newDocCustomH")?.value || 64))))
     : w;
   const bgMode = bgSelect?.value || "transparent";
   const themeKey = themeSelect?.value || state.currentThemeKey || "db32";

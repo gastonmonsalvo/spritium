@@ -45,6 +45,7 @@ subscribe("layers:render", () => renderLayersUI());
 subscribe("layers:syncOpacity", () => syncLayerOpacityUI());
 
 function syncLayerOpacityUI() {
+  if (typeof document === "undefined") return;
   const slider = document.getElementById("layerOpacitySlider");
   const label = document.getElementById("layerOpacityValue");
   const blendSelect = document.getElementById("layerBlendModeSelect");
@@ -237,6 +238,7 @@ function openLayerContextMenu(e, layerIndex) {
  * Renderiza la lista interactiva de capas con drag & drop, candado y visibilidad.
  */
 export function renderLayersUI() {
+  if (typeof document === "undefined") return;
   const list = document.getElementById("layers-list");
   if (!list) return;
   list.innerHTML = "";

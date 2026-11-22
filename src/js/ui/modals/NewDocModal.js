@@ -3,6 +3,7 @@
  * NewDocModal.js: Modal de creación de documento nuevo.
  */
 
+import { MAX_GRID_DIM } from "../../core/state.js";
 import { i18n } from "../../i18n/I18nService.js";
 import { RESOLUTION_PRESETS } from "../components/TopMenuConfig.js";
 import { escapeHtml, renderList } from "../components/uiHtml.js";
@@ -39,11 +40,11 @@ export function renderNewDocModal() {
         <div id="newDocCustomRow" class="modal-grid-2" style="display: none">
           <div>
             <label for="newDocCustomW" data-i18n="modal.new_doc.w">${escapeHtml(i18n.t("modal.new_doc.w"))}</label>
-            <input type="number" id="newDocCustomW" min="4" max="512" value="64" />
+            <input type="number" id="newDocCustomW" min="4" max="${MAX_GRID_DIM}" value="64" />
           </div>
           <div>
             <label for="newDocCustomH" data-i18n="modal.new_doc.h">${escapeHtml(i18n.t("modal.new_doc.h"))}</label>
-            <input type="number" id="newDocCustomH" min="4" max="512" value="32" />
+            <input type="number" id="newDocCustomH" min="4" max="${MAX_GRID_DIM}" value="32" />
           </div>
         </div>
 

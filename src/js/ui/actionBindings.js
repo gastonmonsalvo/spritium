@@ -88,12 +88,6 @@ function buildWorkspaceActions() {
     createNewCustomPalette: pio.createNewCustomPalette,
     closeNewPaletteModal: pio.closeNewPaletteModal,
     confirmCreateNewPalette: pio.confirmCreateNewPalette,
-    switchTheme: () => {
-      const key = document.getElementById("themeSelect")?.value;
-      if (!key) return;
-      if (key === "__new_palette__") pio.createNewCustomPalette({ empty: true });
-      else pm.applyTheme(key, { recordHistory: true });
-    },
     addNewLayer: () => ly.addNewLayer(),
     addNewFolder: () => ly.addNewFolder(),
     duplicateActiveLayer: ly.duplicateActiveLayer,

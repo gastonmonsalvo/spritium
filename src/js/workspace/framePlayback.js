@@ -14,7 +14,7 @@ let playTimer = null;
  */
 export function toggleOnionSkin() {
   state.onionSkin = !state.onionSkin;
-  const btn = document.getElementById("btnOnionSkin");
+  const btn = typeof document !== "undefined" ? document.getElementById("btnOnionSkin") : null;
   if (btn) btn.classList.toggle("active", state.onionSkin);
   renderAll();
   setStatus({ key: state.onionSkin ? "log.onion_on" : "log.onion_off" });
@@ -31,12 +31,14 @@ export function setOnionSkinOption(key, value) {
   }
   if (key === "mode") {
     state.onionSkinConfig.mode = value === "redblue" ? "redblue" : "normal";
-    document.getElementById("onionModeNormal")?.classList.toggle("active", state.onionSkinConfig.mode === "normal");
-    document.getElementById("onionModeRedBlue")?.classList.toggle("active", state.onionSkinConfig.mode === "redblue");
+    if (typeof document !== "undefined") {
+      document.getElementById("onionModeNormal")?.classList.toggle("active", state.onionSkinConfig.mode === "normal");
+      document.getElementById("onionModeRedBlue")?.classList.toggle("active", state.onionSkinConfig.mode === "redblue");
+    }
   } else if (key === "opacity") {
     const op = Math.max(0.1, Math.min(0.8, Number(value) || 0.3));
     state.onionSkinConfig.opacity = op;
-    const label = document.getElementById("onionOpacityVal");
+    const label = typeof document !== "undefined" ? document.getElementById("onionOpacityVal") : null;
     if (label) label.textContent = `${Math.round(op * 100)}%`;
   } else if (key === "prevCount") {
     state.onionSkinConfig.prevCount = Math.max(0, Math.min(3, Math.round(Number(value) || 0)));
@@ -59,7 +61,7 @@ export function stopAnimation() {
     playTimer = null;
   }
   state.isPlaying = false;
-  const btn = document.getElementById("btnPlayAnim");
+  const btn = typeof document !== "undefined" ? document.getElementById("btnPlayAnim") : null;
   if (btn) {
     btn.classList.remove("active");
     btn.innerHTML = `<i data-lucide="play" class="ui-icon-sm"></i><span>Play</span>`;

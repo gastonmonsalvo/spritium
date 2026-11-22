@@ -6,6 +6,7 @@
 
 import {
   state,
+  MAX_GRID_DIM,
   pushState,
   setGridSize,
   getGridDims,
@@ -396,8 +397,8 @@ export async function confirmTilemapImportModal() {
     pushState();
 
     const { w: curW, h: curH } = getGridDims();
-    const dstW = pj ? Math.max(4, Math.min(512, pj.cols * tw)) : Math.max(tw, Math.min(512, curW || 64));
-    const dstH = pj ? Math.max(4, Math.min(512, pj.rows * th)) : Math.max(th, Math.min(512, curH || 64));
+    const dstW = pj ? Math.max(4, Math.min(MAX_GRID_DIM, pj.cols * tw)) : Math.max(tw, Math.min(MAX_GRID_DIM, curW || 64));
+    const dstH = pj ? Math.max(4, Math.min(MAX_GRID_DIM, pj.rows * th)) : Math.max(th, Math.min(MAX_GRID_DIM, curH || 64));
 
     setGridSize(dstW, dstH);
     resetLayersWithGrid(createEmptyGrid(dstW, dstH), baseName);
@@ -479,8 +480,8 @@ export async function confirmTilemapImportModal() {
   pushState();
   state.isDirtySinceImport = true;
   if (pj && resizeCanvasFlag) {
-    const dstW = Math.max(4, Math.min(512, pj.cols * tw));
-    const dstH = Math.max(4, Math.min(512, pj.rows * th));
+    const dstW = Math.max(4, Math.min(MAX_GRID_DIM, pj.cols * tw));
+    const dstH = Math.max(4, Math.min(MAX_GRID_DIM, pj.rows * th));
     resizeAllProjectLayersKeepingContent(dstW, dstH);
     updateResolutionButtons(dstW, dstH);
   }

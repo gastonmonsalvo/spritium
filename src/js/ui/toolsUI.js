@@ -85,7 +85,7 @@ export function setBrushSize(size, announce = true) {
   const clamped = Math.max(minSize, Math.min(256, Math.round(Number(size) || minSize)));
   state.brushSize = clamped;
 
-  const numInput = document.getElementById("brushSizeNumber");
+  const numInput = typeof document !== "undefined" ? document.getElementById("brushSizeNumber") : null;
   if (numInput) {
     numInput.min = String(minSize);
     if (Number(numInput.value) !== clamped) {
@@ -93,7 +93,7 @@ export function setBrushSize(size, announce = true) {
     }
   }
 
-  const slider = document.getElementById("brushSizeInput");
+  const slider = typeof document !== "undefined" ? document.getElementById("brushSizeInput") : null;
   const sliderVal = Math.min(64, clamped);
   if (slider) {
     slider.min = String(minSize);
@@ -147,6 +147,7 @@ export function setLineStyle(style) {
  * @param {string} toolName
  */
 export function updateToolOptionsUI(toolName = state.currentTool) {
+  if (typeof document === "undefined") return;
   const box = document.getElementById("toolOptionsBox");
   const optLine = document.getElementById("optLineOptions");
   const optShapes = document.getElementById("optShapeSelector");
@@ -354,39 +355,41 @@ export function setTool(toolName) {
     state.floatingSelection = null;
   }
   state.currentTool = toolName;
-  document
-    .querySelectorAll("#tools .tool-btn")
-    .forEach((b) => b.classList.remove("active"));
+  if (typeof document !== "undefined") {
+    document
+      .querySelectorAll("#tools .tool-btn")
+      .forEach((b) => b.classList.remove("active"));
 
-  const map = {
-    pencil: "toolPencil",
-    line: "toolLine",
-    rect: "toolShapes",
-    circle: "toolShapes",
-    triangle: "toolShapes",
-    blur: "toolFilterBrush",
-    jumble: "toolFilterBrush",
-    noise: "toolFilterBrush",
-    spray: "toolSpray",
-    move: "toolMove",
-    pan: "toolPan",
-    shading: "toolShading",
-    bucket: "toolBucket",
-    eyedropper: "toolEyedropper",
-    eraser: "toolEraser",
-    select: "toolSelect",
-    ellipseSelect: "toolEllipseSelect",
-    lasso: "toolLasso",
-    magicSelect: "toolMagicSelect",
-    backgroundEraser: "toolBackgroundEraser",
-  };
+    const map = {
+      pencil: "toolPencil",
+      line: "toolLine",
+      rect: "toolShapes",
+      circle: "toolShapes",
+      triangle: "toolShapes",
+      blur: "toolFilterBrush",
+      jumble: "toolFilterBrush",
+      noise: "toolFilterBrush",
+      spray: "toolSpray",
+      move: "toolMove",
+      pan: "toolPan",
+      shading: "toolShading",
+      bucket: "toolBucket",
+      eyedropper: "toolEyedropper",
+      eraser: "toolEraser",
+      select: "toolSelect",
+      ellipseSelect: "toolEllipseSelect",
+      lasso: "toolLasso",
+      magicSelect: "toolMagicSelect",
+      backgroundEraser: "toolBackgroundEraser",
+    };
 
-  const targetId = map[toolName];
-  if (targetId) {
-    document.getElementById(targetId)?.classList.add("active");
+    const targetId = map[toolName];
+    if (targetId) {
+      document.getElementById(targetId)?.classList.add("active");
+    }
+    updateToolOptionsUI(toolName);
+    syncMobileToolButtonIcon(toolName);
   }
-  updateToolOptionsUI(toolName);
-  syncMobileToolButtonIcon(toolName);
   setStatus({ key: "log.tool_selected", params: { toolKey: toolName, tool: toolName } });
 }
 

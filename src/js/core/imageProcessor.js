@@ -4,6 +4,7 @@
  */
 
 import { rgbToOklab, parseColorToRgb, DITHER_STRATEGIES } from "./color.js";
+import { MAX_GRID_DIM } from "./stateStore.js";
 
 function toHex(r, g, b) {
   return (
@@ -118,14 +119,14 @@ export async function loadRawSpriteImageData(file, targetW = null, targetH = nul
   let w = targetW ? Math.round(targetW) : bitmap.width;
   let h = targetH ? Math.round(targetH) : bitmap.height;
 
-  // Si excede el máximo del editor (512px) en tamaño nativo, escalar proporcionalmente sin suavizado
-  if (!targetW && !targetH && (w > 512 || h > 512)) {
-    const scale = 512 / Math.max(w, h);
+  // Si excede el máximo del editor (MAX_GRID_DIM) en tamaño nativo, escalar proporcionalmente sin suavizado
+  if (!targetW && !targetH && (w > MAX_GRID_DIM || h > MAX_GRID_DIM)) {
+    const scale = MAX_GRID_DIM / Math.max(w, h);
     w = Math.max(4, Math.round(w * scale));
     h = Math.max(4, Math.round(h * scale));
   } else {
-    w = Math.max(4, Math.min(512, w));
-    h = Math.max(4, Math.min(512, h));
+    w = Math.max(4, Math.min(MAX_GRID_DIM, w));
+    h = Math.max(4, Math.min(MAX_GRID_DIM, h));
   }
 
   const canvas = document.createElement("canvas");
@@ -158,13 +159,19 @@ export async function loadRawSpriteImageData(file, targetW = null, targetH = nul
 
 /**
  * Decodifica un File de imagen, opcionalmente quita el fondo perimetral y recorta bounding box,
- * y reescala en un lienzo de `targetSize x targetSize`.
+ * y reescala en un lienzo de `targetWidth x targetHeight` (o `targetSize x targetSize`).
  * @param {File} file
  * @param {number} [targetSize=64]
- * @param {{removeBackground?: boolean}} [options={}]
+ * @param {{removeBackground?: boolean, targetWidth?: number|null, targetHeight?: number|null}} [options={}]
  * @returns {Promise<ImageData>}
  */
-export async function prepareExternalSprite(file, targetSize = 64, { removeBackground = false } = {}) {
+export async function prepareExternalSprite(
+  file,
+  targetSize = 64,
+  { removeBackground = false, targetWidth = null, targetHeight = null } = {},
+) {
+  const dstW = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetWidth) || Number(targetSize) || 64)));
+  const dstH = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetHeight) || Number(targetSize) || 64)));
   const bitmap = await createImageBitmap(file);
   const srcCanvas = document.createElement("canvas");
   srcCanvas.width = bitmap.width;
@@ -198,41 +205,43 @@ export async function prepareExternalSprite(file, targetSize = 64, { removeBackg
     const cropW = maxX >= minX ? maxX - minX + 1 : cleaned.width;
     const cropH = maxY >= minY ? maxY - minY + 1 : cleaned.height;
 
-    const margin = Math.max(1, Math.round((targetSize * 4) / 64));
-    const targetBox = Math.max(1, targetSize - margin * 2);
-    const scale = Math.min(targetBox / cropW, targetBox / cropH);
+    const marginX = Math.max(1, Math.round((dstW * 4) / 64));
+    const marginY = Math.max(1, Math.round((dstH * 4) / 64));
+    const targetBoxW = Math.max(1, dstW - marginX * 2);
+    const targetBoxH = Math.max(1, dstH - marginY * 2);
+    const scale = Math.min(targetBoxW / cropW, targetBoxH / cropH);
     const newW = Math.max(1, Math.round(cropW * scale));
     const newH = Math.max(1, Math.round(cropH * scale));
-    const offsetX = Math.floor((targetSize - newW) / 2);
-    const offsetY = Math.floor((targetSize - newH) / 2);
+    const offsetX = Math.floor((dstW - newW) / 2);
+    const offsetY = Math.floor((dstH - newH) / 2);
 
     const dstCanvas = document.createElement("canvas");
-    dstCanvas.width = targetSize;
-    dstCanvas.height = targetSize;
+    dstCanvas.width = dstW;
+    dstCanvas.height = dstH;
     const dstCtx = dstCanvas.getContext("2d");
     const isIntegerDownscale = cropW % newW === 0 && cropH % newH === 0;
     dstCtx.imageSmoothingEnabled = !isIntegerDownscale && (newW < cropW || newH < cropH);
     if (dstCtx.imageSmoothingEnabled) dstCtx.imageSmoothingQuality = "high";
     dstCtx.drawImage(srcCanvas, cropX, cropY, cropW, cropH, offsetX, offsetY, newW, newH);
-    return dstCtx.getImageData(0, 0, targetSize, targetSize);
+    return dstCtx.getImageData(0, 0, dstW, dstH);
   }
 
   const dstCanvas = document.createElement("canvas");
-  dstCanvas.width = targetSize;
-  dstCanvas.height = targetSize;
+  dstCanvas.width = dstW;
+  dstCanvas.height = dstH;
   const dstCtx = dstCanvas.getContext("2d");
   const { drawW, drawH, offsetX, offsetY } = computeContainedRect(
     srcCanvas.width,
     srcCanvas.height,
-    targetSize,
-    targetSize,
+    dstW,
+    dstH,
   );
   const isIntegerDownscale = srcCanvas.width % drawW === 0 && srcCanvas.height % drawH === 0;
   dstCtx.imageSmoothingEnabled = !isIntegerDownscale && (drawW < srcCanvas.width || drawH < srcCanvas.height);
   if (dstCtx.imageSmoothingEnabled) dstCtx.imageSmoothingQuality = "high";
   dstCtx.drawImage(srcCanvas, 0, 0, srcCanvas.width, srcCanvas.height, offsetX, offsetY, drawW, drawH);
 
-  return dstCtx.getImageData(0, 0, targetSize, targetSize);
+  return dstCtx.getImageData(0, 0, dstW, dstH);
 }
 
 /**
@@ -490,8 +499,16 @@ export function extractAdaptivePalette(imgData, maxColors = 32, alphaThreshold =
  * @param {boolean} [dither=false]
  */
 export function reduceGridColorsClient(grid, paletteMap, maxColors = 32, dither = false) {
-  const size = grid.length;
-  const imgData = new ImageData(size, size);
+  if (!Array.isArray(grid) || grid.length === 0) {
+    return { width: 0, height: 0, size: 0, grid: [], palette: { 0: null } };
+  }
+  const h = grid.length;
+  const w = Array.isArray(grid[0]) ? grid[0].length : 0;
+  if (w === 0) {
+    return { width: 0, height: h, size: 0, grid: grid.map(() => []), palette: { 0: null } };
+  }
+
+  const imgData = new ImageData(w, h);
   const rgbCache = new Map();
 
   for (const [kStr, col] of Object.entries(paletteMap || {})) {
@@ -502,13 +519,13 @@ export function reduceGridColorsClient(grid, paletteMap, maxColors = 32, dither 
     }
   }
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
       const idx = grid[y]?.[x];
       if (!idx || idx === 0) continue;
       const rgb = rgbCache.get(idx);
       if (!rgb) continue;
-      const o = (y * size + x) * 4;
+      const o = (y * w + x) * 4;
       imgData.data[o] = rgb[0];
       imgData.data[o + 1] = rgb[1];
       imgData.data[o + 2] = rgb[2];
@@ -522,5 +539,5 @@ export function reduceGridColorsClient(grid, paletteMap, maxColors = 32, dither 
     dither,
   });
 
-  return { size, grid: newGrid, palette: finalPal };
+  return { width: w, height: h, size: w, grid: newGrid, palette: finalPal };
 }

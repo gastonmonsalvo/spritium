@@ -105,18 +105,13 @@ export function renderRightSidebarHtml() {
 
           <div style="display: flex; flex-direction: column; gap: 5px">
             <select id="themeSelect" style="width: 100%; font-size: 11px"></select>
-            <div style="display: flex; gap: 5px; align-items: center">
-              <button type="button" class="tool-btn" data-action="switchTheme" data-i18n="opt.apply" style="flex: 1; font-size: 11px; padding: 5px 8px" data-i18n-title="title.apply_palette" title="${tAttr("title.apply_palette")}">
-                ${tAttr("opt.apply")}
+            <div class="menu-item" id="reduceMenuItem" style="width: 100%">
+              <button type="button" class="tool-btn" id="btnReduceDropdown" style="width: 100%; font-size: 11px; padding: 5px 7px" data-i18n-title="title.reduce_palette" title="${tAttr("title.reduce_palette")}">
+                <span data-i18n="color.reduce">${tAttr("color.reduce")}</span>
+                <i data-lucide="chevron-down" class="ui-icon-sm"></i>
               </button>
-              <div class="menu-item" id="reduceMenuItem" style="flex: 1">
-                <button type="button" class="tool-btn" id="btnReduceDropdown" style="width: 100%; font-size: 11px; padding: 5px 7px" data-i18n-title="title.reduce_palette" title="${tAttr("title.reduce_palette")}">
-                  <span data-i18n="color.reduce">${tAttr("color.reduce")}</span>
-                  <i data-lucide="chevron-down" class="ui-icon-sm"></i>
-                </button>
-                <div class="menu-dropdown" style="right: 0; left: auto; min-width: 155px">
-                  ${reduceHtml}
-                </div>
+              <div class="menu-dropdown" style="right: 0; left: auto; min-width: 155px">
+                ${reduceHtml}
               </div>
             </div>
           </div>

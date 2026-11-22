@@ -98,6 +98,7 @@ export function togglePixelCursor() {
  * @param {number} [h=w]
  */
 export function updateResolutionButtons(w, h = w) {
+  if (typeof document === "undefined") return;
   const rw = Math.max(1, Math.round(Number(w) || 64));
   const rh = Math.max(1, Math.round(Number(h) || rw));
   let matchedPreset = false;
@@ -161,24 +162,26 @@ export function setTiledMode(mode) {
   const next = valid.has(mode) ? mode : "none";
   state.tiledMode = next;
 
-  document.querySelectorAll("[data-tiled-mode]").forEach((btn) => {
-    const isActive = btn.getAttribute("data-tiled-mode") === next;
-    btn.classList.toggle("active", isActive);
-  });
+  if (typeof document !== "undefined") {
+    document.querySelectorAll("[data-tiled-mode]").forEach((btn) => {
+      const isActive = btn.getAttribute("data-tiled-mode") === next;
+      btn.classList.toggle("active", isActive);
+    });
 
-  const previewLabel = document.querySelector("#previewModuleHeader label");
-  if (previewLabel) {
-    const labels = {
-      none: "Vista 1:1",
-      both: "Tiled 3×3",
-      x: "Tiled 3×1",
-      y: "Tiled 1×3",
-    };
-    previewLabel.textContent = labels[next];
+    const previewLabel = document.querySelector("#previewModuleHeader label");
+    if (previewLabel) {
+      const labels = {
+        none: "Vista 1:1",
+        both: "Tiled 3×3",
+        x: "Tiled 3×1",
+        y: "Tiled 1×3",
+      };
+      previewLabel.textContent = labels[next];
+    }
   }
 
   applyZoom(state.zoom || 1);
-  if (next !== "none" && typeof requestAnimationFrame === "function") {
+  if (next !== "none" && typeof requestAnimationFrame === "function" && typeof document !== "undefined") {
     requestAnimationFrame(() => {
       const container = document.getElementById("canvasContainer");
       if (!container) return;

@@ -2,7 +2,7 @@
  * paletteThemeService.js: Catálogo i18n de paletas, selectores y cuantización perceptual OKLab.
  */
 
-import { state, pushState, cloneGrid, clonePaletteMap, setGridSize } from "../core/state.js";
+import { state, pushState, cloneGrid, clonePaletteMap, setGridSize, getGridDims } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import { quantizeGrid, hasPaintedPixels } from "../core/color.js";
 import { setStatus, updateResolutionButtons } from "../ui/index.js";
@@ -62,6 +62,7 @@ export function populatePaletteSelectOptions(sel, { includeOriginal = false, inc
 
 /** Puebla el selector de paletas del editor con el catálogo y la opción de crear nueva. */
 export function populateThemeSelect() {
+  if (typeof document === "undefined") return;
   const sel = document.getElementById("themeSelect");
   if (!sel) return;
   populatePaletteSelectOptions(sel, { includeOriginal: Boolean(state.originalImport), includeNew: true, selectedValue: state.currentThemeKey });
@@ -69,6 +70,7 @@ export function populateThemeSelect() {
 
 /** Sincroniza el valor seleccionado en el dropdown de paletas con state.currentThemeKey. */
 export function syncThemeSelectValue() {
+  if (typeof document === "undefined") return;
   const sel = document.getElementById("themeSelect");
   if (sel && sel.value !== state.currentThemeKey) sel.value = state.currentThemeKey;
 }
@@ -95,7 +97,15 @@ function restoreOriginalImport(recordHistory) {
 
 function quantizeAllFramesAndTiles(targetColors) {
   let quantizedPalette = { 0: null, ...clonePaletteMap(targetColors) };
-  const useOriginal = !state.isDirtySinceImport && state.layers.length === 1 && state.originalImport && state.originalImport.size === state.gridSize;
+  const { w, h } = getGridDims();
+  const origW = state.originalImport?.width || state.originalImport?.size;
+  const origH = state.originalImport?.height || state.originalImport?.size || origW;
+  const useOriginal =
+    !state.isDirtySinceImport &&
+    state.layers.length === 1 &&
+    state.originalImport &&
+    origW === w &&
+    origH === h;
   if (useOriginal) {
     const res = quantizeGrid(state.originalImport.grid, state.originalImport.paletteMap, targetColors, { dither: state.ditherEnabled });
     state.layers[0].grid = res.grid;

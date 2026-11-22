@@ -6,6 +6,7 @@ import { state } from "../core/state.js";
 import { setStatus, openCustomRgbaPopover } from "../ui/index.js";
 import {
   FREE_BRUSH_IDX,
+  FREE_SECONDARY_IDX,
   manualCustomIndices,
   syncActiveUserPalette,
   renderCustomPaletteUI,
@@ -45,11 +46,13 @@ export function registerColor(hex) {
   const normalized = hex.toLowerCase();
   for (const [idxStr, col] of Object.entries(state.paletteMap)) {
     const idx = Number(idxStr);
-    if (idx !== FREE_BRUSH_IDX && idx !== 0 && col?.toLowerCase() === normalized) {
+    if (idx !== FREE_BRUSH_IDX && idx !== FREE_SECONDARY_IDX && idx !== 0 && col?.toLowerCase() === normalized) {
       return { index: idx, alreadyExists: true };
     }
   }
-  const existingKeys = Object.keys(state.paletteMap).map(Number).filter((k) => k !== FREE_BRUSH_IDX);
+  const existingKeys = Object.keys(state.paletteMap)
+    .map(Number)
+    .filter((k) => k !== FREE_BRUSH_IDX && k !== FREE_SECONDARY_IDX);
   const newIdx = Math.max(40, (existingKeys.length > 0 ? Math.max(...existingKeys) : 39) + 1);
   state.paletteMap[newIdx] = normalized;
   if (!state.customColorIndices.includes(newIdx)) state.customColorIndices.push(newIdx);
@@ -69,42 +72,41 @@ export function openSlotColorPicker(slot = "primary") {
   const curIdx = isSecondary ? (state.secondaryColorIndex ?? 0) : state.currentColorIndex;
   const initialHex = (curIdx && state.paletteMap?.[curIdx]) || "#ff0055";
   openCustomRgbaPopover(anchorEl, initialHex, (rgbaHex) => {
-    const { index } = registerColor(rgbaHex);
-    if (isSecondary) {
-      state.secondaryColorIndex = index;
-    } else {
-      state.currentColorIndex = index;
-    }
+    prepareFreeColor(rgbaHex, isSecondary ? "secondary" : "primary");
     highlightCurrentSwatch();
   });
 }
 
 /** Prepara el color libre para pintar SIN agregarlo a Personalizados hasta pintar o presionar + Muestra. */
-export function prepareFreeColor(hex) {
+export function prepareFreeColor(hex, slot = "primary") {
+  const isSecondary = slot === "secondary";
   const normalized = hex.toLowerCase();
   for (const [idxStr, col] of Object.entries(state.paletteMap)) {
     const idx = Number(idxStr);
-    if (idx !== FREE_BRUSH_IDX && idx !== 0 && col?.toLowerCase() === normalized) {
-      state.currentColorIndex = idx;
+    if (idx !== FREE_BRUSH_IDX && idx !== FREE_SECONDARY_IDX && idx !== 0 && col?.toLowerCase() === normalized) {
+      if (isSecondary) state.secondaryColorIndex = idx;
+      else state.currentColorIndex = idx;
       highlightCurrentSwatch();
       setStatus({ key: "log.color_active", params: { hex: normalized } });
       return;
     }
   }
-  state.paletteMap[FREE_BRUSH_IDX] = normalized;
-  state.currentColorIndex = FREE_BRUSH_IDX;
+  const freeIdx = isSecondary ? FREE_SECONDARY_IDX : FREE_BRUSH_IDX;
+  state.paletteMap[freeIdx] = normalized;
+  if (isSecondary) state.secondaryColorIndex = freeIdx;
+  else state.currentColorIndex = freeIdx;
   renderActiveColorsIndicator();
   setStatus({ key: "log.free_ready", params: { hex: normalized } });
 }
 
-function replaceFreeBrushIndex(layers, targetIndex) {
+function replaceFreeBrushIndex(layers, sourceIndex, targetIndex) {
   for (const layer of layers) {
     if (!layer?.grid) continue;
     for (let y = 0; y < layer.grid.length; y++) {
       const row = layer.grid[y];
       if (!row) continue;
       for (let x = 0; x < row.length; x++) {
-        if (row[x] === FREE_BRUSH_IDX) row[x] = targetIndex;
+        if (row[x] === sourceIndex) row[x] = targetIndex;
       }
     }
   }
@@ -113,7 +115,8 @@ function replaceFreeBrushIndex(layers, targetIndex) {
 /** Asegura que todo color usado en píxeles del lienzo esté visible en la paleta activa / personalizados. */
 export function syncCanvasColorsToPalette() {
   const layers = state.layers?.length ? state.layers : [{ grid: state.grid }];
-  let freeBrushUsed = false;
+  let freePrimaryUsed = false;
+  let freeSecondaryUsed = false;
   const used = new Set();
 
   for (const layer of layers) {
@@ -122,20 +125,26 @@ export function syncCanvasColorsToPalette() {
       if (!row) continue;
       for (const v of row) {
         if (!v) continue;
-        if (v === FREE_BRUSH_IDX) freeBrushUsed = true;
+        if (v === FREE_BRUSH_IDX) freePrimaryUsed = true;
+        else if (v === FREE_SECONDARY_IDX) freeSecondaryUsed = true;
         else used.add(v);
       }
     }
   }
 
   let changed = false;
-  if (freeBrushUsed && state.paletteMap[FREE_BRUSH_IDX]) {
-    const { index } = registerColor(state.paletteMap[FREE_BRUSH_IDX]);
-    replaceFreeBrushIndex(layers, index);
-    if (state.currentColorIndex === FREE_BRUSH_IDX) state.currentColorIndex = index;
-    used.add(index);
-    delete state.paletteMap[FREE_BRUSH_IDX];
-    changed = true;
+  for (const [usedFlag, freeIdx, slotKey] of [
+    [freePrimaryUsed, FREE_BRUSH_IDX, "currentColorIndex"],
+    [freeSecondaryUsed, FREE_SECONDARY_IDX, "secondaryColorIndex"],
+  ]) {
+    if (usedFlag && state.paletteMap[freeIdx]) {
+      const { index } = registerColor(state.paletteMap[freeIdx]);
+      replaceFreeBrushIndex(layers, freeIdx, index);
+      if (state[slotKey] === freeIdx) state[slotKey] = index;
+      used.add(index);
+      delete state.paletteMap[freeIdx];
+      changed = true;
+    }
   }
 
   for (const idx of used) {

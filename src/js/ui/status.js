@@ -97,6 +97,7 @@ function getVisibleLogEntries() {
 }
 
 function renderLogHistory() {
+  if (typeof document === "undefined") return;
   const visibleItems = getVisibleLogEntries();
   const countEl = document.getElementById("logHistoryCount");
   if (countEl) {
@@ -134,7 +135,7 @@ function renderLogHistory() {
           : i18n.t("logs.jump_to");
       row.addEventListener("click", () => {
         if (jumpToHistoryAction(item.actionId)) {
-          const statusText = document.getElementById("statusText");
+          const statusText = typeof document !== "undefined" ? document.getElementById("statusText") : null;
           if (statusText) {
             statusText.textContent = i18n.t("logs.history_prefix", { msg: resolveLogMessage(item) });
             statusText.style.color = "var(--text-secondary)";
@@ -254,7 +255,7 @@ export function initLogHistory() {
 
   i18n.addEventListener("langchange", () => {
     if (latestStatusMeta) {
-      const statusText = document.getElementById("statusText");
+      const statusText = typeof document !== "undefined" ? document.getElementById("statusText") : null;
       if (statusText) statusText.textContent = resolveLogMessage({ meta: latestStatusMeta });
     }
     renderLogHistory();
@@ -336,7 +337,7 @@ export function setStatus(msgOrSpec, isError = false, category = null) {
   const msg = isSpec ? resolveLogMessage({ meta }) : String(msgOrSpec ?? "");
   latestStatusMeta = meta;
 
-  const statusText = document.getElementById("statusText");
+  const statusText = typeof document !== "undefined" ? document.getElementById("statusText") : null;
   if (statusText) {
     statusText.textContent = msg;
     statusText.style.color = isError ? "var(--status-danger)" : "var(--text-secondary)";

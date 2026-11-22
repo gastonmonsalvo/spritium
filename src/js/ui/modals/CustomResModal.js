@@ -3,6 +3,7 @@
  * CustomResModal.js: Modal de resolución personalizada (N × M px).
  */
 
+import { MAX_GRID_DIM } from "../../core/state.js";
 import { i18n } from "../../i18n/I18nService.js";
 import { escapeHtml } from "../components/uiHtml.js";
 
@@ -20,11 +21,11 @@ export function renderCustomResModal() {
         <div class="modal-grid-2">
           <div>
             <label for="customResW" data-i18n="modal.custom_res.w">${escapeHtml(i18n.t("modal.custom_res.w"))}</label>
-            <input type="number" id="customResW" min="4" max="512" value="64" required />
+            <input type="number" id="customResW" min="4" max="${MAX_GRID_DIM}" value="64" required />
           </div>
           <div>
             <label for="customResH" data-i18n="modal.custom_res.h">${escapeHtml(i18n.t("modal.custom_res.h"))}</label>
-            <input type="number" id="customResH" min="4" max="512" value="64" required />
+            <input type="number" id="customResH" min="4" max="${MAX_GRID_DIM}" value="64" required />
           </div>
         </div>
         <div class="modal-actions">

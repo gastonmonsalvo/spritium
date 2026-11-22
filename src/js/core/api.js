@@ -14,6 +14,7 @@ import {
   reduceGridColorsClient,
 } from "./imageProcessor.js";
 import { snapMessyPixelArt } from "./pixelSnapper.js";
+import { MAX_GRID_DIM } from "./stateStore.js";
 
 const LOCAL_SPRITES_KEY = "spritium_local_sprites_v1";
 
@@ -77,6 +78,8 @@ export async function requestUploadImage(
     quantize = false,
     dither = false,
     targetSize = 64,
+    targetWidth = null,
+    targetHeight = null,
     pixelArtConvert = false,
     pixelSnapper = false,
     removeBackground = false,
@@ -88,12 +91,14 @@ export async function requestUploadImage(
   let imgData;
   let width;
   let height;
+  const resolvedW = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetWidth) || Number(targetSize) || 64)));
+  const resolvedH = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetHeight) || Number(targetSize) || 64)));
 
   if (pixelSnapper) {
     const raw = await loadRawSpriteImageData(file, null, null);
     const cleaned = removeBackground ? removeConnectedBackground(raw.imgData, 40) : raw.imgData;
     const snapped = snapMessyPixelArt(cleaned, {
-      targetSize: keepNativeSize ? null : Math.max(4, Math.min(512, Number(targetSize) || 64)),
+      targetSize: keepNativeSize ? null : Math.max(resolvedW, resolvedH),
       maxColors: 32,
     });
     imgData = snapped.imgData;
@@ -105,12 +110,15 @@ export async function requestUploadImage(
     width = raw.width;
     height = raw.height;
   } else if (pixelArtConvert || removeBackground) {
-    const size = Math.max(4, Math.min(512, Number(targetSize) || 64));
-    imgData = await prepareExternalSprite(file, size, { removeBackground });
-    width = size;
-    height = size;
+    imgData = await prepareExternalSprite(file, resolvedW, {
+      removeBackground,
+      targetWidth: resolvedW,
+      targetHeight: resolvedH,
+    });
+    width = resolvedW;
+    height = resolvedH;
   } else {
-    const raw = await loadRawSpriteImageData(file, targetSize, targetSize);
+    const raw = await loadRawSpriteImageData(file, resolvedW, resolvedH);
     imgData = raw.imgData;
     width = raw.width;
     height = raw.height;

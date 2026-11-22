@@ -265,6 +265,7 @@ function drawTileCanvasThumbnail(canvas, tileGrid, tileW, tileH, flipH = false, 
  * Renderiza el panel lateral completo de Tileset / Tilemap (selector, modos, grilla de tiles y acciones).
  */
 export function renderTilesetPanelUI() {
+  if (typeof document === "undefined") return;
   const mod = document.getElementById("moduleTileset");
   const isVisible = Boolean(state.showTilesetPanel && mod && mod.style.display !== "none");
   document.getElementById("menuTilesetPanel")?.classList.toggle("active", isVisible);

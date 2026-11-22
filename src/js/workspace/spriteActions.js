@@ -9,6 +9,7 @@ import {
 } from "../core/api.js";
 import {
   state,
+  MAX_GRID_DIM,
   pushState,
   setGridSize,
   getGridDims,
@@ -87,18 +88,21 @@ export async function handleUploadExternalFile(file, options = {}) {
   const keepNativeSize =
     options.keepNativeSize !== undefined
       ? Boolean(options.keepNativeSize)
-      : !options.asNewLayer && !options.targetSize && !options.pixelArtConvert;
-  const targetSize = Number(options.targetSize || resSelect?.value || state.gridSize || 64) || 64;
+      : !options.asNewLayer && !options.targetSize && !options.targetWidth && !options.targetHeight && !options.pixelArtConvert;
+  const fallbackSize = Number(options.targetSize || resSelect?.value || state.gridSize || 64) || 64;
+  const targetWidth = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(options.targetWidth || fallbackSize) || 64)));
+  const targetHeight = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(options.targetHeight || fallbackSize) || 64)));
+  const targetSize = Math.max(targetWidth, targetHeight);
   const pixelArtConvert = Boolean(options.pixelArtConvert);
   const pixelSnapper = Boolean(options.pixelSnapper);
   const removeBackground = Boolean(options.removeBackground);
 
   setStatus(
     pixelArtConvert
-      ? { key: "log.img_convert_pa", params: { w: targetSize, h: targetSize } }
+      ? { key: "log.img_convert_pa", params: { w: targetWidth, h: targetHeight } }
       : keepNativeSize
         ? { key: "log.img_open_native" }
-        : { key: "log.img_importing", params: { w: targetSize, h: targetSize } },
+        : { key: "log.img_importing", params: { w: targetWidth, h: targetHeight } },
   );
 
   try {
@@ -108,6 +112,8 @@ export async function handleUploadExternalFile(file, options = {}) {
       quantize,
       dither,
       targetSize,
+      targetWidth,
+      targetHeight,
       pixelArtConvert,
       pixelSnapper,
       removeBackground,
@@ -132,8 +138,8 @@ export async function handleUploadExternalFile(file, options = {}) {
       const srcW = data.grid[0]?.length || 0;
       if (
         (srcW > gw || srcH > gh) &&
-        srcW <= 512 &&
-        srcH <= 512 &&
+        srcW <= MAX_GRID_DIM &&
+        srcH <= MAX_GRID_DIM &&
         (await showConfirmDialog({
           title: i18n.t("import.confirm_expand_title"),
           message: i18n.t("import.confirm_expand_canvas", { imgW: srcW, imgH: srcH, curW: gw, curH: gh }),
@@ -186,12 +192,15 @@ export async function handleUploadExternalFile(file, options = {}) {
       state.sourceImportOptions = {
         keepNativeSize,
         targetSize,
+        targetWidth,
+        targetHeight,
         pixelArtConvert,
         pixelSnapper,
         removeBackground,
         paletteTheme: requestedTheme,
         dither,
       };
+      state.originalImport = null;
       state.isDirtySinceImport = true;
       state.resBaseSnapshot = null;
       addNewLayer(assetName || i18n.t("default.imported_name"), newGrid);
@@ -199,6 +208,7 @@ export async function handleUploadExternalFile(file, options = {}) {
       if (importedLayer && newOutOfBounds.length > 0) {
         importedLayer.outOfBounds = newOutOfBounds;
       }
+      populateThemeSelect();
       buildPaletteUI();
       renderCustomPaletteUI();
       renderAll();
@@ -211,6 +221,8 @@ export async function handleUploadExternalFile(file, options = {}) {
     state.sourceImportOptions = {
       keepNativeSize,
       targetSize,
+      targetWidth,
+      targetHeight,
       pixelArtConvert,
       pixelSnapper,
       removeBackground,
@@ -348,8 +360,8 @@ function sampleDominantBlockColor(oldGrid, oldSize, targetSize, x, y) {
  * @param {number} targetSize
  */
 export async function changeResolution(targetWidth, targetHeight = targetWidth) {
-  const dstW = Math.max(4, Math.min(512, Math.round(Number(targetWidth) || 64)));
-  const dstH = Math.max(4, Math.min(512, Math.round(Number(targetHeight) || dstW)));
+  const dstW = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetWidth) || 64)));
+  const dstH = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetHeight) || dstW)));
   const { w: curW, h: curH } = getGridDims();
   if (curW === dstW && curH === dstH) return;
   const prevResBase = state.resBaseSnapshot;

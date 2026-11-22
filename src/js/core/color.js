@@ -227,8 +227,10 @@ export function quantizeGrid(
  * @param {number[][]} grid
  */
 export function hasPaintedPixels(grid) {
+  if (!Array.isArray(grid)) return false;
   for (let y = 0; y < grid.length; y++) {
     const row = grid[y];
+    if (!Array.isArray(row)) continue;
     for (let x = 0; x < row.length; x++) {
       if (row[x] !== 0) return true;
     }

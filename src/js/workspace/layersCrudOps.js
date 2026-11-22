@@ -6,7 +6,7 @@ import { state, pushState, createEmptyGrid, cloneGrid, getGridDims, notify } fro
 import { renderAll } from "../canvas/canvas.js";
 import { setStatus } from "../ui/index.js";
 import { i18n } from "../i18n/I18nService.js";
-import { createLayer, syncActiveLayerGrid, setSelectedLayerIndices, forEachFrameLayers } from "./layersOps.js";
+import { createLayer, isLayerLocked, syncActiveLayerGrid, setSelectedLayerIndices, forEachFrameLayers } from "./layersOps.js";
 
 function cloneTilemapMeta(src, dst) {
   if (src.type !== "tilemap") return;
@@ -127,7 +127,7 @@ export function duplicateActiveLayer() {
 /** Elimina la capa en el índice indicado en todos los frames si no está bloqueada y queda al menos una. */
 export function deleteLayerAt(index = state.activeLayerIndex) {
   const target = state.layers[index];
-  if (target?.locked) { setStatus({ key: "log.layer_locked_named", params: { name: target.name } }, true); return; }
+  if (isLayerLocked(target)) { setStatus({ key: "log.layer_locked_named", params: { name: target?.name || "" } }, true); return; }
   if (state.layers.length <= 1) { setStatus({ key: "log.layer_min_one" }, true); return; }
 
   pushState();
@@ -154,7 +154,7 @@ export function deleteActiveLayer() {
 export function clearLayerAt(index = state.activeLayerIndex) {
   const layer = state.layers[index];
   if (!layer) return;
-  if (layer.locked) { setStatus({ key: "log.layer_locked_named", params: { name: layer.name } }, true); return; }
+  if (isLayerLocked(layer)) { setStatus({ key: "log.layer_locked_named", params: { name: layer.name } }, true); return; }
   pushState();
   for (let y = 0; y < layer.grid.length; y++) layer.grid[y].fill(0);
   if (layer.type === "tilemap" && Array.isArray(layer.tileGrid)) {
@@ -180,7 +180,7 @@ export function copyLayerToClipboard(index = state.activeLayerIndex) {
 export function cutLayerToClipboard(index = state.activeLayerIndex) {
   const layer = state.layers[index];
   if (!layer) return;
-  if (layer.locked) { setStatus({ key: "log.layer_locked_named", params: { name: layer.name } }, true); return; }
+  if (isLayerLocked(layer)) { setStatus({ key: "log.layer_locked_named", params: { name: layer.name } }, true); return; }
   copyLayerToClipboard(index);
   clearLayerAt(index);
   setStatus({ key: "log.layer_cut", params: { name: layer.name } }, false, "pixel");

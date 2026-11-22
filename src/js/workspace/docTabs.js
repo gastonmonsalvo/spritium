@@ -255,8 +255,10 @@ export function closeDocTab(tabId) {
   }
 
   if (tabs.length <= 1) {
-    document.body?.classList.add("is-launching");
-    document.getElementById("launcherOverlay")?.classList.remove("hidden");
+    if (typeof document !== "undefined") {
+      document.body?.classList.add("is-launching");
+      document.getElementById("launcherOverlay")?.classList.remove("hidden");
+    }
     return;
   }
 
@@ -287,6 +289,7 @@ export function renameActiveDocTab(name) {
  * Renderiza la barra de pestañas en `#docTabsList`.
  */
 export function renderDocTabsUI() {
+  if (typeof document === "undefined") return;
   const list = document.getElementById("docTabsList");
   if (!list) return;
   list.innerHTML = "";

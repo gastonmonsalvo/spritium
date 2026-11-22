@@ -97,7 +97,10 @@ function cloneFrameEntry(f, idx) {
 /** Construye un snapshot serializable completo del proyecto actual. */
 export function buildCurrentProjectSnapshot(customName = null) {
   syncActiveFrame();
-  const assetName = customName || document.getElementById("assetName")?.value.trim() || "nuevo_proyecto";
+  const assetName =
+    customName ||
+    (typeof document !== "undefined" ? document.getElementById("assetName")?.value.trim() : "") ||
+    "nuevo_proyecto";
   const framesCopy = state.frames.map(cloneFrameEntry);
   const { w, h } = getGridDims();
   return {
@@ -150,7 +153,7 @@ export function restoreProjectSnapshot(data, label = null, { recordHistory = tru
   state.selection = null;
   state.currentColorIndex = state.paletteMap[2] ? 2 : 1;
 
-  const nameInput = document.getElementById("assetName");
+  const nameInput = typeof document !== "undefined" ? document.getElementById("assetName") : null;
   if (nameInput) nameInput.value = (data.name || "").trim() || "nuevo_proyecto";
 
   populateThemeSelect();

@@ -10,6 +10,7 @@ import { i18n } from "../i18n/I18nService.js";
 import { saveUserPalette } from "../core/palettes.js";
 
 export const FREE_BRUSH_IDX = 9999;
+export const FREE_SECONDARY_IDX = 9998;
 export const manualCustomIndices = new Set();
 
 function getRampLabel(idx) {
@@ -92,12 +93,38 @@ function purgeColorFromLayers(idx, replacementIdx = 0) {
   }
 }
 
+function promoteFreeSlotIfNeeded(idx) {
+  if (idx !== FREE_BRUSH_IDX && idx !== FREE_SECONDARY_IDX) return idx;
+  const hex = state.paletteMap?.[idx];
+  if (!hex) return idx;
+  const existingKeys = Object.keys(state.paletteMap)
+    .map(Number)
+    .filter((k) => k !== FREE_BRUSH_IDX && k !== FREE_SECONDARY_IDX);
+  const nextIdx = Math.max(40, (existingKeys.length > 0 ? Math.max(...existingKeys) : 39) + 1);
+  state.paletteMap[nextIdx] = hex.toLowerCase();
+  if (!state.customColorIndices.includes(nextIdx)) state.customColorIndices.push(nextIdx);
+  if (state.currentColorIndex === idx) state.currentColorIndex = nextIdx;
+  if (state.secondaryColorIndex === idx) state.secondaryColorIndex = nextIdx;
+  delete state.paletteMap[idx];
+  return nextIdx;
+}
+
 function replacePaletteColorAcrossProject(oldIdx, newIdx, oldHex) {
   if (oldIdx === newIdx || !state.paletteMap?.[newIdx]) return;
   pushState();
-  purgeColorFromLayers(oldIdx, newIdx);
-  const newHex = state.paletteMap[newIdx];
+  const targetIdx = promoteFreeSlotIfNeeded(newIdx);
+  purgeColorFromLayers(oldIdx, targetIdx);
+  const newHex = state.paletteMap[targetIdx];
+  if (state.customColorIndices.includes(oldIdx)) {
+    manualCustomIndices.delete(oldIdx);
+    state.customColorIndices = state.customColorIndices.filter((i) => i !== oldIdx);
+    delete state.paletteMap[oldIdx];
+    if (state.currentColorIndex === oldIdx) state.currentColorIndex = targetIdx;
+    if (state.secondaryColorIndex === oldIdx) state.secondaryColorIndex = targetIdx;
+  }
   state.isDirtySinceImport = true;
+  syncActiveUserPalette();
+  highlightCurrentSwatch();
   renderAll();
   setStatus({ key: "log.swatch_replaced", params: { from: oldHex, to: newHex } });
 }
@@ -110,7 +137,7 @@ function deletePaletteColorAndPixels(idx, hex) {
   delete state.paletteMap[idx];
   const validKeys = Object.keys(state.paletteMap)
     .map(Number)
-    .filter((k) => k > 0 && k !== FREE_BRUSH_IDX && Boolean(state.paletteMap[k]))
+    .filter((k) => k > 0 && k !== FREE_BRUSH_IDX && k !== FREE_SECONDARY_IDX && Boolean(state.paletteMap[k]))
     .sort((a, b) => a - b);
   if (state.currentColorIndex === idx) {
     state.currentColorIndex = validKeys[0] ?? 0;
@@ -142,7 +169,7 @@ function attachSwatchDeleteButton(swatch, idx, hex) {
   swatch.appendChild(delBtn);
 }
 
-function openSwatchContextMenu(clientX, clientY, idx, hex) {
+function openSwatchContextMenu(clientX, clientY, idx, hex, { isCustom = true } = {}) {
   const menu = document.getElementById("canvasContextMenu");
   if (!menu) return;
 
@@ -163,17 +190,19 @@ function openSwatchContextMenu(clientX, clientY, idx, hex) {
           action: () => replacePaletteColorAcrossProject(idx, state.secondaryColorIndex, hex),
         }]
       : []),
-    {
-      icon: "x", label: i18n.t("ctx.swatch_remove_custom"),
-      action: () => {
-        manualCustomIndices.delete(idx);
-        state.customColorIndices = state.customColorIndices.filter((i) => i !== idx);
-        if (state.currentColorIndex === idx) state.currentColorIndex = 1;
-        syncActiveUserPalette();
-        highlightCurrentSwatch();
-        setStatus({ key: "log.free_removed", params: { hex } });
-      },
-    },
+    ...(isCustom
+      ? [{
+          icon: "x", label: i18n.t("ctx.swatch_remove_custom"),
+          action: () => {
+            manualCustomIndices.delete(idx);
+            state.customColorIndices = state.customColorIndices.filter((i) => i !== idx);
+            if (state.currentColorIndex === idx) state.currentColorIndex = 1;
+            syncActiveUserPalette();
+            highlightCurrentSwatch();
+            setStatus({ key: "log.free_removed", params: { hex } });
+          },
+        }]
+      : []),
     {
       icon: "trash-2", label: i18n.t("ctx.swatch_delete_all"),
       action: () => deletePaletteColorAndPixels(idx, hex),
@@ -221,6 +250,7 @@ function bindTouchLongPress(el, onLongPress) {
 
 /** Renderiza los swatches de la paleta activa en `#palette-bar`. */
 export function buildPaletteUI() {
+  if (typeof document === "undefined") return;
   const bar = document.getElementById("palette-bar");
   if (!bar || !state.paletteMap) return;
   bar.innerHTML = "";
@@ -231,7 +261,7 @@ export function buildPaletteUI() {
 
   for (const [idxStr, hexColor] of entries) {
     const idx = Number(idxStr);
-    if (idx === 0 || idx === FREE_BRUSH_IDX || customSet.has(idx) || !hexColor) continue;
+    if (idx === 0 || idx === FREE_BRUSH_IDX || idx === FREE_SECONDARY_IDX || customSet.has(idx) || !hexColor) continue;
     if (rendered >= maxSwatches) break;
     rendered++;
 
@@ -239,10 +269,10 @@ export function buildPaletteUI() {
     swatch.className = "color-swatch" + (idx === state.currentColorIndex ? " active" : "") + (idx === state.secondaryColorIndex ? " secondary-active" : "");
     swatch.style.backgroundColor = hexColor;
     const rampName = getRampLabel(idx);
-    swatch.title = `[#${idx}] ${rampName} (${hexColor}) · Clic Izq: 1° | Clic Der: 2°`;
+    swatch.title = `[#${idx}] ${rampName} (${hexColor}) · Clic Izq: 1° | Clic Der: opciones`;
     swatch.addEventListener("click", () => { state.currentColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.swatch_p1", params: { idx, ramp: rampName, hex: hexColor } }); });
-    swatch.addEventListener("contextmenu", (e) => { e.preventDefault(); state.secondaryColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.swatch_p2", params: { idx, ramp: rampName, hex: hexColor } }); });
-    bindTouchLongPress(swatch, () => { state.secondaryColorIndex = idx; highlightCurrentSwatch(); setStatus({ key: "log.swatch_p2", params: { idx, ramp: rampName, hex: hexColor } }); });
+    swatch.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); openSwatchContextMenu(e.clientX, e.clientY, idx, hexColor, { isCustom: false }); });
+    bindTouchLongPress(swatch, (cx, cy) => openSwatchContextMenu(cx, cy, idx, hexColor, { isCustom: false }));
     attachSwatchDeleteButton(swatch, idx, hexColor);
     bar.appendChild(swatch);
   }
@@ -259,6 +289,7 @@ export function buildPaletteUI() {
 
 /** Renderiza la barra de muestras libres personalizadas. */
 export function renderCustomPaletteUI() {
+  if (typeof document === "undefined") return;
   const container = document.getElementById("custom-palette-bar");
   if (!container || !state.paletteMap) return;
   container.innerHTML = "";
@@ -290,6 +321,7 @@ export function renderCustomPaletteUI() {
 
 /** Actualiza los chips visuales de color primario (1°) y secundario (2°). */
 export function renderActiveColorsIndicator() {
+  if (typeof document === "undefined") return;
   const pEl = document.getElementById("primaryColorPreview");
   const sEl = document.getElementById("secondaryColorPreview");
   const pCol = state.paletteMap?.[state.currentColorIndex];
@@ -329,6 +361,7 @@ export function resetSecondaryColorToTransparent() {
 
 /** Resalta el swatch correspondiente al color activo. */
 export function highlightCurrentSwatch() {
+  if (typeof document === "undefined") return;
   document.querySelectorAll(".color-swatch").forEach((el) => el.classList.remove("active", "secondary-active"));
   buildPaletteUI();
   renderCustomPaletteUI();

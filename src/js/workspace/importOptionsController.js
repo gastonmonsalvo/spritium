@@ -4,7 +4,7 @@
 
 import { requestUploadImage } from "../core/api.js";
 import { parseColorToRgba, hasPaintedPixels } from "../core/color.js";
-import { state } from "../core/state.js";
+import { state, MAX_GRID_DIM } from "../core/state.js";
 import { populatePaletteSelectOptions } from "./paletteManager.js";
 import { setStatus } from "../ui/index.js";
 import { i18n } from "../i18n/I18nService.js";
@@ -81,6 +81,19 @@ export async function reopenImportOptionsModal() {
   openImportModal(file, { asNewLayer: false, isReimport: true });
 }
 
+function syncCustomResRowVisibility() {
+  const resSelect = /** @type {HTMLSelectElement|null} */ (document.getElementById("importResSelect"));
+  const customRow = document.getElementById("importCustomResRow");
+  if (!customRow) return;
+  customRow.style.display = resSelect?.value === "custom" ? "grid" : "none";
+}
+
+function clampImportDim(raw, fallback = 64) {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.max(4, Math.min(MAX_GRID_DIM, n));
+}
+
 /**
  * Abre el modal de opciones de importación para un archivo de imagen.
  * @param {File} file
@@ -116,15 +129,28 @@ export function openImportModal(file, { asNewLayer = false, isReimport = false }
   if (modeSelect) {
     modeSelect.value = defaultAsNewLayer ? "layer" : "project";
   }
+  const customWInput = /** @type {HTMLInputElement|null} */ (document.getElementById("importCustomW"));
+  const customHInput = /** @type {HTMLInputElement|null} */ (document.getElementById("importCustomH"));
+  if (customWInput) {
+    customWInput.value = String(clampImportDim(savedOpts?.targetWidth ?? savedOpts?.targetSize, state.gridWidth || state.gridSize || 64));
+  }
+  if (customHInput) {
+    customHInput.value = String(clampImportDim(savedOpts?.targetHeight ?? savedOpts?.targetSize, state.gridHeight || state.gridSize || 64));
+  }
   if (resSelect) {
-    resSelect.value = savedOpts
-      ? savedOpts.keepNativeSize
-        ? "native"
-        : String(savedOpts.targetSize || 64)
-      : "native";
+    if (!savedOpts || savedOpts.keepNativeSize) {
+      resSelect.value = "native";
+    } else {
+      const savedW = savedOpts.targetWidth ?? savedOpts.targetSize;
+      const savedH = savedOpts.targetHeight ?? savedOpts.targetSize;
+      const presetVal = savedW === savedH ? String(savedW || 64) : "";
+      const hasPreset = presetVal && Array.from(resSelect.options).some((o) => o.value === presetVal);
+      resSelect.value = hasPreset ? presetVal : "custom";
+    }
     if (!resSelect.value) resSelect.value = "native";
     resSelect.disabled = false;
   }
+  syncCustomResRowVisibility();
   const convertChk = /** @type {HTMLInputElement|null} */ (document.getElementById("importConvertPixelArtChk"));
   if (convertChk) {
     convertChk.checked = Boolean(savedOpts?.pixelArtConvert);
@@ -168,7 +194,20 @@ function readImportFormOptions() {
   const asNewLayer = mode === "layer";
   const rawRes = /** @type {HTMLSelectElement|null} */ (document.getElementById("importResSelect"))?.value || "native";
   const keepNativeSize = rawRes === "native";
-  const targetSize = keepNativeSize ? state.gridSize || 64 : Number(rawRes || state.gridSize || 64);
+  const isCustom = rawRes === "custom";
+  const fallbackW = state.gridWidth || state.gridSize || 64;
+  const fallbackH = state.gridHeight || state.gridSize || 64;
+  const targetWidth = keepNativeSize
+    ? null
+    : isCustom
+      ? clampImportDim(/** @type {HTMLInputElement|null} */ (document.getElementById("importCustomW"))?.value, fallbackW)
+      : clampImportDim(rawRes, fallbackW);
+  const targetHeight = keepNativeSize
+    ? null
+    : isCustom
+      ? clampImportDim(/** @type {HTMLInputElement|null} */ (document.getElementById("importCustomH"))?.value, fallbackH)
+      : clampImportDim(rawRes, fallbackH);
+  const targetSize = keepNativeSize ? state.gridSize || 64 : Math.max(targetWidth, targetHeight);
   const pixelArtConvert = Boolean(/** @type {HTMLInputElement|null} */ (document.getElementById("importConvertPixelArtChk"))?.checked);
   const pixelSnapper = Boolean(/** @type {HTMLInputElement|null} */ (document.getElementById("importPixelSnapperChk"))?.checked);
   const removeBackground = Boolean(/** @type {HTMLInputElement|null} */ (document.getElementById("importRemoveBgChk"))?.checked);
@@ -178,6 +217,8 @@ function readImportFormOptions() {
     assetName,
     asNewLayer,
     targetSize,
+    targetWidth,
+    targetHeight,
     keepNativeSize,
     pixelArtConvert,
     pixelSnapper,
@@ -277,6 +318,13 @@ export function initImportOptionsModal(onImported) {
     "importDitherChk",
   ];
   for (const id of previewInputIds) {
+    document.getElementById(id)?.addEventListener("change", () => {
+      if (id === "importResSelect") syncCustomResRowVisibility();
+      scheduleImportPreview();
+    });
+  }
+  for (const id of ["importCustomW", "importCustomH"]) {
+    document.getElementById(id)?.addEventListener("input", scheduleImportPreview);
     document.getElementById(id)?.addEventListener("change", scheduleImportPreview);
   }
 

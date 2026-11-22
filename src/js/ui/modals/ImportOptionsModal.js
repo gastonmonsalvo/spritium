@@ -3,6 +3,7 @@
  * ImportOptionsModal.js: Modal de opciones para importar imágenes externas.
  */
 
+import { MAX_GRID_DIM } from "../../core/state.js";
 import { i18n } from "../../i18n/I18nService.js";
 import { RESOLUTION_PRESETS } from "../components/TopMenuConfig.js";
 import { escapeHtml, renderList } from "../components/uiHtml.js";
@@ -48,11 +49,23 @@ export function renderImportOptionsModal() {
                 <select id="importResSelect">
                   <option value="native" selected data-i18n="pm.import_native">${escapeHtml(i18n.t("pm.import_native"))}</option>
                   ${resOptions}
+                  <option value="custom" data-i18n="pm.custom_size">${escapeHtml(i18n.t("pm.custom_size"))}</option>
                 </select>
               </div>
               <div>
                 <label for="importThemeSelect" data-i18n="modal.import.palette">${escapeHtml(i18n.t("modal.import.palette"))}</label>
                 <select id="importThemeSelect"></select>
+              </div>
+            </div>
+
+            <div id="importCustomResRow" class="modal-grid-2" style="display: none">
+              <div>
+                <label for="importCustomW" data-i18n="modal.new_doc.w">${escapeHtml(i18n.t("modal.new_doc.w"))}</label>
+                <input type="number" id="importCustomW" min="4" max="${MAX_GRID_DIM}" value="64" />
+              </div>
+              <div>
+                <label for="importCustomH" data-i18n="modal.new_doc.h">${escapeHtml(i18n.t("modal.new_doc.h"))}</label>
+                <input type="number" id="importCustomH" min="4" max="${MAX_GRID_DIM}" value="64" />
               </div>
             </div>
 

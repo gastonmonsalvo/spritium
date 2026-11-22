@@ -152,7 +152,7 @@ export function setActiveLayerOpacity(percent) {
   const layer = state.layers[state.activeLayerIndex];
   if (!layer) return;
   layer.opacity = Math.max(0, Math.min(1, Number(percent) / 100));
-  const label = document.getElementById("layerOpacityValue");
+  const label = typeof document !== "undefined" ? document.getElementById("layerOpacityValue") : null;
   if (label) label.textContent = `${Math.round(layer.opacity * 100)}%`;
   renderAll();
 }
