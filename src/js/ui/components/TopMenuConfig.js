@@ -172,7 +172,7 @@ export const TOP_MENU_ITEMS = [
       { icon: "message-square-plus", labelKey: "menu.help.feedback", action: "openFeedbackModal" },
       { icon: "discord", labelKey: "menu.help.discord", href: "https://discord.gg/cxPmhUNFPj" },
       { divider: true },
-      { icon: "file-text", labelKey: "help.docs_guide", href: "./docs/viewer.html?doc=HELP.md&from=editor" },
+      { icon: "file-text", labelKey: "help.docs_guide", href: "./docs/index.html?doc=HELP.md&from=editor" },
       { divider: true },
       { icon: "info", labelKey: "menu.help.about", action: "openAboutModal" },
     ],

@@ -1,0 +1,21 @@
+{
+  "name": "spritium",
+  "version": "0.9.0-beta.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:smoke",
+    "test:smoke": "node scripts/tests/smoke-test.mjs",
+    "test:unit": "vitest run scripts/tests/unit",
+    "test:watch": "vitest scripts/tests/unit",
+    "test:ui": "vitest --ui scripts/tests/unit",
+    "test:core": "vitest run scripts/tests/unit/core",
+    "test:tools": "vitest run scripts/tests/unit/tools",
+    "test:workspace": "vitest run scripts/tests/unit/workspace",
+    "test:schemas": "vitest run scripts/tests/unit/schemas"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^5.1.1",
+    "vitest": "^5.1.1"
+  }
+}

@@ -117,7 +117,7 @@ function renderHelpSection(section) {
 }
 
 const HELP_DOC_LINKS = [
-  { href: "./docs/viewer.html?doc=HELP.md&from=editor", icon: "file-text", key: "help.docs_guide" },
+  { href: "./docs/index.html?doc=HELP.md&from=editor", icon: "file-text", key: "help.docs_guide" },
 ];
 
 /** Genera el HTML del modal de Atajos, Controles y Documentación. */

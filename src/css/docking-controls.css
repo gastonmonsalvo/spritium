@@ -8,6 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 8px 10px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-input);
@@ -17,10 +18,18 @@
   cursor: move;
 }
 
+.log-window-header > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .log-window-actions {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  flex-shrink: 0;
+  gap: 5px;
 }
 
 .log-history-clear,
@@ -44,6 +53,12 @@
 .log-window-close:hover {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
+}
+
+.log-history-clear.active {
+  color: var(--accent-primary, #38bdf8);
+  border-color: var(--accent-primary, #38bdf8);
+  background: color-mix(in srgb, var(--accent-primary, #38bdf8) 12%, transparent);
 }
 
 .log-window-legend {

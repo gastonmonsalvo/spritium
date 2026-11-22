@@ -50,11 +50,10 @@ uploads/
 scripts/
 config/
 private_backup/
-docs/index.html
-docs/ARCHITECTURE.md
-docs/HELPER.md
-docs/data/api.es.json
-docs/data/api.en.json
+dev-docs/
+node_modules/
+coverage/
+.vitest/
 
 # Logs y bases de datos locales
 *.log

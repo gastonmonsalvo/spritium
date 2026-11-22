@@ -6,6 +6,8 @@ export * from "./status.js";
 export * from "./cursors.js";
 export * from "./theme.js";
 export * from "./toolsUI.js";
+export * from "./symmetryUI.js";
+export * from "./viewControlsUI.js";
 export * from "./menus.js";
 export * from "./docking.js";
 export * from "./configIO.js";

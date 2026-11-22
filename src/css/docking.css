@@ -154,7 +154,8 @@ body .dock-module.module-floating {
   position: fixed;
   left: 224px;
   bottom: 42px;
-  width: 320px;
+  width: 370px;
+  max-width: calc(100vw - 24px);
   max-height: 400px;
   flex-direction: column;
   background: var(--bg-panel);

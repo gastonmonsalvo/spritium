@@ -1,10 +1,9 @@
-/**
+﻿/**
  * launcher.js: Pantalla de inicio (Launcher) para Spritium,
  * con modal real de Documento Nuevo, Drag & Drop sin parpadeo y lista de recientes reales.
  */
 
-import { fetchHistory, requestLoadSprite, requestUploadImage } from "../core/api.js";
-import { parseColorToRgba, hasPaintedPixels } from "../core/color.js";
+import { fetchHistory, requestLoadSprite } from "../core/api.js";
 import {
   state,
   pushState,
@@ -24,6 +23,14 @@ import { renderAll, applyZoom, fitZoomToViewport } from "../canvas/canvas.js";
 import { renderRulers } from "../canvas/rulers.js";
 import { setStatus, updateResolutionButtons } from "../ui/index.js";
 import { i18n } from "../i18n/I18nService.js";
+import {
+  openImportModal,
+  closeImportModal,
+  reopenImportOptionsModal,
+  initImportOptionsModal,
+} from "./importOptionsController.js";
+
+export { openImportModal, closeImportModal, reopenImportOptionsModal };
 
 if (typeof window !== "undefined") {
   i18n.addEventListener("langchange", () => {
@@ -39,7 +46,6 @@ if (typeof window !== "undefined") {
     }
   });
 }
-import { handleUploadExternalFile } from "./spriteActions.js";
 import { loadProjectFile } from "../core/projectIO.js";
 import { openNewDocTab, syncActiveTabSnapshot } from "./docTabs.js";
 
@@ -178,258 +184,6 @@ function createNewDocumentFromModal(e) {
     key: "status.doc_created",
     params: { name: docName, w, h, bg: bgMode },
   });
-}
-
-let pendingImportFile = null;
-let pendingImportReuseTab = false;
-
-async function buildCurrentCanvasPngFile() {
-  if (typeof document === "undefined") return null;
-  const w = Math.max(1, state.gridWidth || state.gridSize || 64);
-  const h = Math.max(1, state.gridHeight || state.gridSize || w);
-  const layers = state.originalImport?.grid
-    ? [{ visible: true, grid: state.originalImport.grid }]
-    : (state.layers || []).filter((l) => l?.visible !== false && l?.grid && l.type !== "folder");
-  const pal = state.originalImport?.paletteMap || state.paletteMap || {};
-  const srcW = state.originalImport?.width || state.originalImport?.size || w;
-  const srcH = state.originalImport?.height || state.originalImport?.size || h;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = srcW;
-  canvas.height = srcH;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-  const img = ctx.createImageData(srcW, srcH);
-  for (const layer of layers) {
-    for (let y = 0; y < srcH; y++) {
-      const row = layer.grid[y];
-      if (!row) continue;
-      for (let x = 0; x < srcW; x++) {
-        const idx = row[x] || 0;
-        if (!idx) continue;
-        const rgba = parseColorToRgba(pal[idx]);
-        if (!rgba) continue;
-        const o = (y * srcW + x) * 4;
-        img.data[o] = rgba[0];
-        img.data[o + 1] = rgba[1];
-        img.data[o + 2] = rgba[2];
-        img.data[o + 3] = rgba[3];
-      }
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-  if (!blob) return null;
-  const nameEl = /** @type {HTMLInputElement|null} */ (document.getElementById("assetName"));
-  const baseName = (nameEl?.value || "sprite").trim() || "sprite";
-  return new File([blob], `${baseName}.png`, { type: "image/png" });
-}
-
-/**
- * Reabre el modal de configuración de importación sobre la imagen original del documento actual.
- */
-export async function reopenImportOptionsModal() {
-  let file = state.sourceImageFile;
-  if (!file) {
-    const hasPixels =
-      Boolean(state.originalImport?.grid) ||
-      (state.layers || []).some((l) => l?.grid && hasPaintedPixels(l.grid));
-    if (!hasPixels) {
-      setStatus({ key: "log.reimport_none" }, true);
-      return;
-    }
-    file = await buildCurrentCanvasPngFile();
-    if (!file) {
-      setStatus({ key: "log.reimport_none" }, true);
-      return;
-    }
-    state.sourceImageFile = file;
-  }
-  openImportModal(file, { asNewLayer: false, isReimport: true });
-}
-
-/**
- * Abre el modal de opciones de importación para un archivo de imagen.
- * @param {File} file
- * @param {{asNewLayer?: boolean, isReimport?: boolean}} [options]
- */
-export function openImportModal(file, { asNewLayer = false, isReimport = false } = {}) {
-  if (!file) return;
-  pendingImportFile = file;
-  pendingImportReuseTab = Boolean(isReimport);
-
-  const canvasIsEmpty =
-    state.frames.length <= 1 &&
-    state.layers.length === 1 &&
-    state.layers[0]?.type !== "tilemap" &&
-    !(state.layers[0]?.grid && hasPaintedPixels(state.layers[0].grid));
-  const defaultAsNewLayer = !isReimport && Boolean(asNewLayer) && !canvasIsEmpty;
-  const savedOpts = isReimport ? state.sourceImportOptions : null;
-
-  const modal = document.getElementById("importOptionsModal");
-  const titleEl = document.getElementById("importModalTitle");
-  const nameInput = document.getElementById("importAssetName");
-  const modeSelect = document.getElementById("importModeSelect");
-  const resSelect = document.getElementById("importResSelect");
-  const themeSelect = document.getElementById("importThemeSelect");
-  const ditherChk = document.getElementById("importDitherChk");
-
-  if (titleEl) {
-    titleEl.textContent = i18n.t(defaultAsNewLayer ? "import.title_layer" : "import.title_project");
-  }
-  if (nameInput) {
-    nameInput.value = file.name.replace(/\.[^/.]+$/, "") || "imported_asset";
-  }
-  if (modeSelect) {
-    modeSelect.value = defaultAsNewLayer ? "layer" : "project";
-  }
-  if (resSelect) {
-    resSelect.value = savedOpts
-      ? savedOpts.keepNativeSize
-        ? "native"
-        : String(savedOpts.targetSize || 64)
-      : "native";
-    if (!resSelect.value) resSelect.value = "native";
-    resSelect.disabled = false;
-  }
-  const convertChk = document.getElementById("importConvertPixelArtChk");
-  if (convertChk) {
-    convertChk.checked = Boolean(savedOpts?.pixelArtConvert);
-  }
-  const snapperChk = document.getElementById("importPixelSnapperChk");
-  if (snapperChk) {
-    snapperChk.checked = Boolean(savedOpts?.pixelSnapper);
-  }
-  const removeBgChk = document.getElementById("importRemoveBgChk");
-  if (removeBgChk) {
-    removeBgChk.checked = Boolean(savedOpts?.removeBackground);
-  }
-  if (themeSelect) {
-    populatePaletteSelectOptions(themeSelect, {
-      includeOriginal: true,
-      selectedValue: savedOpts?.paletteTheme
-        ? savedOpts.paletteTheme
-        : state.quantizeOnUpload && state.currentThemeKey !== "original"
-          ? state.currentThemeKey
-          : "original",
-    });
-  }
-  if (ditherChk) {
-    ditherChk.checked = savedOpts ? Boolean(savedOpts.dither) : Boolean(state.ditherEnabled);
-  }
-
-  if (modeSelect) {
-    modeSelect.onchange = () => {
-      const isLayer = modeSelect.value === "layer";
-      if (titleEl) titleEl.textContent = i18n.t(isLayer ? "import.title_layer" : "import.title_project");
-      scheduleImportPreview();
-    };
-  }
-  if (modal) modal.classList.add("open");
-  scheduleImportPreview();
-}
-
-let importPreviewTimer = null;
-let importPreviewSeq = 0;
-
-function readImportFormOptions() {
-  const assetName = document.getElementById("importAssetName")?.value.trim();
-  const mode = document.getElementById("importModeSelect")?.value || "project";
-  const asNewLayer = mode === "layer";
-  const rawRes = document.getElementById("importResSelect")?.value || "native";
-  const keepNativeSize = rawRes === "native";
-  const targetSize = keepNativeSize ? state.gridSize || 64 : Number(rawRes || state.gridSize || 64);
-  const pixelArtConvert = Boolean(document.getElementById("importConvertPixelArtChk")?.checked);
-  const pixelSnapper = Boolean(document.getElementById("importPixelSnapperChk")?.checked);
-  const removeBackground = Boolean(document.getElementById("importRemoveBgChk")?.checked);
-  const paletteTheme = document.getElementById("importThemeSelect")?.value || "original";
-  const dither = Boolean(document.getElementById("importDitherChk")?.checked);
-  return {
-    assetName,
-    asNewLayer,
-    targetSize,
-    keepNativeSize,
-    pixelArtConvert,
-    pixelSnapper,
-    removeBackground,
-    paletteTheme,
-    quantize: paletteTheme !== "original",
-    dither,
-    reuseActiveTab: pendingImportReuseTab,
-  };
-}
-
-function drawImportPreviewData(data) {
-  const canvas = document.getElementById("importPreviewCanvas");
-  const metaEl = document.getElementById("importPreviewMeta");
-  if (!canvas || !data?.grid?.length) return;
-
-  const h = data.height || data.grid.length;
-  const w = data.width || data.grid[0]?.length || 1;
-  if (canvas.width !== w) canvas.width = w;
-  if (canvas.height !== h) canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const img = ctx.createImageData(w, h);
-  const buf = img.data;
-  const rgbaCache = new Map();
-  for (let y = 0; y < h; y++) {
-    const row = data.grid[y];
-    for (let x = 0; x < w; x++) {
-      const idx = row?.[x] || 0;
-      if (!idx) continue;
-      let rgba = rgbaCache.get(idx);
-      if (!rgba) {
-        const hex = data.palette?.[idx];
-        rgba = hex ? parseColorToRgba(hex) : [0, 0, 0, 0];
-        rgbaCache.set(idx, rgba);
-      }
-      const o = (y * w + x) * 4;
-      buf[o] = rgba[0];
-      buf[o + 1] = rgba[1];
-      buf[o + 2] = rgba[2];
-      buf[o + 3] = rgba[3];
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-
-  if (metaEl) {
-    const colorCount = Object.keys(data.palette || {}).filter((k) => Number(k) !== 0).length;
-    metaEl.textContent = `${w}×${h} · ${i18n.t("modal.import.colors", { count: colorCount })}`;
-  }
-}
-
-function scheduleImportPreview() {
-  if (!pendingImportFile) return;
-  if (importPreviewTimer) clearTimeout(importPreviewTimer);
-  const metaEl = document.getElementById("importPreviewMeta");
-  if (metaEl) metaEl.textContent = "...";
-
-  const seq = ++importPreviewSeq;
-  importPreviewTimer = setTimeout(async () => {
-    importPreviewTimer = null;
-    const file = pendingImportFile;
-    if (!file) return;
-    try {
-      const opts = readImportFormOptions();
-      const data = await requestUploadImage(file, { ...opts, saveToHistory: false });
-      if (seq !== importPreviewSeq || !pendingImportFile) return;
-      drawImportPreviewData(data);
-    } catch {
-      if (seq === importPreviewSeq && metaEl) metaEl.textContent = "—";
-    }
-  }, 60);
-}
-
-/**
- * Cierra el modal de opciones de importación.
- */
-export function closeImportModal() {
-  pendingImportFile = null;
-  const modal = document.getElementById("importOptionsModal");
-  if (modal) modal.classList.remove("open");
 }
 
 async function openFileFromLauncher(file) {
@@ -580,33 +334,7 @@ export function initLauncher() {
     form.addEventListener("submit", createNewDocumentFromModal);
   }
 
-  const importForm = document.getElementById("importOptionsForm");
-  if (importForm) {
-    const previewInputIds = [
-      "importResSelect",
-      "importThemeSelect",
-      "importConvertPixelArtChk",
-      "importPixelSnapperChk",
-      "importRemoveBgChk",
-      "importDitherChk",
-    ];
-    for (const id of previewInputIds) {
-      document.getElementById(id)?.addEventListener("change", scheduleImportPreview);
-    }
-
-    importForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const file = pendingImportFile;
-      if (!file) {
-        closeImportModal();
-        return;
-      }
-      const opts = readImportFormOptions();
-      closeImportModal();
-      await handleUploadExternalFile(file, opts);
-      hideLauncher();
-    });
-  }
+  initImportOptionsModal(hideLauncher);
 
   if (fileInput) {
     fileInput.addEventListener("change", async (e) => {

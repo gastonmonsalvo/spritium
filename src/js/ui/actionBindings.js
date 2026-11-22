@@ -166,6 +166,7 @@ export function registerAppActions() {
     toggleLogHistory: ui.toggleLogHistory,
     closeLogHistory: ui.closeLogHistory,
     clearLogHistory: ui.clearLogHistory,
+    toggleUiLogs: ui.toggleUiLogs,
     setTool: ui.setTool,
     setBrushSize: ui.setBrushSize,
     selectActiveShapeTool: ui.selectActiveShapeTool,
@@ -244,7 +245,7 @@ export function registerAppActions() {
       document.getElementById("customResModal")?.classList.remove("open");
     },
     openLauncherFileInput: () => document.getElementById("launcherFileInput")?.click(),
-    openLauncherDocs: () => window.open("./docs/viewer.html?doc=HELP.md&from=launcher", "_blank", "noopener,noreferrer"),
+    openLauncherDocs: () => window.open("./docs/index.html?doc=HELP.md&from=launcher", "_blank", "noopener,noreferrer"),
     openFolderDialog: () => fb.openFolderDialog({ onOpenProject: loadProjectFile, onOpenImage: (f) => ln.openImportModal(f) }),
     openLoadedMediaModal: () => fb.openLoadedMediaModal({ onOpenProject: loadProjectFile, onOpenImage: (f) => ln.openImportModal(f) }),
     closeFolderBrowserModal: fb.closeFolderBrowserModal,

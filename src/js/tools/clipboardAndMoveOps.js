@@ -93,6 +93,49 @@ function initFloatingSelection(baseGrid, baseSelection, baseOutOfBounds, gw, gh)
   state.floatingSelection = { layerIndex: state.activeLayerIndex, bgGrid, bgOutOfBounds, patch, w, h, mask, curX: x, curY: y };
 }
 
+/**
+ * Garantiza que la selección activa esté promovida a `state.floatingSelection` para ediciones no destructivas.
+ * @returns {any}
+ */
+export function ensureFloatingSelection() {
+  if (!state.selection) return null;
+  if (!state.floatingSelection || state.floatingSelection.layerIndex !== state.activeLayerIndex) {
+    const { w: gw, h: gh } = getGridDims();
+    const activeLayer = state.layers?.[state.activeLayerIndex];
+    const baseOob = activeLayer?.outOfBounds ? activeLayer.outOfBounds.map((p) => [...p]) : [];
+    initFloatingSelection(state.grid, state.selection, baseOob, gw, gh);
+  }
+  return state.floatingSelection;
+}
+
+/**
+ * Compone `floatingSelection` sobre su `bgGrid` y actualiza `state.grid` y `activeLayer.outOfBounds`.
+ * @param {any} [fs=state.floatingSelection]
+ */
+export function compositeFloatingSelection(fs = state.floatingSelection) {
+  if (!fs) return;
+  const { w: gw, h: gh } = getGridDims();
+  const activeLayer = state.layers?.[state.activeLayerIndex];
+  const newOutOfBounds = fs.bgOutOfBounds.map((p) => [...p]);
+  for (let gy = 0; gy < gh; gy++) {
+    for (let gx = 0; gx < gw; gx++) {
+      state.grid[gy][gx] = fs.bgGrid[gy]?.[gx] ?? 0;
+    }
+  }
+  for (let r = 0; r < fs.h; r++) {
+    for (let c = 0; c < fs.w; c++) {
+      const val = fs.patch[r]?.[c] ?? 0;
+      if (!val) continue;
+      const nx = fs.curX + c;
+      const ny = fs.curY + r;
+      if (nx >= 0 && nx < gw && ny >= 0 && ny < gh) state.grid[ny][nx] = val;
+      else newOutOfBounds.push([nx, ny, val]);
+    }
+  }
+  if (activeLayer) activeLayer.outOfBounds = newOutOfBounds;
+  state.isDirtySinceImport = true;
+}
+
 /** Traslada los píxeles de `baseGrid` (y `baseSelection` si existe) un delta (dx, dy). */
 export function translateFromSnapshot(baseGrid, baseSelection, dx, dy, baseOutOfBounds = []) {
   const { w: gw, h: gh } = getGridDims();
@@ -104,20 +147,12 @@ export function translateFromSnapshot(baseGrid, baseSelection, dx, dy, baseOutOf
     if (!state.floatingSelection || state.floatingSelection.layerIndex !== state.activeLayerIndex) {
       initFloatingSelection(baseGrid, baseSelection, baseOutOfBounds, gw, gh);
     }
-    const fs = state.floatingSelection, destX = baseSelection.x + dx, destY = baseSelection.y + dy;
-    for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) targetGrid[gy][gx] = fs.bgGrid[gy]?.[gx] ?? 0;
-    newOutOfBounds = fs.bgOutOfBounds.map((p) => [...p]);
-    for (let r = 0; r < fs.h; r++) {
-      for (let c = 0; c < fs.w; c++) {
-        const val = fs.patch[r]?.[c] ?? 0;
-        if (!val) continue;
-        const nx = destX + c, ny = destY + r;
-        if (nx >= 0 && nx < gw && ny >= 0 && ny < gh) targetGrid[ny][nx] = val;
-        else newOutOfBounds.push([nx, ny, val]);
-      }
-    }
-    fs.curX = destX; fs.curY = destY;
-    state.selection = { ...baseSelection, x: destX, y: destY, w: fs.w, h: fs.h };
+    const fs = state.floatingSelection;
+    fs.curX = baseSelection.x + dx;
+    fs.curY = baseSelection.y + dy;
+    compositeFloatingSelection(fs);
+    state.selection = { ...baseSelection, x: fs.curX, y: fs.curY, w: fs.w, h: fs.h };
+    return;
   } else {
     for (let y = 0; y < gh; y++) targetGrid[y].fill(0);
     const place = (nx, ny, val) => {

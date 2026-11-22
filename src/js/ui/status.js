@@ -7,7 +7,7 @@ import { state, subscribe, jumpToHistoryAction } from "../core/state.js";
 import { recordCapturedError } from "../core/flightRecorder.js";
 import { i18n } from "../i18n/I18nService.js";
 
-const MAX_LOG_HISTORY = 100;
+const MAX_LOG_HISTORY = 200;
 
 const PIXEL_MSG_REGEX =
   /^(deshacer|rehacer|undo|redo)|p[ií]xel|trazo|stroke|contorno|outline|erosi[oó]n|erod|rotad|rotat|invertid|flip|pegad|past|cortad|cut|borrad|eras|limpi|clear|transformaci[oó]n|transform|relleno|fill|centrado|center/i;
@@ -18,6 +18,7 @@ let pendingDirtyEntry = null;
 let pendingDirtyAt = 0;
 let latestStatusMeta = null;
 let isLogHistoryOpen = false;
+let showUiLogs = true;
 let initialized = false;
 
 function formatTime(date = new Date()) {
@@ -91,23 +92,28 @@ function getTimelineStatus(actionId) {
   return "expired";
 }
 
+function getVisibleLogEntries() {
+  return showUiLogs ? logHistory : logHistory.filter((item) => item.category !== "ui");
+}
+
 function renderLogHistory() {
+  const visibleItems = getVisibleLogEntries();
   const countEl = document.getElementById("logHistoryCount");
   if (countEl) {
-    countEl.textContent = logHistory.length > 0 ? String(logHistory.length) : "";
-    countEl.style.display = logHistory.length > 0 ? "inline-flex" : "none";
+    countEl.textContent = visibleItems.length > 0 ? String(visibleItems.length) : "";
+    countEl.style.display = visibleItems.length > 0 ? "inline-flex" : "none";
   }
 
   const list = document.getElementById("logHistoryList");
   if (!list || !isLogHistoryOpen) return;
 
-  if (logHistory.length === 0) {
+  if (visibleItems.length === 0) {
     list.innerHTML = `<div class="log-history-empty">${i18n.t("logs.empty")}</div>`;
     return;
   }
 
   list.innerHTML = "";
-  for (const item of logHistory) {
+  for (const item of visibleItems) {
     const timelineState = getTimelineStatus(item.actionId);
     const isJumpable =
       item.category === "pixel" &&
@@ -130,7 +136,7 @@ function renderLogHistory() {
         if (jumpToHistoryAction(item.actionId)) {
           const statusText = document.getElementById("statusText");
           if (statusText) {
-            statusText.textContent = i18n.t("logs.history_prefix", { msg: item.message });
+            statusText.textContent = i18n.t("logs.history_prefix", { msg: resolveLogMessage(item) });
             statusText.style.color = "var(--text-secondary)";
           }
           renderLogHistory();
@@ -212,6 +218,25 @@ export function initLogHistory() {
   initialized = true;
 
   subscribe("dirty", () => {
+    // Limpiar pasos futuros que quedaron invalidados tras ramificar desde un undo
+    for (let i = logHistory.length - 1; i >= 0; i--) {
+      const it = logHistory[i];
+      if (it.category === "pixel" && typeof it.actionId === "number" && getTimelineStatus(it.actionId) === "expired") {
+        logHistory.splice(i, 1);
+      }
+    }
+    // Asegurar entrada base para poder volver al estado inicial (actionId = 0) si sigue en undoStack
+    if (!logHistory.some((it) => it.actionId === 0) && state.undoStack.some((s) => s.actionId === 0)) {
+      const baseMeta = { type: "i18n", key: "logs.initial_state" };
+      logHistory.push({
+        id: nextLogId++,
+        message: resolveLogMessage({ meta: baseMeta }),
+        category: "pixel",
+        time: formatTime(),
+        actionId: 0,
+        meta: baseMeta,
+      });
+    }
     const meta = { type: "pixels_modified", tool: state.currentTool };
     const entry = pushLogEntry(
       resolveLogMessage({ meta }),
@@ -275,6 +300,21 @@ export function closeLogHistory() {
 }
 
 /**
+ * Muestra u oculta los eventos informativos de interfaz/herramientas en el historial de logs.
+ * @param {Event} [event]
+ */
+export function toggleUiLogs(event) {
+  event?.stopPropagation?.();
+  showUiLogs = !showUiLogs;
+  const btn = document.getElementById("btnToggleUiLogs");
+  if (btn) {
+    btn.classList.toggle("active", showUiLogs);
+    btn.setAttribute("aria-pressed", String(showUiLogs));
+  }
+  renderLogHistory();
+}
+
+/**
  * Limpia la pila visual de historial de logs.
  */
 export function clearLogHistory(event) {
@@ -308,7 +348,7 @@ export function setStatus(msgOrSpec, isError = false, category = null) {
   if (
     !isError &&
     pendingDirtyEntry &&
-    now - pendingDirtyAt <= 80 &&
+    now - pendingDirtyAt <= 400 &&
     resolvedCategory === "pixel"
   ) {
     pendingDirtyEntry.message = msg.trim() || pendingDirtyEntry.message;
