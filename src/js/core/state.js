@@ -177,6 +177,7 @@ export const state = {
   zoom: 1,
   showGrid: true,
   showCenterGuides: true,
+  showCenterRulerMarks: true,
   showRulers: true,
   showGridCoords: false,
   gridCoordsConfig: {

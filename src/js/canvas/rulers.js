@@ -138,7 +138,7 @@ export function renderRulers() {
   }
 
   // Marca central rojiza ligeramente más larga en las reglas para ubicar el medio del lienzo
-  if (state.showCenterGuides !== false) {
+  if (state.showCenterRulerMarks !== false) {
     const centerTickColor = isLight ? "rgba(185, 28, 28, 0.9)" : "rgba(239, 68, 68, 0.8)";
     if (w >= 4) {
       const midCoordX = w % 2 === 0 ? w / 2 : Math.floor(w / 2) + 0.5;

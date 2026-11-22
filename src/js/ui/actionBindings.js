@@ -187,6 +187,7 @@ export function registerAppActions() {
     clearRulerGuides: ui.clearRulerGuides,
     toggleGrid: ui.toggleGrid,
     toggleCenterGuides: ui.toggleCenterGuides,
+    toggleCenterRulerMarks: ui.toggleCenterRulerMarks,
     toggleRulers: ui.toggleRulers,
     toggleGridCoords: ui.toggleGridCoords,
     togglePixelCursor: ui.togglePixelCursor,

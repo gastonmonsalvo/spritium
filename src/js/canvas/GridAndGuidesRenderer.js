@@ -172,7 +172,7 @@ export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX,
  * @param {number} zoom
  */
 export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, baseH, w, h, zoom = 1) {
-  if (state.showGrid === false || state.showCenterGuides === false) return;
+  if (state.showCenterGuides === false) return;
   if (w < 4 && h < 4) return;
 
   const cellW = baseW / w;

@@ -668,15 +668,25 @@ export function toggleRulers() {
 }
 
 /**
- * Muestra u oculta las líneas guía centrales del lienzo (marcas rojas del punto medio).
+ * Muestra u oculta las líneas guía rojas del centro sobre el lienzo.
  */
 export function toggleCenterGuides() {
   state.showCenterGuides = state.showCenterGuides === false;
   saveUserPreferences();
   syncViewTogglesUI();
   renderAll();
-  renderRulers();
   setStatus({ key: state.showCenterGuides ? "status.center_guides_on" : "status.center_guides_off" });
+}
+
+/**
+ * Muestra u oculta las marcas rojas del centro sobre las reglas.
+ */
+export function toggleCenterRulerMarks() {
+  state.showCenterRulerMarks = state.showCenterRulerMarks === false;
+  saveUserPreferences();
+  syncViewTogglesUI();
+  renderRulers();
+  setStatus({ key: state.showCenterRulerMarks ? "status.center_ruler_marks_on" : "status.center_ruler_marks_off" });
 }
 
 /**

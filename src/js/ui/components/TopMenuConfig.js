@@ -112,6 +112,7 @@ export const TOP_MENU_ITEMS = [
     items: [
       { id: "menuGrid", active: true, icon: "grid-3x3", labelKey: "menu.view.grid", action: "toggleGrid", shortcut: "G" },
       { id: "menuCenterGuides", active: true, icon: "crosshair", labelKey: "menu.view.center_guides", action: "toggleCenterGuides" },
+      { id: "menuCenterRulerMarks", active: true, icon: "bookmark", labelKey: "menu.view.center_ruler_marks", action: "toggleCenterRulerMarks" },
       { id: "menuRulers", active: true, icon: "ruler", labelKey: "menu.view.rulers", action: "toggleRulers" },
       { icon: "trash-2", labelKey: "menu.view.clear_guides", action: "clearRulerGuides" },
       { id: "menuGridCoords", active: false, icon: "locate-fixed", labelKey: "menu.view.grid_coords", action: "toggleGridCoords" },
