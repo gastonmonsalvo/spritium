@@ -199,6 +199,10 @@ export function registerAppActions() {
     toggleRightPanel: ui.toggleRightPanel,
     toggleBottomPanel: ui.toggleBottomPanel,
     toggleMobileDrawer: ui.toggleMobileDrawer,
+    toggleMobilePanTool: () => {
+      ui.closeMobileDrawers();
+      ui.toggleMobilePanTool();
+    },
     resetDockedPanels: ui.resetDockedPanels,
     toggleColorTheme: ui.toggleColorTheme,
     triggerWin98EasterEgg: ui.triggerWin98EasterEgg,

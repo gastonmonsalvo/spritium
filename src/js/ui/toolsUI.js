@@ -315,8 +315,10 @@ const MOBILE_TOOL_ICONS = {
 };
 
 let previousToolBeforeEyedropper = "pencil";
+let previousToolBeforePan = "pencil";
 
 function syncMobileToolButtonIcon(toolName) {
+  document.getElementById("btnMobilePan")?.classList.toggle("active", toolName === "pan");
   const btn = document.getElementById("btnMobileTools");
   if (!btn) return;
   const iconEl = btn.querySelector("i, svg");
@@ -328,6 +330,18 @@ function syncMobileToolButtonIcon(toolName) {
     iconEl.replaceWith(nextIcon);
     refreshIcons(btn);
   }
+}
+
+/**
+ * Alterna rápidamente entre la herramienta Mano (`pan`) y la herramienta previa desde el dock móvil.
+ */
+export function toggleMobilePanTool() {
+  if (state.currentTool === "pan") {
+    const nextTool = previousToolBeforePan && previousToolBeforePan !== "pan" ? previousToolBeforePan : "pencil";
+    setTool(nextTool);
+    return;
+  }
+  setTool("pan");
 }
 
 /**
@@ -347,6 +361,9 @@ export function restorePreviousToolAfterEyedropper() {
 export function setTool(toolName) {
   if (toolName === "eyedropper" && state.currentTool && state.currentTool !== "eyedropper") {
     previousToolBeforeEyedropper = state.currentTool;
+  }
+  if (toolName === "pan" && state.currentTool && state.currentTool !== "pan") {
+    previousToolBeforePan = state.currentTool;
   }
   if (state.freeTransform) {
     commitFreeTransform();

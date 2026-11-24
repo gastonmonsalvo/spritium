@@ -78,6 +78,8 @@ export default {
   "menu.view.panel_right": "Panel Color y Capas",
   "menu.view.panel_bottom": "Panel Frames y Timeline",
   "mobile.tools": "Herramientas",
+  "mobile.pan": "Mover",
+  "mobile.pan_title": "Alternar Mano (mover lienzo)",
   "mobile.swap_colors": "Tocar: Colores y Paleta · Mantener: 1°⇄2°",
   "mobile.colors": "Colores",
   "mobile.layers": "Capas",

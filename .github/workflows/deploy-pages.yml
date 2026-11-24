@@ -33,6 +33,7 @@ jobs:
           mkdir -p _site/docs/data
           cp index.html _site/
           cp -r src _site/src
+          if [ -f docs/index.html ]; then cp docs/index.html _site/docs/; fi
           if [ -f docs/viewer.html ]; then cp docs/viewer.html _site/docs/; fi
           if [ -f docs/HELP.md ]; then cp docs/HELP.md _site/docs/; fi
           if [ -f docs/data/guides.es.json ]; then cp docs/data/guides.es.json _site/docs/data/; fi
@@ -42,6 +43,7 @@ jobs:
       - name: Verify critical runtime files
         run: |
           test -f _site/index.html
+          test -f _site/docs/index.html
           test -f _site/src/js/app.js
           test -f _site/src/js/core/version.js
 

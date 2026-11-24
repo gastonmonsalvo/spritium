@@ -76,6 +76,8 @@ export default {
   "menu.view.panel_right": "Color & Layers Panel",
   "menu.view.panel_bottom": "Frames & Timeline Panel",
   "mobile.tools": "Tools",
+  "mobile.pan": "Pan",
+  "mobile.pan_title": "Toggle Hand (pan canvas)",
   "mobile.swap_colors": "Tap: Colors & Palette · Hold: 1°⇄2°",
   "mobile.colors": "Colors",
   "mobile.layers": "Layers",
