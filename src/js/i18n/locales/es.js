@@ -1044,6 +1044,7 @@ export default {
   "modal.noise.intensity": "Intensidad",
   "modal.noise.painted_only": "Aplicar solo sobre píxeles pintados",
   "modal.noise.monochrome": "Ruido monocromático (luminancia)",
+  "modal.noise.grayscale": "Escala de grises (Blanco y Negro)",
   "modal.noise.reseed": "Nueva semilla aleatoria",
   "status.noise_applied": "Filtro de ruido aplicado ({{intensity}}%).",
   "menu.canvas.hsl": "Ajuste HSL...",

@@ -192,10 +192,10 @@ export function applyNoiseAt(cx, cy, brushSize = state.brushSize) {
 /**
  * Filtro de Ruido Pixel-Art Safe para la capa o selección activa, cuantizando en OKLab
  * a los colores de la paleta activa para no introducir colores sucios.
- * @param {{intensity?: number, paintedOnly?: boolean, monochrome?: boolean, seed?: number}} [options]
+ * @param {{intensity?: number, paintedOnly?: boolean, monochrome?: boolean, grayscale?: boolean, seed?: number}} [options]
  * @returns {boolean} True si se modificó al menos un píxel.
  */
-export function applyNoiseToRegion({ intensity = 25, paintedOnly = true, monochrome = true, seed = 1 } = {}) {
+export function applyNoiseToRegion({ intensity = 25, paintedOnly = true, monochrome = true, grayscale = false, seed = 1 } = {}) {
   const { w: gw, h: gh } = getGridDims();
   const entries = buildPaletteColorEntries({ withOklab: true });
   if (!entries.length) return false;
@@ -212,11 +212,20 @@ export function applyNoiseToRegion({ intensity = 25, paintedOnly = true, monochr
       if (paintedOnly && !curIdx) continue;
       const baseRgb = curIdx ? parseColorToRgb(state.paletteMap[curIdx]) || fallbackRgb : fallbackRgb;
       const dR = (rand() * 2 - 1) * strength;
-      const dG = monochrome ? dR : (rand() * 2 - 1) * strength;
-      const dB = monochrome ? dR : (rand() * 2 - 1) * strength;
-      const nr = Math.max(0, Math.min(255, baseRgb[0] + dR));
-      const ng = Math.max(0, Math.min(255, baseRgb[1] + dG));
-      const nb = Math.max(0, Math.min(255, baseRgb[2] + dB));
+      let nr, ng, nb;
+      if (grayscale) {
+        const luma = 0.2126 * baseRgb[0] + 0.7152 * baseRgb[1] + 0.0722 * baseRgb[2];
+        const gray = Math.max(0, Math.min(255, luma + dR));
+        nr = gray;
+        ng = gray;
+        nb = gray;
+      } else {
+        const dG = monochrome ? dR : (rand() * 2 - 1) * strength;
+        const dB = monochrome ? dR : (rand() * 2 - 1) * strength;
+        nr = Math.max(0, Math.min(255, baseRgb[0] + dR));
+        ng = Math.max(0, Math.min(255, baseRgb[1] + dG));
+        nb = Math.max(0, Math.min(255, baseRgb[2] + dB));
+      }
       const nextIdx = findNearestPaletteEntry(nr, ng, nb, entries, { useOklab: true });
       if (nextIdx !== curIdx) {
         state.grid[y][x] = nextIdx;

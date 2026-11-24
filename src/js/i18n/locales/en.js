@@ -1042,6 +1042,7 @@ export default {
   "modal.noise.intensity": "Intensity",
   "modal.noise.painted_only": "Apply to painted pixels only",
   "modal.noise.monochrome": "Monochrome noise (luminance)",
+  "modal.noise.grayscale": "Grayscale (Black & White)",
   "modal.noise.reseed": "New random seed",
   "status.noise_applied": "Noise filter applied ({{intensity}}%).",
   "menu.canvas.hsl": "HSL Adjustment...",

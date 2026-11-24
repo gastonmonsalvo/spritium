@@ -317,19 +317,61 @@ const MOBILE_TOOL_ICONS = {
 let previousToolBeforeEyedropper = "pencil";
 let previousToolBeforePan = "pencil";
 
+const MOBILE_TOOL_LABEL_KEYS = {
+  pencil: "tool.pencil",
+  eraser: "tool.eraser",
+  bucket: "tool.bucket",
+  eyedropper: "tool.eyedropper",
+  move: "tool.move",
+  line: "tool.line",
+  rect: "tool.shapes",
+  circle: "tool.shapes",
+  triangle: "tool.shapes",
+  select: "tool.select",
+  ellipseSelect: "tool.ellipse_select",
+  lasso: "tool.lasso",
+  magicSelect: "tool.magic_select",
+  spray: "tool.spray",
+  shading: "tool.shading",
+  backgroundEraser: "tool.bg_eraser",
+};
+
+function setMobileBtnIcon(btn, iconName) {
+  const iconEl = btn.querySelector("i, svg");
+  if (!iconEl) return;
+  const nextIcon = document.createElement("i");
+  nextIcon.setAttribute("data-lucide", iconName);
+  nextIcon.className = "ui-icon-sm";
+  iconEl.replaceWith(nextIcon);
+  refreshIcons(btn);
+}
+
+function syncMobilePanButton(toolName) {
+  const panBtn = document.getElementById("btnMobilePan");
+  if (!panBtn) return;
+  const isPan = toolName === "pan";
+  panBtn.classList.toggle("active", isPan);
+  const labelEl = panBtn.querySelector("span");
+  if (isPan) {
+    const returnTool = previousToolBeforePan && previousToolBeforePan !== "pan" ? previousToolBeforePan : "pencil";
+    setMobileBtnIcon(panBtn, MOBILE_TOOL_ICONS[returnTool] || "pencil");
+    if (labelEl) {
+      const fullLabel = i18n.t(MOBILE_TOOL_LABEL_KEYS[returnTool] || "tool.pencil");
+      labelEl.textContent = fullLabel.split(/[\s(—/]/)[0] || i18n.t("mobile.pan");
+    }
+  } else {
+    setMobileBtnIcon(panBtn, "hand");
+    if (labelEl) {
+      labelEl.textContent = i18n.t("mobile.pan");
+    }
+  }
+}
+
 function syncMobileToolButtonIcon(toolName) {
-  document.getElementById("btnMobilePan")?.classList.toggle("active", toolName === "pan");
+  syncMobilePanButton(toolName);
   const btn = document.getElementById("btnMobileTools");
   if (!btn) return;
-  const iconEl = btn.querySelector("i, svg");
-  const iconName = MOBILE_TOOL_ICONS[toolName] || "paintbrush";
-  if (iconEl) {
-    const nextIcon = document.createElement("i");
-    nextIcon.setAttribute("data-lucide", iconName);
-    nextIcon.className = "ui-icon-sm";
-    iconEl.replaceWith(nextIcon);
-    refreshIcons(btn);
-  }
+  setMobileBtnIcon(btn, MOBILE_TOOL_ICONS[toolName] || "paintbrush");
 }
 
 /**
