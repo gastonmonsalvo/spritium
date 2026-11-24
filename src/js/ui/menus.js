@@ -166,6 +166,45 @@ export function setupTopMenu() {
   const items = Array.from(topMenu.querySelectorAll(".menu-item"));
   const closeAll = () => items.forEach((item) => item.classList.remove("open"));
 
+  const syncDropdownScrollHints = (dropdown) => {
+    if (!dropdown) return;
+    const canScroll = dropdown.scrollHeight > dropdown.clientHeight + 4;
+    dropdown.classList.toggle("has-scroll-top", canScroll && dropdown.scrollTop > 4);
+    dropdown.classList.toggle(
+      "has-scroll-bottom",
+      canScroll && dropdown.scrollHeight - dropdown.scrollTop - dropdown.clientHeight > 4,
+    );
+  };
+
+  items.forEach((item) => {
+    const dropdown = /** @type {HTMLElement | null} */ (item.querySelector(".menu-dropdown"));
+    dropdown?.addEventListener("scroll", () => syncDropdownScrollHints(dropdown), { passive: true });
+  });
+
+  const fitDropdownInViewport = (item) => {
+    const dropdown = /** @type {HTMLElement | null} */ (item.querySelector(".menu-dropdown"));
+    if (!dropdown) return;
+    dropdown.style.left = "";
+    dropdown.style.right = "";
+    dropdown.style.transform = "";
+    dropdown.scrollTop = 0;
+
+    const vw = typeof window !== "undefined" ? window.innerWidth : 0;
+    if (vw) {
+      const margin = 8;
+      let rect = dropdown.getBoundingClientRect();
+      if (rect.right > vw - margin) {
+        dropdown.style.left = "auto";
+        dropdown.style.right = "0";
+        rect = dropdown.getBoundingClientRect();
+      }
+      if (rect.left < margin) {
+        dropdown.style.transform = `translateX(${Math.round(margin - rect.left)}px)`;
+      }
+    }
+    syncDropdownScrollHints(dropdown);
+  };
+
   items.forEach((item) => {
     const trigger = item.querySelector(".menu-trigger");
     if (!trigger) return;
@@ -174,13 +213,17 @@ export function setupTopMenu() {
       e.stopPropagation();
       const wasOpen = item.classList.contains("open");
       closeAll();
-      if (!wasOpen) item.classList.add("open");
+      if (!wasOpen) {
+        item.classList.add("open");
+        fitDropdownInViewport(item);
+      }
     });
 
     item.addEventListener("mouseenter", () => {
       if (items.some((other) => other !== item && other.classList.contains("open"))) {
         closeAll();
         item.classList.add("open");
+        fitDropdownInViewport(item);
       }
     });
   });

@@ -282,6 +282,9 @@ export function setupMouseEvents(canvas) {
 
   const touchPointers = new Map();
   let pinchState = null;
+  let wasPinching = false;
+  let touchStrokePendingUndo = false;
+  let touchStrokeStartTime = 0;
   let canvasLongPressTimer = null;
   let canvasLongPressOrigin = null;
   const clearCanvasLongPress = () => {
@@ -311,6 +314,11 @@ export function setupMouseEvents(canvas) {
       touchPointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
       if (touchPointers.size === 2) {
         clearCanvasLongPress();
+        wasPinching = true;
+        if (touchStrokePendingUndo && Date.now() - touchStrokeStartTime < 450) {
+          touchStrokePendingUndo = false;
+          performUndo();
+        }
         ptr.isMouseDown = false;
         ptr.activeStrategy = null;
         const pts = [...touchPointers.values()];
@@ -325,7 +333,7 @@ export function setupMouseEvents(canvas) {
         };
         return;
       }
-      if (touchPointers.size > 2) return;
+      if (touchPointers.size > 2 || wasPinching) return;
       const { x: gx, y: gy } = getGridCoordinates(e, canvas);
       if (SELECTION_CTX_TOOLS.has(state.currentTool) || (state.selection && isInsideSelection(gx, gy))) {
         clearCanvasLongPress();
@@ -341,6 +349,10 @@ export function setupMouseEvents(canvas) {
           openCanvasContextMenu(cx, cy);
         }, 480);
       }
+      touchStrokePendingUndo = !READ_ONLY_TOOLS.has(state.currentTool) && !isActiveLayerLocked();
+      touchStrokeStartTime = Date.now();
+    } else {
+      touchStrokePendingUndo = false;
     }
     handleCanvasMouseDown(e, canvas, ptr);
   });
@@ -365,6 +377,7 @@ export function setupMouseEvents(canvas) {
         }
         return;
       }
+      if (wasPinching) return;
     }
     if (pinchState) return;
     handleCanvasMouseMove(e, canvas, ptr);
@@ -397,10 +410,14 @@ export function setupMouseEvents(canvas) {
     clearCanvasLongPress();
     touchPointers.delete(e.pointerId);
     if (touchPointers.size < 2) pinchState = null;
+    if (touchPointers.size === 0) {
+      wasPinching = false;
+      touchStrokePendingUndo = false;
+    }
   };
   window.addEventListener("pointerup", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
   window.addEventListener("pointercancel", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
-  window.addEventListener("blur", () => { touchPointers.clear(); pinchState = null; ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
+  window.addEventListener("blur", () => { touchPointers.clear(); pinchState = null; wasPinching = false; touchStrokePendingUndo = false; ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
 
   // Arrastrar desde #rulerTop o #rulerLeft para crear/mover guías (clic derecho o soltar fuera quita la guía)
   const bindRulerGuideEvents = (rulerId, axis) => {

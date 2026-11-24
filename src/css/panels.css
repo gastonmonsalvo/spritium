@@ -63,19 +63,28 @@
   transition: opacity 0.1s ease, background 0.1s ease;
 }
 
-.color-swatch:hover .swatch-delete-btn {
-  opacity: 1;
-  pointer-events: auto;
+@media (hover: hover) and (pointer: fine) {
+  .color-swatch:hover .swatch-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .swatch-delete-btn:hover {
+    background: #dc2626;
+    color: #ffffff;
+  }
+
+  .color-swatch:hover {
+    transform: scale(1.15);
+    z-index: 2;
+  }
 }
 
-.swatch-delete-btn:hover {
-  background: #dc2626;
-  color: #ffffff;
-}
-
-.color-swatch:hover {
-  transform: scale(1.15);
-  z-index: 2;
+@media (hover: none), (pointer: coarse) {
+  .swatch-delete-btn {
+    display: none;
+    pointer-events: none;
+  }
 }
 
 .color-swatch.active {

@@ -28,6 +28,34 @@ const FEEDBACK_LAST_SENT_KEY = "spritium_feedback_last_sent_at";
 let activeCategory = "bug";
 let activeRating = 5;
 let isTelemetryPreviewOpen = false;
+let charCountersBound = false;
+
+const FEEDBACK_CHAR_COUNTER_FIELDS = [
+  { inputId: "feedbackSteps", countId: "feedbackStepsCount", max: 220 },
+  { inputId: "feedbackTitle", countId: "feedbackTitleCount", max: 140 },
+  { inputId: "feedbackMessage", countId: "feedbackMessageCount", max: 2500 },
+  { inputId: "feedbackContact", countId: "feedbackContactCount", max: 120 },
+];
+
+function updateFeedbackCharCounters() {
+  if (typeof document === "undefined") return;
+  for (const { inputId, countId, max } of FEEDBACK_CHAR_COUNTER_FIELDS) {
+    const input = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById(inputId));
+    const badge = document.getElementById(countId);
+    if (!badge) continue;
+    const len = (input?.value || "").length;
+    badge.textContent = `${len} / ${max}`;
+    badge.classList.toggle("is-near-limit", len >= Math.floor(max * 0.9));
+  }
+}
+
+function bindFeedbackCharCounters() {
+  if (charCountersBound || typeof document === "undefined") return;
+  charCountersBound = true;
+  for (const { inputId } of FEEDBACK_CHAR_COUNTER_FIELDS) {
+    document.getElementById(inputId)?.addEventListener("input", updateFeedbackCharCounters);
+  }
+}
 
 function getResolvedWebhookUrl() {
   try {
@@ -67,6 +95,8 @@ export function openFeedbackModal(initialCategory = "bug") {
       ? initialCategory
       : "bug";
 
+  bindFeedbackCharCounters();
+  updateFeedbackCharCounters();
   setFeedbackCategory(cat);
   showModalAlert("");
   refreshFeedbackTelemetryPreview();
@@ -432,16 +462,24 @@ export async function submitFeedbackReport() {
   showModalAlert(i18n.t("feedback.sending"), "info");
 
   try {
+    const outgoingPayload = {
+      ...payload,
+      markdown: formatFeedbackAsMarkdown(payload),
+    };
+    let serializedBody = JSON.stringify(outgoingPayload);
+    if (serializedBody.length > 1_450_000 && outgoingPayload.projectSnapshot) {
+      outgoingPayload.projectSnapshot = null;
+      outgoingPayload.snapshotDroppedTooLarge = true;
+      serializedBody = JSON.stringify(outgoingPayload);
+    }
+
     await fetch(webhookUrl, {
       method: "POST",
       mode: "no-cors",
       headers: {
         "Content-Type": "text/plain;charset=utf-8",
       },
-      body: JSON.stringify({
-        ...payload,
-        markdown: formatFeedbackAsMarkdown(payload),
-      }),
+      body: serializedBody,
     });
 
     try {
@@ -458,6 +496,7 @@ export async function submitFeedbackReport() {
     if (titleEl) titleEl.value = "";
     if (msgEl) msgEl.value = "";
     if (stepsEl) stepsEl.value = "";
+    updateFeedbackCharCounters();
 
     showModalAlert(i18n.t("feedback.sent_ok", { id: payload.reportId }), "success");
     setStatus({ key: "feedback.sent_ok", params: { id: payload.reportId } });

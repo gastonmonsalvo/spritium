@@ -58,7 +58,10 @@ export function renderFeedbackModal() {
               </select>
             </div>
             <div class="feedback-field-col">
-              <label for="feedbackSteps" class="feedback-label" data-i18n="feedback.steps_label">${escapeHtml(i18n.t("feedback.steps_label"))}</label>
+              <div class="feedback-label-row">
+                <label for="feedbackSteps" class="feedback-label" data-i18n="feedback.steps_label">${escapeHtml(i18n.t("feedback.steps_label"))}</label>
+                <span id="feedbackStepsCount" class="feedback-char-count">0 / 220</span>
+              </div>
               <input
                 type="text"
                 id="feedbackSteps"
@@ -112,7 +115,10 @@ export function renderFeedbackModal() {
 
           <!-- Resumen / Título -->
           <div class="feedback-field-col">
-            <label for="feedbackTitle" class="feedback-label" data-i18n="feedback.summary_label">${escapeHtml(i18n.t("feedback.summary_label"))}</label>
+            <div class="feedback-label-row">
+              <label for="feedbackTitle" class="feedback-label" data-i18n="feedback.summary_label">${escapeHtml(i18n.t("feedback.summary_label"))}</label>
+              <span id="feedbackTitleCount" class="feedback-char-count">0 / 140</span>
+            </div>
             <input
               type="text"
               id="feedbackTitle"
@@ -125,7 +131,10 @@ export function renderFeedbackModal() {
 
           <!-- Descripción detallada -->
           <div class="feedback-field-col">
-            <label for="feedbackMessage" class="feedback-label" data-i18n="feedback.details_label">${escapeHtml(i18n.t("feedback.details_label"))}</label>
+            <div class="feedback-label-row">
+              <label for="feedbackMessage" class="feedback-label" data-i18n="feedback.details_label">${escapeHtml(i18n.t("feedback.details_label"))}</label>
+              <span id="feedbackMessageCount" class="feedback-char-count">0 / 2500</span>
+            </div>
             <textarea
               id="feedbackMessage"
               class="feedback-textarea"
@@ -138,7 +147,10 @@ export function renderFeedbackModal() {
 
           <!-- Contacto opcional (Discord / GitHub / Email) -->
           <div class="feedback-field-col">
-            <label for="feedbackContact" class="feedback-label" data-i18n="feedback.contact_label">${escapeHtml(i18n.t("feedback.contact_label"))}</label>
+            <div class="feedback-label-row">
+              <label for="feedbackContact" class="feedback-label" data-i18n="feedback.contact_label">${escapeHtml(i18n.t("feedback.contact_label"))}</label>
+              <span id="feedbackContactCount" class="feedback-char-count">0 / 120</span>
+            </div>
             <input
               type="text"
               id="feedbackContact"

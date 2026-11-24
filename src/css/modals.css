@@ -418,10 +418,31 @@
   min-width: 0;
 }
 
+.feedback-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .feedback-label {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.feedback-char-count {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, var(--text-secondary));
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.feedback-char-count.is-near-limit {
+  color: var(--accent-warning, #f59e0b);
+  opacity: 1;
+  font-weight: 600;
 }
 
 .feedback-input,
