@@ -7,13 +7,13 @@
   "scripts": {
     "test": "npm run test:unit && npm run test:smoke",
     "test:smoke": "node scripts/tests/smoke-test.mjs",
-    "test:unit": "vitest run scripts/tests/unit",
-    "test:watch": "vitest scripts/tests/unit",
-    "test:ui": "vitest --ui scripts/tests/unit",
-    "test:core": "vitest run scripts/tests/unit/core",
-    "test:tools": "vitest run scripts/tests/unit/tools",
-    "test:workspace": "vitest run scripts/tests/unit/workspace",
-    "test:schemas": "vitest run scripts/tests/unit/schemas"
+    "test:unit": "vitest run scripts/tests/unit --exclude \"**/private_backup/**\"",
+    "test:watch": "vitest scripts/tests/unit --exclude \"**/private_backup/**\"",
+    "test:ui": "vitest --ui scripts/tests/unit --exclude \"**/private_backup/**\"",
+    "test:core": "vitest run scripts/tests/unit/core --exclude \"**/private_backup/**\"",
+    "test:tools": "vitest run scripts/tests/unit/tools --exclude \"**/private_backup/**\"",
+    "test:workspace": "vitest run scripts/tests/unit/workspace --exclude \"**/private_backup/**\"",
+    "test:schemas": "vitest run scripts/tests/unit/schemas --exclude \"**/private_backup/**\""
   },
   "devDependencies": {
     "@stryker-mutator/core": "^10.1.1",

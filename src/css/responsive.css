@@ -282,10 +282,24 @@
   #btnCollapseRight svg {
     transform: rotate(90deg);
   }
+
+  .log-history-window {
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 55dvh;
+  }
 }
 
 /* 4b. Móvil en Horizontal / Landscape (altura reducida) */
 @media (max-height: 500px) and (max-width: 960px) {
+  .log-history-window {
+    bottom: calc(46px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100dvh - 104px);
+  }
   #topBar {
     padding: 3px 8px;
     gap: 4px;
