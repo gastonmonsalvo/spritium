@@ -11,6 +11,7 @@ import {
   drawSelectionOverlay as renderSelectionOverlay,
   drawFreeTransformOverlay,
   drawLassoPreview,
+  drawPolygonPreview,
 } from "./SelectionOverlayRenderer.js";
 import { drawPixelCursorOverlay } from "./CursorPreviewOverlay.js";
 
@@ -87,6 +88,7 @@ export function drawSelectionAndGizmosOverlay(ctx, cellSize, tileOriginX, tileOr
   ctx.save();
   ctx.translate(tileOriginX, tileOriginY);
   drawLassoPreview(ctx, cellSize, state.lassoPreview);
+  drawPolygonPreview(ctx, cellSize, state.polygonPreview);
 
   if (state.selection && !state.freeTransform) {
     drawSelectionOverlay(ctx, cellSize);

@@ -7,6 +7,7 @@
 
 import { state } from "../core/state.js";
 import { plotWithMirror, plotBrushWithMirror, traceBresenhamPoints } from "./tools.js";
+import { normalizePolygonVertices, scanlineFillPolygon } from "./polygonGeometry.js";
 
 /**
  * Determina si el paso `step` debe pintarse según el estilo de línea y grosor.
@@ -328,4 +329,55 @@ export function drawPixelTriangle(x0, y0, x1, y1, colorIndex, filled = false, th
     }
   }
   state.isDirtySinceImport = true;
+}
+
+/**
+ * Traza un polígono arbitrario de N vértices (contorno estilizado o relleno scanline pixel-perfect).
+ * @param {Array<{x: number, y: number}>} vertices
+ * @param {number} colorIndex
+ * @param {boolean} [filled=true]
+ * @param {number} [thickness=1]
+ * @param {"solid"|"dotted"|"dashed"|"dashdot"} [style="solid"]
+ * @returns {boolean}
+ */
+export function drawPixelPolygon(
+  vertices,
+  colorIndex,
+  filled = true,
+  thickness = 1,
+  style = "solid",
+) {
+  const verts = normalizePolygonVertices(vertices);
+  if (verts.length === 0) return false;
+
+  if (verts.length === 1) {
+    plotBrushWithMirror(verts[0].x, verts[0].y, colorIndex, filled ? 1 : thickness);
+    state.isDirtySinceImport = true;
+    return true;
+  }
+
+  if (verts.length === 2 || !filled) {
+    const edgeCount = verts.length === 2 ? 1 : verts.length;
+    for (let i = 0; i < edgeCount; i++) {
+      const a = verts[i];
+      const b = verts[(i + 1) % verts.length];
+      drawStyledLine(a.x, a.y, b.x, b.y, colorIndex, thickness, style);
+    }
+    state.isDirtySinceImport = true;
+    return true;
+  }
+
+  const pts = scanlineFillPolygon(verts, { includeOutline: true });
+  for (const pt of pts) {
+    plotWithMirror(pt.x, pt.y, colorIndex);
+  }
+  if ((thickness || 1) > 1) {
+    for (let i = 0; i < verts.length; i++) {
+      const a = verts[i];
+      const b = verts[(i + 1) % verts.length];
+      drawStyledLine(a.x, a.y, b.x, b.y, colorIndex, thickness, "solid");
+    }
+  }
+  state.isDirtySinceImport = true;
+  return true;
 }

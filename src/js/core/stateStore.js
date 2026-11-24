@@ -143,6 +143,8 @@ export const state = {
   lineMode: "straight", // "straight" | "curve"
   lineStyle: "solid", // "solid" | "dotted" | "dashed" | "dashdot"
   curveControlPoints: 1, // 1 | 2 | 3 puntos de curvatura
+  fillPolygons: true,
+  noiseBrushMode: "monochrome", // "monochrome" | "rgb" | "grayscale"
   currentColorIndex: 1,
   secondaryColorIndex: 0,
   currentThemeKey: "db32",
@@ -166,6 +168,7 @@ export const state = {
   selection: null,
   floatingSelection: null, // { bgGrid, bgOutOfBounds, patch, w, h, mask, curX, curY }
   lassoPreview: null, // Array de puntos {x, y} mientras se traza el lazo
+  polygonPreview: null, // Vista previa de vértices/cierre para Polígono y Contorno
   isSelecting: false,
   selectStart: null,
   clipboard: null,

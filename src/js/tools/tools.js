@@ -123,7 +123,7 @@ function resolveColorIndexForHex(hex) {
   return nextIdx;
 }
 
-const BRUSH_PATTERN_TOOLS = new Set(["pencil", "line", "rect", "circle", "triangle"]);
+const BRUSH_PATTERN_TOOLS = new Set(["pencil", "line", "rect", "circle", "triangle", "polygon", "contour"]);
 
 /**
  * Pinta un sello de pincel (estándar o personalizado) respetando los ejes de simetría.

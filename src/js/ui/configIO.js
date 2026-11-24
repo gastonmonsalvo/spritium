@@ -4,13 +4,22 @@
 
 import { setStatus } from "./status.js";
 import { i18n } from "../i18n/I18nService.js";
-import { THEME_STORAGE_KEY, CANVAS_BG_STORAGE_KEY, applyColorTheme, setCanvasBgIntensity } from "./theme.js";
+import {
+  THEME_STORAGE_KEY,
+  CANVAS_BG_STORAGE_KEY,
+  CANVAS_BG_CONFIG_STORAGE_KEY,
+  applyColorTheme,
+  getCanvasBgConfig,
+  setCanvasBgConfig,
+  setCanvasBgIntensity,
+} from "./theme.js";
 import { LAYOUT_STORAGE_KEY, restoreLayoutState, resetDockedPanels } from "./docking.js";
 import {
   getUserPreferencesPayload,
   applyUserPreferencesObject,
   resetUserPreferences,
 } from "./preferences.js";
+import { showConfirmDialog } from "./modals/ConfirmModal.js";
 
 /** Exporta la configuración del usuario a un archivo JSON descargable. */
 export function exportUserConfig() {
@@ -20,6 +29,7 @@ export function exportUserConfig() {
     version: 1,
     exportedAt: new Date().toISOString(),
     theme: localStorage.getItem(THEME_STORAGE_KEY) || "dark",
+    canvasBg: getCanvasBgConfig(),
     layout: (() => {
       try {
         return JSON.parse(localStorage.getItem(LAYOUT_STORAGE_KEY) || "null");
@@ -75,6 +85,9 @@ export async function importUserConfig(file, { onPalettesChanged } = {}) {
     if (data.preferences && typeof data.preferences === "object") {
       applyUserPreferencesObject(data.preferences);
     }
+    if (data.canvasBg && typeof data.canvasBg === "object") {
+      setCanvasBgConfig(data.canvasBg, { persist: true });
+    }
     setStatus({ key: "log.cfg_loaded" });
   } catch (err) {
     setStatus({ key: "log.cfg_load_err", params: { msg: err.message } }, true);
@@ -85,8 +98,12 @@ export async function importUserConfig(file, { onPalettesChanged } = {}) {
  * Restablece todas las preferencias persistidas en localStorage a valores de fábrica.
  * @param {Object} [options]
  */
-export function resetAllUserConfig({ onPalettesChanged } = {}) {
-  if (!window.confirm(i18n.t("config.confirm_reset"))) {
+export async function resetAllUserConfig({ onPalettesChanged } = {}) {
+  const confirmed = await showConfirmDialog({
+    title: i18n.t("modal.confirm.title"),
+    message: i18n.t("config.confirm_reset"),
+  });
+  if (!confirmed) {
     return;
   }
   try {
@@ -100,10 +117,11 @@ export function resetAllUserConfig({ onPalettesChanged } = {}) {
   applyColorTheme("dark");
   try {
     localStorage.removeItem(CANVAS_BG_STORAGE_KEY);
+    localStorage.removeItem(CANVAS_BG_CONFIG_STORAGE_KEY);
   } catch {
     // ignore
   }
-  setCanvasBgIntensity(12, { persist: false });
+  setCanvasBgConfig({ percent: 12, color: null, checker: true }, { persist: false });
   resetDockedPanels();
   resetUserPreferences();
   if (onPalettesChanged) onPalettesChanged();

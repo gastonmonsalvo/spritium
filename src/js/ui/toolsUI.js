@@ -2,7 +2,7 @@
  * toolsUI.js: Estado visual de herramientas, grosor, modo línea/curva y opciones contextuales.
  */
 
-import { state } from "../core/state.js";
+import { state, notify } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import { commitFreeTransform } from "../tools/freeTransform.js";
 import { setStatus, refreshIcons } from "./status.js";
@@ -11,6 +11,8 @@ import { getToolCursorCss } from "./cursors.js";
 
 
 let lastShapeTool = "rect";
+let lastSelectTool = "select";
+let lastPolyTool = "polygon";
 let lastFilterTool = "blur";
 
 /**
@@ -18,6 +20,20 @@ let lastFilterTool = "blur";
  */
 export function selectActiveShapeTool() {
   setTool(lastShapeTool);
+}
+
+/**
+ * Activa la última herramienta de selección geométrica usada (rectangular, circular o triangular).
+ */
+export function selectActiveSelectTool() {
+  setTool(lastSelectTool);
+}
+
+/**
+ * Activa la última herramienta poligonal usada (Polígono o Contorno).
+ */
+export function selectActivePolyTool() {
+  setTool(lastPolyTool);
 }
 
 /**
@@ -36,6 +52,8 @@ const TILEMAP_PLACE_TOOLS = new Set([
   "rect",
   "circle",
   "triangle",
+  "polygon",
+  "contour",
 ]);
 
 const BRUSH_SIZE_TOOLS = new Set([
@@ -45,8 +63,11 @@ const BRUSH_SIZE_TOOLS = new Set([
   "rect",
   "circle",
   "triangle",
+  "polygon",
+  "contour",
   "blur",
   "jumble",
+  "noise",
   "spray",
 ]);
 
@@ -105,6 +126,7 @@ export function setBrushSize(size, announce = true) {
   if (announce) {
     setStatus({ key: "log.brush_size", params: { size: clamped } });
   }
+  notify("polygon:refreshPreview");
 }
 
 /** Cambia el modo de la herramienta de línea (straight o curve).
@@ -127,6 +149,15 @@ export function setCurveControlPoints(count) {
   setStatus({ key: "log.curve_pts", params: { pts: state.curveControlPoints } });
 }
 
+/** Define el modo del pincel de Ruido ("monochrome" | "rgb" | "grayscale").
+ * @param {string} mode */
+export function setNoiseBrushMode(mode) {
+  const valid = new Set(["monochrome", "rgb", "grayscale"]);
+  state.noiseBrushMode = valid.has(mode) ? mode : "monochrome";
+  updateToolOptionsUI(state.currentTool);
+  setStatus({ key: `log.noise_mode_${state.noiseBrushMode}` });
+}
+
 /** Define el patrón de trazo para líneas.
  * @param {string} style */
 export function setLineStyle(style) {
@@ -140,6 +171,7 @@ export function setLineStyle(style) {
     dashdot: "Punto y guión",
   };
   setStatus({ key: "log.line_style", params: { style: i18n.t(`log.line_style_${state.lineStyle}`) } });
+  notify("polygon:refreshPreview");
 }
 
 /**
@@ -151,9 +183,14 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   const box = document.getElementById("toolOptionsBox");
   const optLine = document.getElementById("optLineOptions");
   const optShapes = document.getElementById("optShapeSelector");
+  const optSelectShapes = document.getElementById("optSelectShapeSelector");
+  const optPoly = document.getElementById("optPolySelector");
+  const optPolygonActions = document.getElementById("optPolygonActions");
   const optFilter = document.getElementById("optFilterSelector");
+  const optNoiseBrush = document.getElementById("optNoiseBrushOptions");
   const optRadius = document.getElementById("optCircleRadius");
   const optFill = document.getElementById("optFillShapes");
+  const optFillPolygons = document.getElementById("optFillPolygons");
   const optPP = document.getElementById("optPixelPerfect");
   const optBrushSize = document.getElementById("optBrushSize");
   const optCustomBrushes = document.getElementById("optCustomBrushes");
@@ -173,6 +210,8 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   }
 
   const isShape = toolName === "rect" || toolName === "circle" || toolName === "triangle";
+  const isSelectShape = toolName === "select" || toolName === "ellipseSelect" || toolName === "triangleSelect";
+  const isPoly = toolName === "polygon" || toolName === "contour";
   const isFilter = toolName === "blur" || toolName === "jumble" || toolName === "noise";
   const activeLayer = state.layers?.[state.activeLayerIndex];
   const inTilemapPlaceMode =
@@ -181,7 +220,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
     TILEMAP_PLACE_TOOLS.has(toolName);
   const supportsBrushSize = BRUSH_SIZE_TOOLS.has(toolName);
   const showBrushSize = supportsBrushSize && !inTilemapPlaceMode;
-  const showAny = ftActive || isShape || isFilter || showBrushSize || toolName === "magicSelect";
+  const showAny = ftActive || isShape || isSelectShape || isPoly || isFilter || showBrushSize || toolName === "magicSelect";
 
   if (box) box.style.display = showAny ? "flex" : "none";
   if (!ftActive) {
@@ -189,7 +228,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
     if (paintCanvas) paintCanvas.style.cursor = getToolCursorCss(toolName);
   }
   if (optLine) {
-    const showLineOpts = !inTilemapPlaceMode && (toolName === "line" || isShape);
+    const showLineOpts = !inTilemapPlaceMode && (toolName === "line" || isShape || isPoly);
     optLine.style.display = showLineOpts ? "flex" : "none";
     if (showLineOpts) {
       const mode = state.lineMode || "straight";
@@ -219,11 +258,26 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
     }
   }
   if (optShapes) optShapes.style.display = isShape ? "flex" : "none";
+  if (optSelectShapes) optSelectShapes.style.display = isSelectShape ? "flex" : "none";
+  if (optPoly) optPoly.style.display = isPoly ? "flex" : "none";
+  if (optPolygonActions) optPolygonActions.style.display = !inTilemapPlaceMode && toolName === "polygon" ? "flex" : "none";
   if (optFilter) optFilter.style.display = isFilter ? "flex" : "none";
+  if (optNoiseBrush) {
+    optNoiseBrush.style.display = toolName === "noise" ? "flex" : "none";
+    const nMode = state.noiseBrushMode || "monochrome";
+    document.getElementById("noiseModeMono")?.classList.toggle("active", nMode === "monochrome");
+    document.getElementById("noiseModeRgb")?.classList.toggle("active", nMode === "rgb");
+    document.getElementById("noiseModeLuma")?.classList.toggle("active", nMode === "grayscale");
+  }
   if (optFill) {
     optFill.style.display = isShape ? "flex" : "none";
     const chkFill = document.getElementById("chkFillShapes");
     if (chkFill) chkFill.checked = Boolean(state.fillShapes);
+  }
+  if (optFillPolygons) {
+    optFillPolygons.style.display = !inTilemapPlaceMode && isPoly ? "flex" : "none";
+    const chkFillPoly = document.getElementById("chkFillPolygons");
+    if (chkFillPoly) chkFillPoly.checked = state.fillPolygons !== false;
   }
   if (optRadius) {
     optRadius.style.display = !inTilemapPlaceMode && toolName === "circle" ? "flex" : "none";
@@ -241,7 +295,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   }
   if (optCustomBrushes) {
     optCustomBrushes.style.display =
-      !inTilemapPlaceMode && (toolName === "pencil" || toolName === "line" || isShape) ? "flex" : "none";
+      !inTilemapPlaceMode && (toolName === "pencil" || toolName === "line" || isShape || isPoly) ? "flex" : "none";
   }
   if (optMagic) {
     optMagic.style.display = toolName === "magicSelect" ? "flex" : "none";
@@ -277,6 +331,30 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
       b.classList.toggle("active", match);
     });
   }
+  if (isSelectShape) {
+    lastSelectTool = toolName;
+    const selBtn = document.getElementById("toolSelect");
+    const iconName =
+      toolName === "ellipseSelect" ? "circle-dashed" : toolName === "triangleSelect" ? "triangle" : "box-select";
+    if (selBtn) {
+      selBtn.innerHTML = `<i data-lucide="${iconName}" class="ui-icon"></i>`;
+      refreshIcons(selBtn);
+    }
+    document.getElementById("selBtnRect")?.classList.toggle("active", toolName === "select");
+    document.getElementById("selBtnEllipse")?.classList.toggle("active", toolName === "ellipseSelect");
+    document.getElementById("selBtnTriangle")?.classList.toggle("active", toolName === "triangleSelect");
+  }
+  if (isPoly) {
+    lastPolyTool = toolName;
+    const polyBtn = document.getElementById("toolPolyGroup");
+    const iconName = toolName === "contour" ? "pen-tool" : "pentagon";
+    if (polyBtn) {
+      polyBtn.innerHTML = `<i data-lucide="${iconName}" class="ui-icon"></i>`;
+      refreshIcons(polyBtn);
+    }
+    document.getElementById("polyBtnPolygon")?.classList.toggle("active", toolName === "polygon");
+    document.getElementById("polyBtnContour")?.classList.toggle("active", toolName === "contour");
+  }
   if (isFilter) {
     lastFilterTool = toolName;
     const filterBtn = document.getElementById("toolFilterBrush");
@@ -302,8 +380,11 @@ const MOBILE_TOOL_ICONS = {
   rect: "square",
   circle: "circle",
   triangle: "triangle",
+  polygon: "pentagon",
+  contour: "pen-tool",
   select: "square-dashed",
   ellipseSelect: "circle",
+  triangleSelect: "triangle",
   lasso: "lasso",
   magicSelect: "wand-sparkles",
   spray: "spray-can",
@@ -327,8 +408,11 @@ const MOBILE_TOOL_LABEL_KEYS = {
   rect: "tool.shapes",
   circle: "tool.shapes",
   triangle: "tool.shapes",
+  polygon: "tool.poly_short",
+  contour: "tool.contour_short",
   select: "tool.select",
   ellipseSelect: "tool.ellipse_select",
+  triangleSelect: "tool.triangle_select",
   lasso: "tool.lasso",
   magicSelect: "tool.magic_select",
   spray: "tool.spray",
@@ -401,6 +485,9 @@ export function restorePreviousToolAfterEyedropper() {
  * @param {string} toolName
  */
 export function setTool(toolName) {
+  if (state.currentTool === "polygon" && toolName !== "polygon") {
+    notify("tool:cancelPending");
+  }
   if (toolName === "eyedropper" && state.currentTool && state.currentTool !== "eyedropper") {
     previousToolBeforeEyedropper = state.currentTool;
   }
@@ -425,6 +512,8 @@ export function setTool(toolName) {
       rect: "toolShapes",
       circle: "toolShapes",
       triangle: "toolShapes",
+      polygon: "toolPolyGroup",
+      contour: "toolPolyGroup",
       blur: "toolFilterBrush",
       jumble: "toolFilterBrush",
       noise: "toolFilterBrush",
@@ -436,7 +525,8 @@ export function setTool(toolName) {
       eyedropper: "toolEyedropper",
       eraser: "toolEraser",
       select: "toolSelect",
-      ellipseSelect: "toolEllipseSelect",
+      ellipseSelect: "toolSelect",
+      triangleSelect: "toolSelect",
       lasso: "toolLasso",
       magicSelect: "toolMagicSelect",
       backgroundEraser: "toolBackgroundEraser",
@@ -467,6 +557,16 @@ export function initToolOptionsControls() {
     chkFill.addEventListener("change", (e) => {
       state.fillShapes = Boolean(e.target.checked);
       setStatus({ key: state.fillShapes ? "log.fill_on" : "log.fill_off" });
+    });
+  }
+
+  const chkFillPoly = document.getElementById("chkFillPolygons");
+  if (chkFillPoly) {
+    chkFillPoly.checked = state.fillPolygons !== false;
+    chkFillPoly.addEventListener("change", (e) => {
+      state.fillPolygons = Boolean(e.target.checked);
+      notify("polygon:refreshPreview");
+      setStatus({ key: state.fillPolygons ? "log.fill_poly_on" : "log.fill_poly_off" });
     });
   }
 

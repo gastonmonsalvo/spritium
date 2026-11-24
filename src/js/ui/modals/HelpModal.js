@@ -15,6 +15,7 @@ const HELP_SECTIONS = [
       ["help.r2", "L"],
       ["help.r3", "Shift · Enter / Esc"],
       ["help.r4", "R / C / U"],
+      ["help.r_poly", "N / O · Enter / Esc / Supr"],
       ["help.r5", "T / F · Panel"],
       ["help.r6", "K"],
       ["help.r7", "I / E"],

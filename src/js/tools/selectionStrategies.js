@@ -8,7 +8,43 @@ import { magicSelectAt, cloneSelection, getSelectionMode, combineSelections } fr
 import { setStatus } from "../ui/index.js";
 import { createBrushFromSelection } from "./customBrushes.js";
 
-function createBoxSelectStrategy(isEllipse = false) {
+function buildShapeSelectionMask(shapeType, w, h, invertY) {
+  const mask = new Uint8Array(w * h);
+  if (shapeType === "ellipse") {
+    const rx = w / 2;
+    const ry = h / 2;
+    for (let r = 0; r < h; r++) {
+      const ny = (r + 0.5 - ry) / ry;
+      for (let c = 0; c < w; c++) {
+        const nx = (c + 0.5 - rx) / rx;
+        if (nx * nx + ny * ny <= 1) {
+          mask[r * w + c] = 1;
+        }
+      }
+    }
+    return mask;
+  }
+
+  // Triángulo isósceles pixel-perfect dentro del bounding box (consistente con drawPixelTriangle)
+  const apexX = Math.round((w - 1) / 2);
+  const apexY = invertY ? h - 1 : 0;
+  const stepY = invertY ? -1 : 1;
+  const totalH = Math.max(1, h - 1);
+  for (let i = 0; i <= totalH; i++) {
+    const py = apexY + i * stepY;
+    const t = i / totalH;
+    const lx = Math.round(apexX + (0 - apexX) * t);
+    const rx = Math.round(apexX + (w - 1 - apexX) * t);
+    const s = Math.min(lx, rx);
+    const e = Math.max(lx, rx);
+    for (let px = s; px <= e; px++) {
+      mask[py * w + px] = 1;
+    }
+  }
+  return mask;
+}
+
+function createBoxSelectStrategy(shapeType = "rect") {
   let baseSelection = null;
   let mode = "replace";
 
@@ -47,19 +83,8 @@ function createBoxSelectStrategy(isEllipse = false) {
       const h = y2 - y1 + 1;
 
       let shapeSel = { x: x1, y: y1, w, h };
-      if (isEllipse && w > 1 && h > 1) {
-        const mask = new Uint8Array(w * h);
-        const rx = w / 2;
-        const ry = h / 2;
-        for (let r = 0; r < h; r++) {
-          const ny = (r + 0.5 - ry) / ry;
-          for (let c = 0; c < w; c++) {
-            const nx = (c + 0.5 - rx) / rx;
-            if (nx * nx + ny * ny <= 1) {
-              mask[r * w + c] = 1;
-            }
-          }
-        }
+      if (shapeType !== "rect" && w > 1 && h > 1) {
+        const mask = buildShapeSelectionMask(shapeType, w, h, ty < state.selectStart.y);
         shapeSel = { x: x1, y: y1, w, h, mask };
       }
 
@@ -80,8 +105,9 @@ function createBoxSelectStrategy(isEllipse = false) {
   };
 }
 
-export const selectStrategy = createBoxSelectStrategy(false);
-export const ellipseSelectStrategy = createBoxSelectStrategy(true);
+export const selectStrategy = createBoxSelectStrategy("rect");
+export const ellipseSelectStrategy = createBoxSelectStrategy("ellipse");
+export const triangleSelectStrategy = createBoxSelectStrategy("triangle");
 
 function pointInPolygon(px, py, poly) {
   let inside = false;

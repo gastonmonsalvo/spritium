@@ -9,7 +9,9 @@ import {
   restoreProjectSnapshot,
 } from "../core/storage.js";
 import { applyZoom } from "../canvas/canvas.js";
-import { setTiledMode, setStatus, updateToolOptionsUI } from "../ui/index.js";
+import { setTiledMode, setStatus, updateToolOptionsUI, getRegisteredAction } from "../ui/index.js";
+import { openFloatingContextMenu } from "../ui/canvasContextMenu.js";
+import { showConfirmDialog, showPromptDialog } from "../ui/modals/ConfirmModal.js";
 import { highlightCurrentSwatch } from "./paletteManager.js";
 import { i18n } from "../i18n/I18nService.js";
 import {
@@ -99,9 +101,11 @@ export function openNewDocTab(name = "nuevo_proyecto") {
   }
 
   saveActiveTabState();
+  notify("tool:cancelPending");
   state.freeTransform = null;
   state.selection = null;
   state.lassoPreview = null;
+  state.polygonPreview = null;
   updateToolOptionsUI();
 
   const id = nextTabId();
@@ -160,9 +164,11 @@ export function switchToTab(tabId) {
   if (!target) return;
 
   saveActiveTabState();
+  notify("tool:cancelPending");
   state.freeTransform = null;
   state.selection = null;
   state.lassoPreview = null;
+  state.polygonPreview = null;
   updateToolOptionsUI();
 
   activeTabId = tabId;
@@ -201,23 +207,9 @@ export function markActiveTabSaved() {
   renderDocTabsUI();
 }
 
-/**
- * Cierra una pestaña por ID (pide confirmación si tiene cambios sin guardar).
- * @param {string} tabId
- */
-export function closeDocTab(tabId) {
+function executeCloseDocTab(tabId) {
   const plan = computeTabClosePlan(tabs, activeTabId, tabId);
   if (plan.action === "noop") return;
-
-  const targetTab = tabs[plan.index];
-  if (
-    targetTab.dirty &&
-    typeof window !== "undefined" &&
-    typeof window.confirm === "function" &&
-    !window.confirm(i18n.t("tabs.confirm_close", { name: targetTab.name }))
-  ) {
-    return;
-  }
 
   if (plan.action === "launch") {
     if (typeof document !== "undefined") {
@@ -238,6 +230,29 @@ export function closeDocTab(tabId) {
 }
 
 /**
+ * Cierra una pestaña por ID (pide confirmación con modal propio si tiene cambios sin guardar).
+ * @param {string} tabId
+ */
+export function closeDocTab(tabId) {
+  const plan = computeTabClosePlan(tabs, activeTabId, tabId);
+  if (plan.action === "noop") return;
+
+  const targetTab = tabs[plan.index];
+  if (targetTab.dirty && typeof document !== "undefined" && document.getElementById("appConfirmModal")) {
+    showConfirmDialog({
+      title: targetTab.name,
+      message: i18n.t("tabs.confirm_close", { name: targetTab.name }),
+      confirmText: i18n.t("tabs.ctx_close"),
+    }).then((ok) => {
+      if (ok) executeCloseDocTab(tabId);
+    });
+    return;
+  }
+
+  executeCloseDocTab(tabId);
+}
+
+/**
  * Sincroniza el título de la pestaña activa cuando cambia el nombre del asset.
  * @param {string} name
  */
@@ -249,6 +264,160 @@ export function renameActiveDocTab(name) {
 }
 
 /**
+ * Duplica una pestaña existente en una nueva pestaña independiente ubicada a su derecha.
+ * @param {string} tabId
+ * @returns {string|null}
+ */
+export function duplicateDocTab(tabId) {
+  if (tabId === activeTabId) {
+    saveActiveTabState();
+  }
+  const sourceIndex = tabs.findIndex((t) => t.id === tabId);
+  if (sourceIndex === -1) return null;
+  const source = tabs[sourceIndex];
+  const baseName = `${source.name}_copia`;
+  let copyName = baseName;
+  let suffix = 2;
+  while (tabs.some((t) => t.name === copyName)) {
+    copyName = `${baseName}_${suffix++}`;
+  }
+
+  const clonedSnap = source.snapshot ? JSON.parse(JSON.stringify(source.snapshot)) : null;
+  if (clonedSnap) clonedSnap.name = copyName;
+
+  const newId = nextTabId();
+  const clonedTab = {
+    ...source,
+    id: newId,
+    name: copyName,
+    dirty: true,
+    snapshot: clonedSnap,
+    tilesets: cloneTilesets(source.tilesets),
+    undoStack: [],
+    redoStack: [],
+    sourceImportOptions: source.sourceImportOptions ? { ...source.sourceImportOptions } : null,
+  };
+  tabs.splice(sourceIndex + 1, 0, clonedTab);
+  switchToTab(newId);
+  setStatus({ key: "log.tab_duplicated", params: { name: copyName } });
+  return newId;
+}
+
+/**
+ * Renombra una pestaña específica (y `#assetName` si es la activa).
+ * @param {string} tabId
+ * @param {string} nextName
+ */
+export function renameDocTabById(tabId, nextName) {
+  const tab = tabs.find((t) => t.id === tabId);
+  if (!tab) return;
+  const clean = normalizeDocTabName(nextName);
+  tab.name = clean;
+  if (tab.snapshot) tab.snapshot.name = clean;
+  if (tabId === activeTabId && typeof document !== "undefined") {
+    const assetEl = document.getElementById("assetName");
+    if (assetEl) assetEl.value = clean;
+  }
+  renderDocTabsUI();
+  setStatus({ key: "log.tab_renamed", params: { name: clean } });
+}
+
+function executeCloseTabBatch(closingSet, keepTabId) {
+  const activeClosed = closingSet.has(activeTabId);
+  tabs = tabs.filter((t) => !closingSet.has(t.id));
+  if (activeClosed && keepTabId && tabs.some((t) => t.id === keepTabId)) {
+    activeTabId = null;
+    switchToTab(keepTabId);
+  } else {
+    renderDocTabsUI();
+  }
+}
+
+function closeTabBatch(toCloseIds, keepTabId) {
+  if (toCloseIds.length === 0) return;
+  const closingSet = new Set(toCloseIds);
+  const dirtyTabs = tabs.filter((t) => closingSet.has(t.id) && t.dirty);
+  if (dirtyTabs.length > 0 && typeof document !== "undefined" && document.getElementById("appConfirmModal")) {
+    showConfirmDialog({
+      title: i18n.t("modal.confirm.title"),
+      message: i18n.t("tabs.confirm_close_batch", { count: dirtyTabs.length }),
+      confirmText: i18n.t("opt.confirm"),
+    }).then((ok) => {
+      if (ok) executeCloseTabBatch(closingSet, keepTabId);
+    });
+    return;
+  }
+  executeCloseTabBatch(closingSet, keepTabId);
+}
+
+/** Cierra todas las pestañas excepto la indicada.
+ * @param {string} keepTabId */
+export function closeOtherDocTabs(keepTabId) {
+  const ids = tabs.filter((t) => t.id !== keepTabId).map((t) => t.id);
+  closeTabBatch(ids, keepTabId);
+}
+
+/** Cierra todas las pestañas ubicadas a la derecha de la indicada.
+ * @param {string} fromTabId */
+export function closeRightDocTabs(fromTabId) {
+  const idx = tabs.findIndex((t) => t.id === fromTabId);
+  if (idx === -1 || idx >= tabs.length - 1) return;
+  const ids = tabs.slice(idx + 1).map((t) => t.id);
+  closeTabBatch(ids, fromTabId);
+}
+
+function openDocTabContextMenu(tab, tabIndex, clientX, clientY) {
+  const items = [
+    {
+      icon: "copy-plus",
+      label: i18n.t("tabs.ctx_duplicate"),
+      action: () => duplicateDocTab(tab.id),
+    },
+    {
+      icon: "pencil",
+      label: i18n.t("tabs.ctx_rename"),
+      action: () => {
+        showPromptDialog({
+          title: i18n.t("tabs.ctx_rename"),
+          message: i18n.t("tabs.prompt_rename"),
+          defaultValue: tab.name,
+          confirmText: i18n.t("opt.apply"),
+        }).then((next) => {
+          if (next !== null) renameDocTabById(tab.id, next);
+        });
+      },
+    },
+    {
+      icon: "save",
+      label: i18n.t("tabs.ctx_save"),
+      action: () => {
+        if (tab.id !== activeTabId) switchToTab(tab.id);
+        getRegisteredAction("saveProjectFile")?.();
+      },
+    },
+    { divider: true },
+    {
+      icon: "x",
+      label: i18n.t("tabs.ctx_close"),
+      action: () => closeDocTab(tab.id),
+    },
+    {
+      icon: "x-circle",
+      label: i18n.t("tabs.ctx_close_others"),
+      disabled: tabs.length <= 1,
+      action: () => closeOtherDocTabs(tab.id),
+    },
+    {
+      icon: "arrow-right",
+      label: i18n.t("tabs.ctx_close_right"),
+      disabled: tabIndex >= tabs.length - 1,
+      action: () => closeRightDocTabs(tab.id),
+    },
+  ];
+  openFloatingContextMenu(clientX, clientY, tab.name, items);
+}
+
+/**
  * Renderiza la barra de pestañas en `#docTabsList`.
  */
 export function renderDocTabsUI() {
@@ -257,7 +426,8 @@ export function renderDocTabsUI() {
   if (!list) return;
   list.innerHTML = "";
 
-  for (const tab of tabs) {
+  for (let i = 0; i < tabs.length; i++) {
+    const tab = tabs[i];
     const vm = formatDocTabViewModel(tab, tab.id === activeTabId, state);
     const pill = document.createElement("div");
     pill.className = `doc-tab${vm.isActive ? " active" : ""}`;
@@ -287,6 +457,11 @@ export function renderDocTabsUI() {
         e.preventDefault();
         closeDocTab(tab.id);
       }
+    });
+    pill.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openDocTabContextMenu(tab, i, e.clientX, e.clientY);
     });
 
     pill.appendChild(label);

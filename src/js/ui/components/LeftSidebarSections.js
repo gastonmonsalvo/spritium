@@ -9,6 +9,8 @@ import {
   LINE_STYLE_ITEMS,
   CURVE_POINT_PRESETS,
   SHAPE_SELECTOR_ITEMS,
+  SELECT_SHAPE_ITEMS,
+  POLY_TOOL_ITEMS,
   ALIGN_BUTTON_ITEMS,
   TILE_THUMB_SIZES,
 } from "./ToolbarConfig.js";
@@ -58,6 +60,8 @@ function renderLineAndShapeOptions() {
   const lineStylesHtml = renderList(LINE_STYLE_ITEMS, (s) => `<button type="button" id="${s.id}" class="tool-btn${s.active ? " active" : ""}" data-action="setLineStyle" data-action-arg="${s.arg}" style="font-size: 10px; padding: 3px 2px" data-i18n-title="${s.titleKey}" title="${tAttr(s.titleKey)}">${s.glyph}</button>`);
   const curvePtsHtml = renderList(CURVE_POINT_PRESETS, (p) => `<button type="button" id="${p.id}" class="tool-btn${p.active ? " active" : ""}" data-action="setCurveControlPoints" data-action-arg="${p.count}" style="font-size: 10px; padding: 2px 7px" data-i18n-title="${p.titleKey}" title="${tAttr(p.titleKey)}">${p.count}</button>`);
   const shapeBtnsHtml = renderList(SHAPE_SELECTOR_ITEMS, (s) => `<button type="button" id="${s.id}" class="tool-btn${s.active ? " active" : ""}" data-action="setTool" data-action-arg="${s.tool}" style="flex: 1" data-i18n-title="${s.titleKey}" title="${tAttr(s.titleKey)}"><i data-lucide="${s.icon}" class="ui-icon-sm"></i></button>`);
+  const selectShapeBtnsHtml = renderList(SELECT_SHAPE_ITEMS, (s) => `<button type="button" id="${s.id}" class="tool-btn${s.active ? " active" : ""}" data-action="setTool" data-action-arg="${s.tool}" style="flex: 1" data-i18n-title="${s.titleKey}" title="${tAttr(s.titleKey)}"><i data-lucide="${s.icon}" class="ui-icon-sm"></i></button>`);
+  const polyBtnsHtml = renderList(POLY_TOOL_ITEMS, (p) => `<button type="button" id="${p.id}" class="tool-btn${p.active ? " active" : ""}" data-action="setTool" data-action-arg="${p.tool}" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="${p.titleKey}" title="${tAttr(p.titleKey)}"><i data-lucide="${p.icon}" class="ui-icon-sm"></i><span data-i18n="${p.labelKey}">${tAttr(p.labelKey)}</span></button>`);
   return `
     <div id="optLineOptions" style="display: none; flex-direction: column; gap: 6px">
       <div id="optLineModeRow" style="display: flex; gap: 4px">
@@ -71,10 +75,25 @@ function renderLineAndShapeOptions() {
       </div>
     </div>
     <div id="optShapeSelector" style="display: none; gap: 4px">${shapeBtnsHtml}</div>
+    <div id="optSelectShapeSelector" style="display: none; gap: 4px">${selectShapeBtnsHtml}</div>
+    <div id="optPolySelector" style="display: none; gap: 4px">${polyBtnsHtml}</div>
+    <div id="optPolygonActions" style="display: none; gap: 4px">
+      <button type="button" class="tool-btn" data-action="undoPolygonVertexAction" style="flex: 1; font-size: 10px; padding: 4px" data-i18n-title="title.poly_undo_v" title="${tAttr("title.poly_undo_v")}" data-i18n="opt.poly_undo_v">${tAttr("opt.poly_undo_v")}</button>
+      <button type="button" class="btn-primary" data-action="commitPolygonAction" style="flex: 1.2; font-size: 10px; padding: 4px" data-i18n-title="title.poly_close" title="${tAttr("title.poly_close")}" data-i18n="opt.poly_close">${tAttr("opt.poly_close")}</button>
+      <button type="button" class="tool-btn" data-action="cancelPolygonAction" style="flex: 1; font-size: 10px; padding: 4px" data-i18n-title="title.poly_cancel" title="${tAttr("title.poly_cancel")}" data-i18n="opt.cancel">${tAttr("opt.cancel")}</button>
+    </div>
     <div id="optFilterSelector" style="display: none; gap: 4px">
       <button type="button" id="filterBtnBlur" class="tool-btn active" data-action="setTool" data-action-arg="blur" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.blur" title="${tAttr("title.blur")}"><i data-lucide="droplet" class="ui-icon-sm"></i><span data-i18n="tool.blur_short">${tAttr("tool.blur_short")}</span></button>
       <button type="button" id="filterBtnJumble" class="tool-btn" data-action="setTool" data-action-arg="jumble" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.jumble" title="${tAttr("title.jumble")}"><i data-lucide="shuffle" class="ui-icon-sm"></i><span data-i18n="tool.jumble_short">${tAttr("tool.jumble_short")}</span></button>
       <button type="button" id="filterBtnNoise" class="tool-btn" data-action="setTool" data-action-arg="noise" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.noise" title="${tAttr("title.noise")}"><i data-lucide="sparkles" class="ui-icon-sm"></i><span data-i18n="tool.noise_short">${tAttr("tool.noise_short")}</span></button>
+    </div>
+    <div id="optNoiseBrushOptions" style="display: none; flex-direction: column; gap: 4px">
+      <span style="font-size: 10px; color: var(--text-secondary)" data-i18n="opt.noise_mode">${tAttr("opt.noise_mode")}</span>
+      <div style="display: flex; gap: 3px">
+        <button type="button" id="noiseModeMono" class="tool-btn active" data-action="setNoiseBrushMode" data-action-arg="monochrome" style="flex: 1; font-size: 10px; padding: 3px 4px" data-i18n-title="title.noise_mono" title="${tAttr("title.noise_mono")}" data-i18n="opt.noise_mono">${tAttr("opt.noise_mono")}</button>
+        <button type="button" id="noiseModeRgb" class="tool-btn" data-action="setNoiseBrushMode" data-action-arg="rgb" style="flex: 1; font-size: 10px; padding: 3px 4px" data-i18n-title="title.noise_rgb" title="${tAttr("title.noise_rgb")}" data-i18n="opt.noise_rgb">${tAttr("opt.noise_rgb")}</button>
+        <button type="button" id="noiseModeLuma" class="tool-btn" data-action="setNoiseBrushMode" data-action-arg="grayscale" style="flex: 1; font-size: 10px; padding: 3px 4px" data-i18n-title="title.noise_luma" title="${tAttr("title.noise_luma")}" data-i18n="opt.noise_luma">${tAttr("opt.noise_luma")}</button>
+      </div>
     </div>`;
 }
 
@@ -85,6 +104,7 @@ function renderBrushAndWandOptions() {
       <input type="number" id="circleRadiusInput" min="0" max="64" value="0" data-i18n-title="title.circle_radius" title="${tAttr("title.circle_radius")}" style="width: 56px; padding: 3px 6px; font-size: 11px; border-radius: 4px" />
     </div>
     <label id="optFillShapes" style="display: none; align-items: center; gap: 5px; margin: 0; font-size: 11px; cursor: pointer; text-transform: none"><input type="checkbox" id="chkFillShapes" /><span data-i18n="opt.fill_shapes">${tAttr("opt.fill_shapes")}</span></label>
+    <label id="optFillPolygons" style="display: none; align-items: center; gap: 5px; margin: 0; font-size: 11px; cursor: pointer; text-transform: none"><input type="checkbox" id="chkFillPolygons" checked /><span data-i18n="opt.fill_polygons">${tAttr("opt.fill_polygons")}</span></label>
     <label id="optPixelPerfect" style="display: flex; align-items: center; gap: 5px; margin: 0; font-size: 11px; cursor: pointer; text-transform: none" data-i18n-title="title.pixel_perfect" title="${tAttr("title.pixel_perfect")}"><input type="checkbox" id="chkPixelPerfect" checked /><span data-i18n="opt.pixel_perfect">${tAttr("opt.pixel_perfect")}</span></label>
     <div id="optBrushSize" style="display: flex; flex-direction: column; gap: 4px">
       <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px">
@@ -234,10 +254,13 @@ export function renderUtilityModules() {
           <button type="button" id="btnResetSymAxis" class="tool-btn" data-action="resetSymmetryAxes" style="padding: 2px 6px; font-size: 10px" data-i18n-title="sym.reset_center_title" title="${tAttr("sym.reset_center_title")}"><i data-lucide="locate-fixed" class="ui-icon-sm"></i></button>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; padding-top: 2px" data-i18n-title="title.bg_btn" title="${tAttr("title.bg_btn")}">
+      <div style="display: flex; align-items: center; gap: 4px; padding-top: 2px" data-i18n-title="title.bg_btn" title="${tAttr("title.bg_btn")}">
         <label for="canvasBgSlider" data-i18n="btn.bg" style="margin: 0; font-size: 10px; white-space: nowrap">${tAttr("btn.bg")}</label>
+        <button type="button" id="btnCanvasBgColor" class="tool-btn" data-action="openCanvasBgColorPicker" data-i18n-title="title.bg_color" title="${tAttr("title.bg_color")}" style="width: 22px; height: 20px; padding: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center"><span id="canvasBgColorSwatch" style="width: 100%; height: 100%; border-radius: 2px; background: var(--checker-dark); border: 1px solid var(--border-subtle)"></span></button>
+        <button type="button" id="btnCanvasBgChecker" class="tool-btn active" data-action="toggleCanvasBgChecker" style="padding: 2px 5px; font-size: 10px; flex-shrink: 0" data-i18n-title="title.bg_checker" title="${tAttr("title.bg_checker")}"><i data-lucide="grid-2x2" class="ui-icon-sm"></i></button>
         <input type="range" id="canvasBgSlider" min="0" max="100" value="12" data-input="setCanvasBgFromEvent" style="flex: 1; min-width: 0" />
-        <span id="canvasBgValue" style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); min-width: 30px; text-align: right">12%</span>
+        <span id="canvasBgValue" style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); min-width: 28px; text-align: right">12%</span>
+        <button type="button" id="btnResetCanvasBg" class="tool-btn" data-action="resetCanvasBg" style="padding: 2px 5px; font-size: 10px; flex-shrink: 0" data-i18n-title="title.bg_reset" title="${tAttr("title.bg_reset")}"><i data-lucide="rotate-ccw" class="ui-icon-sm"></i></button>
       </div>
     </section>
     <section id="moduleTransforms" class="dock-module">

@@ -51,7 +51,8 @@ const CLOSE_MODAL_IDS = [
 
 const SINGLE_KEY_TOOL_MAP = {
   s: "select", q: "lasso", w: "magicSelect", b: "pencil", l: "line",
-  r: "rect", c: "circle", u: "triangle", m: "move", h: "pan",
+  r: "rect", c: "circle", u: "triangle", n: "polygon", o: "contour",
+  m: "move", h: "pan",
   k: "shading", i: "eyedropper", f: "bucket", t: "bucket", e: "eraser", d: "backgroundEraser",
 };
 
@@ -65,6 +66,7 @@ export function getActiveFocusZone() {
 /** Ejecuta deshacer sobre el historial de estados y actualiza el mensaje de estado. */
 export function performUndo() {
   if (state.freeTransform) { cancelFreeTransform(); return; }
+  if (TOOL_STRATEGIES.polygon?.hasPendingSession?.()) { TOOL_STRATEGIES.polygon.undoLastVertex(); return; }
   if (undo()) {
     syncCanvasColorsToPalette();
     setStatus({ key: "log.undo_applied" }, false, "pixel");
@@ -117,6 +119,21 @@ function handleSpecialKeyAndModes(e) {
   }
   if (e.key === "Escape" && TOOL_STRATEGIES.line?.isBending?.()) {
     e.preventDefault(); e.stopPropagation(); TOOL_STRATEGIES.line.cancelBend(); return true;
+  }
+  if (e.key === "Enter" && TOOL_STRATEGIES.polygon?.hasPendingSession?.()) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (TOOL_STRATEGIES.polygon.commitPolygon()) {
+      if (state.layers?.[state.activeLayerIndex]?.type === "tilemap") reconcileActiveTilemapLayer();
+      syncCanvasColorsToPalette();
+    }
+    return true;
+  }
+  if (e.key === "Escape" && TOOL_STRATEGIES.polygon?.hasPendingSession?.()) {
+    e.preventDefault(); e.stopPropagation(); TOOL_STRATEGIES.polygon.cancelPolygon(); return true;
+  }
+  if ((e.key === "Backspace" || e.key === "Delete") && TOOL_STRATEGIES.polygon?.hasPendingSession?.()) {
+    e.preventDefault(); e.stopPropagation(); TOOL_STRATEGIES.polygon.undoLastVertex(); return true;
   }
   if (e.key === "Enter" && state.freeTransform) {
     e.preventDefault(); e.stopPropagation(); commitFreeTransform(); return true;

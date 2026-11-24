@@ -27,13 +27,60 @@ export function closeCanvasContextMenu() {
 }
 
 /**
+ * Renderiza y posiciona un menú contextual flotante genérico reutilizando `#canvasContextMenu`.
+ * @param {number} clientX
+ * @param {number} clientY
+ * @param {string} headerText
+ * @param {Array<Object>} items
+ */
+export function openFloatingContextMenu(clientX, clientY, headerText, items) {
+  const menu = document.getElementById("canvasContextMenu");
+  if (!menu) return;
+
+  menu.innerHTML = `<div class="ctx-header">${headerText}</div>`;
+  for (const item of items) {
+    if (item.divider) {
+      const div = document.createElement("div");
+      div.className = "ctx-divider";
+      menu.appendChild(div);
+      continue;
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ctx-item";
+    btn.disabled = Boolean(item.disabled);
+    btn.innerHTML = `<i data-lucide="${item.icon}" class="ui-icon-sm"></i><span>${item.label}</span>`;
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      closeCanvasContextMenu();
+      item.action();
+    });
+    menu.appendChild(btn);
+  }
+
+  menu.classList.add("open");
+  refreshIcons(menu);
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const mw = menu.offsetWidth || 200;
+  const mh = menu.offsetHeight || 260;
+  const left = vw <= 640
+    ? Math.max(12, Math.round((vw - mw) / 2))
+    : Math.max(8, Math.min(clientX, vw - mw - 8));
+  const bottomPad = vw <= 860 ? 60 : 8;
+  const top = Math.max(8, Math.min(clientY, vh - mh - bottomPad));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+}
+
+/**
  * Abre el menú contextual del lienzo en la posición (clientX, clientY).
  * @param {number} clientX
  * @param {number} clientY
  */
 export function openCanvasContextMenu(clientX, clientY) {
-  const menu = document.getElementById("canvasContextMenu");
-  if (!menu) return;
+  if (!document.getElementById("canvasContextMenu")) return;
 
   const hasSelection = Boolean(state.selection);
   const hasClipboard = Boolean(state.clipboard);
@@ -163,39 +210,5 @@ export function openCanvasContextMenu(clientX, clientY) {
     },
   ];
 
-  menu.innerHTML = `<div class="ctx-header">${i18n.t("ctx.canvas_header")}</div>`;
-  for (const item of items) {
-    if (item.divider) {
-      const div = document.createElement("div");
-      div.className = "ctx-divider";
-      menu.appendChild(div);
-      continue;
-    }
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ctx-item";
-    btn.disabled = Boolean(item.disabled);
-    btn.innerHTML = `<i data-lucide="${item.icon}" class="ui-icon-sm"></i><span>${item.label}</span>`;
-    btn.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      closeCanvasContextMenu();
-      item.action();
-    });
-    menu.appendChild(btn);
-  }
-
-  menu.classList.add("open");
-  refreshIcons(menu);
-
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const mw = menu.offsetWidth || 200;
-  const mh = menu.offsetHeight || 260;
-  const left = vw <= 640
-    ? Math.max(12, Math.round((vw - mw) / 2))
-    : Math.max(8, Math.min(clientX, vw - mw - 8));
-  const bottomPad = vw <= 860 ? 60 : 8;
-  const top = Math.max(8, Math.min(clientY, vh - mh - bottomPad));
-  menu.style.left = `${left}px`;
-  menu.style.top = `${top}px`;
+  openFloatingContextMenu(clientX, clientY, i18n.t("ctx.canvas_header"), items);
 }

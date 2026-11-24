@@ -120,7 +120,7 @@ export function toggleCustomBrushColorMode() {
 export function createBrushFromSelection() {
   if (!state.selection) {
     state.pendingBrushFromSelection = true;
-    const selTools = new Set(["select", "ellipseSelect", "lasso", "magicSelect"]);
+    const selTools = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect"]);
     if (!selTools.has(state.currentTool)) {
       setTool("select");
     }

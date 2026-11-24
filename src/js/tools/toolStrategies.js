@@ -43,9 +43,11 @@ import {
 import {
   selectStrategy,
   ellipseSelectStrategy,
+  triangleSelectStrategy,
   lassoStrategy,
   magicSelectStrategy,
 } from "./selectionStrategies.js";
+import { createPolygonStrategy, createContourStrategy } from "./polygonStrategies.js";
 
 const strokeStrategy = (() => {
   let ppBaseGrid = null;
@@ -520,6 +522,9 @@ const sprayStrategy = (() => {
   };
 })();
 
+const polygonStrategy = createPolygonStrategy();
+const contourStrategy = createContourStrategy();
+
 // --- TABLA DE DESPACHO STRATEGY ---
 export const TOOL_STRATEGIES = {
   pencil: strokeStrategy,
@@ -537,10 +542,13 @@ export const TOOL_STRATEGIES = {
   triangle: createShapeStrategy(({ start, x, y }, col, filled) =>
     drawPixelTriangle(start.x, start.y, x, y, col, filled, state.brushSize, state.lineStyle || "solid"),
   ),
+  polygon: polygonStrategy,
+  contour: contourStrategy,
   move: moveStrategy,
   shading: shadingStrategy,
   select: selectStrategy,
   ellipseSelect: ellipseSelectStrategy,
+  triangleSelect: triangleSelectStrategy,
   lasso: lassoStrategy,
   magicSelect: magicSelectStrategy,
   eyedropper: eyedropperStrategy,

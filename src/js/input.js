@@ -21,9 +21,9 @@ import { getActiveFocusZone, performUndo, performRedo, setupKeyboardShortcuts } 
 export { performUndo, performRedo, setupKeyboardShortcuts };
 
 const REGION_TOOLS = new Set(["bucket", "fill", "backgroundEraser", "magicSelect"]);
-const READ_ONLY_TOOLS = new Set(["select", "ellipseSelect", "lasso", "magicSelect", "eyedropper", "zoom", "pan"]);
-const SELECTION_CTX_TOOLS = new Set(["select", "lasso", "magicSelect", "move"]);
-const ALT_SELECTION_TOOLS = new Set(["select", "ellipseSelect", "lasso", "magicSelect", "move"]);
+const READ_ONLY_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect", "eyedropper", "zoom", "pan"]);
+const SELECTION_CTX_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect", "move"]);
+const ALT_SELECTION_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect", "move"]);
 
 function wantsSymmetryAxisDrag(e) {
   if (!isSymmetryActive()) return false;
@@ -209,6 +209,10 @@ function handleCanvasMouseMove(e, canvas, ptr) {
       ? "move"
       : getToolCursorCss(state.currentTool);
   if (canvas.style.cursor !== toolCursor) canvas.style.cursor = toolCursor;
+  if (TOOL_STRATEGIES[state.currentTool]?.hasPendingSession?.()) {
+    TOOL_STRATEGIES[state.currentTool].onMove({ x, y, button: 0, event: e });
+    return;
+  }
   if (state.currentTool === "line" && TOOL_STRATEGIES.line?.isBending?.()) {
     TOOL_STRATEGIES.line.onMove({ x, y, button: 0, event: e });
     return;

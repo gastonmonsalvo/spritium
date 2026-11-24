@@ -152,17 +152,26 @@ export function applyBlurAt(cx, cy, brushSize = state.brushSize) {
 
 /**
  * Noise Brush: aplica textura de ruido cuantizada en OKLab a la paleta activa dentro del pincel.
+ * Soporta modo `"monochrome"` (escalar), `"rgb"` (color por canal) y `"grayscale"` (luminiscencia B&N).
  * @param {number} cx
  * @param {number} cy
  * @param {number} [brushSize=state.brushSize]
+ * @param {"monochrome"|"rgb"|"grayscale"} [mode=state.noiseBrushMode]
  */
-export function applyNoiseAt(cx, cy, brushSize = state.brushSize) {
+export function applyNoiseAt(
+  cx,
+  cy,
+  brushSize = state.brushSize,
+  mode = state.noiseBrushMode || "monochrome",
+) {
   const { w: gw, h: gh } = getGridDims();
   const radius = Math.max(0, Math.floor(Math.max(1, brushSize) / 2));
   const entries = buildPaletteColorEntries({ withOklab: true });
   if (!entries.length) return;
 
   const updates = [];
+  const randomDelta = () => (Math.random() < 0.5 ? -1 : 1) * (28 + Math.random() * 64);
+
   for (let dy = -radius; dy <= radius; dy++) {
     for (let dx = -radius; dx <= radius; dx++) {
       const x = wrapCoordX(cx + dx, gw);
@@ -174,11 +183,26 @@ export function applyNoiseAt(cx, cy, brushSize = state.brushSize) {
       const rgb = parseColorToRgb(state.paletteMap[curIdx]);
       if (!rgb) continue;
       if (Math.random() > 0.55) continue;
-      const sign = Math.random() < 0.5 ? -1 : 1;
-      const delta = sign * (28 + Math.random() * 64);
-      const nr = Math.max(0, Math.min(255, rgb[0] + delta));
-      const ng = Math.max(0, Math.min(255, rgb[1] + delta));
-      const nb = Math.max(0, Math.min(255, rgb[2] + delta));
+
+      let nr;
+      let ng;
+      let nb;
+      if (mode === "grayscale") {
+        const luma = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+        const gray = Math.max(0, Math.min(255, luma + randomDelta()));
+        nr = gray;
+        ng = gray;
+        nb = gray;
+      } else if (mode === "rgb") {
+        nr = Math.max(0, Math.min(255, rgb[0] + randomDelta()));
+        ng = Math.max(0, Math.min(255, rgb[1] + randomDelta()));
+        nb = Math.max(0, Math.min(255, rgb[2] + randomDelta()));
+      } else {
+        const delta = randomDelta();
+        nr = Math.max(0, Math.min(255, rgb[0] + delta));
+        ng = Math.max(0, Math.min(255, rgb[1] + delta));
+        nb = Math.max(0, Math.min(255, rgb[2] + delta));
+      }
       updates.push([x, y, findNearestPaletteEntry(nr, ng, nb, entries, { useOklab: true })]);
     }
   }

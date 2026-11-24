@@ -216,3 +216,64 @@ export function drawLassoPreview(ctx, cellSize, points) {
   ctx.stroke();
   ctx.restore();
 }
+
+/**
+ * Dibuja los vértices, líneas guía y anillo de cierre para Polígono / Contorno.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cellSize
+ * @param {{ vertices?: Array<{x: number, y: number}>, hoverPt?: {x: number, y: number}|null, snapClose?: boolean, isContour?: boolean }|null} preview
+ */
+export function drawPolygonPreview(ctx, cellSize, preview) {
+  const verts = preview?.vertices;
+  if (!verts || verts.length === 0) return;
+
+  ctx.save();
+  if (preview.isContour) {
+    if (verts.length >= 2) {
+      const start = verts[0];
+      const end = verts[verts.length - 1];
+      ctx.strokeStyle = preview.snapClose ? "#22c55e" : "#38bdf8";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo((end.x + 0.5) * cellSize, (end.y + 0.5) * cellSize);
+      ctx.lineTo((start.x + 0.5) * cellSize, (start.y + 0.5) * cellSize);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  verts.forEach((pt, idx) => {
+    const px = (pt.x + 0.5) * cellSize;
+    const py = (pt.y + 0.5) * cellSize;
+    if (idx === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  });
+  if (preview.hoverPt) {
+    const target = preview.snapClose ? verts[0] : preview.hoverPt;
+    ctx.lineTo((target.x + 0.5) * cellSize, (target.y + 0.5) * cellSize);
+  }
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  verts.forEach((pt, idx) => {
+    const px = (pt.x + 0.5) * cellSize;
+    const py = (pt.y + 0.5) * cellSize;
+    if (idx === 0 && verts.length >= 3) {
+      ctx.strokeStyle = preview.snapClose ? "#22c55e" : "#38bdf8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(px, py, Math.max(5, cellSize * 0.45), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = idx === 0 ? "#22c55e" : "#38bdf8";
+    ctx.fillRect(px - 2.5, py - 2.5, 5, 5);
+  });
+
+  ctx.restore();
+}

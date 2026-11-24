@@ -10,6 +10,7 @@ import * as ui from "./index.js";
 import * as ft from "../tools/freeTransform.js";
 import * as tr from "../tools/transforms.js";
 import * as cb from "../tools/customBrushes.js";
+import { TOOL_STRATEGIES } from "../tools/toolStrategies.js";
 import * as tm from "../workspace/tilemap.js";
 import * as ly from "../workspace/layers.js";
 import * as fr from "../workspace/frames.js";
@@ -164,7 +165,19 @@ export function registerAppActions() {
     setTool: ui.setTool,
     setBrushSize: ui.setBrushSize,
     selectActiveShapeTool: ui.selectActiveShapeTool,
+    selectActiveSelectTool: ui.selectActiveSelectTool,
+    selectActivePolyTool: ui.selectActivePolyTool,
+    commitPolygonAction: () => {
+      if (TOOL_STRATEGIES.polygon?.commitPolygon?.()) {
+        if (state.layers?.[state.activeLayerIndex]?.type === "tilemap") tm.reconcileActiveTilemapLayer();
+        tx.syncLinkedCelsForActiveLayer();
+        pm.syncCanvasColorsToPalette();
+      }
+    },
+    undoPolygonVertexAction: () => TOOL_STRATEGIES.polygon?.undoLastVertex?.(),
+    cancelPolygonAction: () => TOOL_STRATEGIES.polygon?.cancelPolygon?.(),
     selectActiveFilterTool: ui.selectActiveFilterTool,
+    setNoiseBrushMode: ui.setNoiseBrushMode,
     setLineMode: ui.setLineMode,
     setLineStyle: ui.setLineStyle,
     setCurveControlPoints: ui.setCurveControlPoints,
@@ -195,6 +208,10 @@ export function registerAppActions() {
     toggleColorWheelPanel: ui.toggleColorWheelPanel,
     setCanvasBgFromEvent: (e) => ui.setCanvasBgIntensity(e.target.value),
     setCanvasBgIntensity: ui.setCanvasBgIntensity,
+    openCanvasBgColorPicker: ui.openCanvasBgColorPicker,
+    setCanvasBgColorFromEvent: (e) => ui.setCanvasBgColor(e.target.value),
+    toggleCanvasBgChecker: ui.toggleCanvasBgChecker,
+    resetCanvasBg: ui.resetCanvasBg,
     toggleLeftPanel: ui.toggleLeftPanel,
     toggleRightPanel: ui.toggleRightPanel,
     toggleBottomPanel: ui.toggleBottomPanel,
