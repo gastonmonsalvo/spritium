@@ -19,6 +19,9 @@ export function copySelection() {
     cells.push(row);
   }
   state.clipboard = { w, h, cells };
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText("spritium:selection").catch(() => {});
+  }
   return { w, h };
 }
 

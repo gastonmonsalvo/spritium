@@ -149,7 +149,7 @@ function collectBfsMatches(grid, lx, ly, w, h, matches, respectSelection) {
   return { coords, cellsSet };
 }
 
-function getFloodFillPreviewOffsets(lx, ly, w, h, { respectSelection = true, ignoreTransparent = false, tolerance = 0, contiguous = true } = {}) {
+function getFloodFillPreviewOffsets(lx, ly, w, h, { respectSelection = true, ignoreTransparent = false, tolerance = 0, contiguous = true, skipCache = false } = {}) {
   const grid = state.grid;
   if (!grid || lx < 0 || lx >= w || ly < 0 || ly >= h) return null;
   if (respectSelection && !isPixelInActiveSelection(lx, ly)) return null;
@@ -159,7 +159,7 @@ function getFloodFillPreviewOffsets(lx, ly, w, h, { respectSelection = true, ign
   const sel = respectSelection ? state.selection : null;
   const selKey = sel ? `${sel.x},${sel.y},${sel.w},${sel.h},${sel.mask ? sel.mask.length : 0}` : "none";
   const cacheKey = `${state.activeFrameIndex}:${state.activeLayerIndex}:${state.currentHistoryActionId}:${state.undoStack.length}:${w}x${h}:${selKey}:${state.tiledMode}:${respectSelection}:${ignoreTransparent}:${tolerance}:${contiguous}`;
-  if (fillPreviewCache?.cacheKey === cacheKey && fillPreviewCache.gridRef === grid && fillPreviewCache.targetVal === targetVal && fillPreviewCache.cellsSet.has(ly * w + lx)) {
+  if (!skipCache && fillPreviewCache?.cacheKey === cacheKey && fillPreviewCache.gridRef === grid && fillPreviewCache.targetVal === targetVal && fillPreviewCache.cellsSet.has(ly * w + lx)) {
     return fillPreviewCache.coords.map(([px, py]) => ({ dx: px - lx, dy: py - ly }));
   }
 
@@ -167,7 +167,7 @@ function getFloodFillPreviewOffsets(lx, ly, w, h, { respectSelection = true, ign
   const { coords, cellsSet } = contiguous
     ? collectBfsMatches(grid, lx, ly, w, h, matches, respectSelection)
     : collectGlobalMatches(grid, w, h, matches, respectSelection);
-  fillPreviewCache = { cacheKey, gridRef: grid, targetVal, cellsSet, coords };
+  if (!skipCache) fillPreviewCache = { cacheKey, gridRef: grid, targetVal, cellsSet, coords };
   return coords.map(([px, py]) => ({ dx: px - lx, dy: py - ly }));
 }
 
@@ -209,6 +209,21 @@ function tryDrawRegionPreview(ctx, cx, cy, w, h, cellSize, cfg, opacity, outerSh
   const fillRgba = activeBucketHex ? hexToRgba(activeBucketHex, activeFillAlpha) : hexToRgba(regionHex, 1);
   ctx.save();
   strokeCellsFootprint(ctx, cx, cy, fillOffsets, cellSize, hexToRgba(regionHex, Math.max(0.65, opacity)), fillRgba, outerShadow, lineW, true);
+  if (!isBgEraser && !isMagic && isSymmetryActive()) {
+    const covered = new Set(fillOffsets.map(({ dx, dy }) => `${lx + dx},${ly + dy}`));
+    const tileBaseX = Math.floor(cx / w) * w;
+    const tileBaseY = Math.floor(cy / h) * h;
+    const symPts = getSymmetryPoints(lx, ly, w, h);
+    ctx.globalAlpha = 0.65;
+    for (let i = 1; i < symPts.length; i++) {
+      const [sx, sy] = symPts[i];
+      if (sx < 0 || sx >= w || sy < 0 || sy >= h || covered.has(`${sx},${sy}`)) continue;
+      const symOffsets = getFloodFillPreviewOffsets(sx, sy, w, h, { respectSelection: true, skipCache: true });
+      if (!symOffsets?.length) continue;
+      for (const { dx, dy } of symOffsets) covered.add(`${sx + dx},${sy + dy}`);
+      strokeCellsFootprint(ctx, tileBaseX + sx, tileBaseY + sy, symOffsets, cellSize, hexToRgba(regionHex, Math.max(0.65, opacity)), fillRgba, outerShadow, lineW, true);
+    }
+  }
   ctx.restore();
   return true;
 }

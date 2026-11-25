@@ -43,6 +43,7 @@ import {
 } from "./ui/index.js";
 import { syncCanvasColorsToPalette } from "./workspace/paletteManager.js";
 import { saveProjectFile, saveProjectFileAs, openProjectWithPicker } from "./core/projectIO.js";
+import { openImportModal } from "./workspace/importOptionsController.js";
 
 const CLOSE_MODAL_IDS = [
   "helpModal", "preferencesModal", "languageModal", "aboutModal",
@@ -208,11 +209,10 @@ function handleModifierShortcuts(e, key, isMod) {
     else { const { w, h } = cutSelection(); setStatus({ key: "log.cut", params: { w, h } }, false, "pixel"); }
     return true;
   }
-  if (e.ctrlKey && key === "v") {
-    e.preventDefault();
-    if (activeFocusZone === "layers") pasteClipboardAsLayer();
-    else if (activeFocusZone === "frames") pasteClipboardAsFrame();
-    else if (pasteClipboard()) setStatus({ key: "log.pasted_cursor" }, false, "pixel");
+  if (isMod && key === "v") {
+    if (activeFocusZone === "layers") { e.preventDefault(); pasteClipboardAsLayer(); return true; }
+    if (activeFocusZone === "frames") { e.preventDefault(); pasteClipboardAsFrame(); return true; }
+    // En el lienzo dejamos fluir el evento nativo "paste" para detectar imágenes del portapapeles del SO.
     return true;
   }
   return false;
@@ -288,4 +288,26 @@ export function setupKeyboardShortcuts() {
     if (handleModifierShortcuts(e, key, isMod)) return;
     handleNavigationAndTools(e, key, isMod);
   }, { capture: true });
+
+  window.addEventListener("paste", (e) => {
+    const target = e.target;
+    if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.tagName === "SELECT" || target?.isContentEditable) return;
+    if (!document.getElementById("launcherOverlay")?.classList.contains("hidden")) return;
+
+    const items = Array.from(e.clipboardData?.items || []);
+    const imageItem = items.find((item) => item.kind === "file" && item.type.startsWith("image/"));
+    if (imageItem) {
+      const file = imageItem.getAsFile();
+      if (file) {
+        e.preventDefault();
+        openImportModal(file);
+        return;
+      }
+    }
+
+    if (activeFocusZone === "canvas" && pasteClipboard()) {
+      e.preventDefault();
+      setStatus({ key: "log.pasted_cursor" }, false, "pixel");
+    }
+  });
 }

@@ -114,14 +114,20 @@ export function setupTimelineResizer() {
   const wrap = document.getElementById("timelineMatrixWrap");
   if (!resizer || !wrap) return;
 
-  let dragging = false, startY = 0, startH = 0;
+  let dragging = false, startY = 0, startH = 0, openedOnDrag = false;
   resizer.addEventListener("mousedown", (e) => {
     if (e.button !== 0) return;
     e.preventDefault();
-    if (!isExpanded) toggleTimelineExpanded();
+    openedOnDrag = !isExpanded;
+    if (openedOnDrag) {
+      toggleTimelineExpanded();
+      wrap.style.height = "0px";
+      startH = 0;
+    } else {
+      startH = wrap.getBoundingClientRect().height || 190;
+    }
     dragging = true;
     startY = e.clientY;
-    startH = wrap.getBoundingClientRect().height || 190;
     resizer.classList.add("dragging");
   });
   window.addEventListener("mousemove", (e) => {
@@ -137,13 +143,27 @@ export function setupTimelineResizer() {
     }
     if (!dragging) return;
     const maxH = Math.round(window.innerHeight * 0.75);
-    wrap.style.height = `${Math.max(110, Math.min(maxH, Math.round(startH + (startY - e.clientY))))}px`;
+    const isTop = Boolean(document.getElementById("moduleFrames")?.classList.contains("module-docked-top"));
+    const deltaY = isTop ? (e.clientY - startY) : (startY - e.clientY);
+    const minH = openedOnDrag ? 0 : 110;
+    wrap.style.height = `${Math.max(minH, Math.min(maxH, Math.round(startH + deltaY)))}px`;
   });
-  window.addEventListener("mouseup", () => {
+  window.addEventListener("mouseup", (e) => {
     activeColResize = null;
     if (!dragging) return;
     dragging = false;
     resizer.classList.remove("dragging");
+    if (openedOnDrag) {
+      openedOnDrag = false;
+      const moved = Math.abs(e.clientY - startY);
+      const currentH = wrap.getBoundingClientRect().height;
+      if (moved < 5) {
+        wrap.style.height = "";
+      } else if (currentH < 48) {
+        wrap.style.height = "";
+        if (isExpanded) toggleTimelineExpanded();
+      }
+    }
   });
 }
 

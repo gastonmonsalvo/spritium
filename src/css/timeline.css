@@ -12,6 +12,22 @@
   background: var(--accent-secondary);
 }
 
+#moduleFrames.module-docked-top #timelineBar {
+  order: 1;
+}
+
+#moduleFrames.module-docked-top #timelineMatrixWrap {
+  order: 2;
+}
+
+#moduleFrames.module-docked-top #timelineResizer {
+  order: 3;
+}
+
+#moduleFrames.module-docked-top #btnCollapseBottom svg {
+  transform: rotate(180deg);
+}
+
 .timeline-matrix-wrap {
   display: flex;
   flex-direction: column;

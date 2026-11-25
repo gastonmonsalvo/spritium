@@ -114,6 +114,15 @@ select {
   border-top: 1px solid var(--border-subtle);
 }
 
+.panel-reopen-btn.bottom.is-top {
+  border-top: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-reopen-btn.bottom.is-top svg {
+  transform: rotate(180deg);
+}
+
 #moduleFrames.collapsed {
   display: none;
 }

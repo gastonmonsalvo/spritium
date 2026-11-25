@@ -61,7 +61,11 @@ export function saveLayoutState() {
         };
       } else {
         const dock = el.parentElement;
-        const mode = dock?.id === "sidebar" ? "dock-left" : dock?.id === "workspace" ? "dock-bottom" : "dock-right";
+        let mode = dock?.id === "sidebar" ? "dock-left" : "dock-right";
+        if (dock?.id === "workspace") {
+          const docTabsBar = document.getElementById("docTabsBar");
+          mode = docTabsBar && el.previousElementSibling === docTabsBar ? "dock-top" : "dock-bottom";
+        }
         const siblings = dock ? Array.from(dock.children).filter((c) => c.classList.contains("dock-module")) : [];
         payload[def.id] = { mode, order: siblings.indexOf(el), pinned: el.classList.contains("is-pinned") };
       }
@@ -73,18 +77,37 @@ export function saveLayoutState() {
 /** Acopla un módulo en el panel lateral o inferior indicado. */
 export function dockModuleTo(moduleEl, side, floatBtn, { persist = true, targetEl = null, insertAfter = false } = {}) {
   if (!moduleEl) return;
-  const targetDock = document.getElementById(side === "left" ? "sidebar" : side === "bottom" ? "workspace" : "rightSidebar");
+  const isWorkspaceDock = side === "bottom" || side === "top";
+  const targetDock = document.getElementById(side === "left" ? "sidebar" : isWorkspaceDock ? "workspace" : "rightSidebar");
   if (targetDock) {
     if (targetEl && targetEl.parentElement === targetDock && targetEl !== moduleEl) {
       if (insertAfter) targetEl.after(moduleEl);
       else targetDock.insertBefore(moduleEl, targetEl);
-    } else if (moduleEl.parentElement !== targetDock) {
+    } else if (side === "top") {
+      const docTabsBar = document.getElementById("docTabsBar");
+      if (docTabsBar && docTabsBar.parentElement === targetDock) docTabsBar.after(moduleEl);
+      else targetDock.prepend(moduleEl);
+    } else if (moduleEl.parentElement !== targetDock || isWorkspaceDock) {
       const anchor = side === "left" ? (document.getElementById("logsBox") || document.getElementById("statusText")) : side === "bottom" ? document.getElementById("canvasFooterHelp") : null;
       if (anchor && anchor.parentElement === targetDock) targetDock.insertBefore(moduleEl, anchor);
       else targetDock.appendChild(moduleEl);
     }
   }
   moduleEl.classList.remove("module-floating");
+  moduleEl.classList.toggle("module-docked-top", side === "top");
+  if (moduleEl.id === "moduleFrames") {
+    const btnExpandBottom = document.getElementById("btnExpandBottom");
+    if (btnExpandBottom) {
+      btnExpandBottom.classList.toggle("is-top", side === "top");
+      if (side === "top") {
+        const docTabsBar = document.getElementById("docTabsBar");
+        if (docTabsBar) docTabsBar.after(btnExpandBottom);
+      } else {
+        const footer = document.getElementById("canvasFooterHelp");
+        if (footer) footer.before(btnExpandBottom);
+      }
+    }
+  }
   moduleEl.style.left = ""; moduleEl.style.top = ""; moduleEl.style.width = ""; moduleEl.style.height = "";
   if (floatBtn) { floatBtn.classList.remove("active"); floatBtn.title = i18n.t("dock.float_title"); }
   syncDockContainersVisibility();
@@ -190,6 +213,7 @@ export function restoreLayoutState() {
       if (cfg.mode === "float" && !isMobile) floatModuleAt(el, floatBtn, cfg.left ?? 40, cfg.top ?? 60, { persist: false, width: cfg.width, height: cfg.height });
       else if (cfg.mode === "float" && isMobile) dockModuleTo(el, def.defaultSide, floatBtn, { persist: false });
       else if (cfg.mode === "dock-left") dockModuleTo(el, "left", floatBtn, { persist: false });
+      else if (cfg.mode === "dock-top") dockModuleTo(el, "top", floatBtn, { persist: false });
       else if (cfg.mode === "dock-bottom") dockModuleTo(el, "bottom", floatBtn, { persist: false });
       else if (cfg.mode === "dock-right") dockModuleTo(el, "right", floatBtn, { persist: false });
       if (cfg.pinned) {
@@ -208,6 +232,14 @@ export function resetDockedPanels() {
     const el = document.getElementById(def.id), floatBtn = document.getElementById(def.btnId);
     if (el) {
       el.classList.remove("is-pinned", "preview-minimized", "collapsed");
+      el.style.left = "";
+      el.style.top = "";
+      el.style.width = "";
+      el.style.height = "";
+      delete el.dataset.anchorXEdge;
+      delete el.dataset.anchorXVal;
+      delete el.dataset.anchorYEdge;
+      delete el.dataset.anchorYVal;
       const pinBtn = el.querySelector(".module-pin-btn");
       if (pinBtn) { pinBtn.classList.remove("active"); pinBtn.title = i18n.t("dock.pin"); }
     }

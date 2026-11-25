@@ -196,7 +196,10 @@ export function renderRightSidebarHtml() {
 
       <section id="modulePreview" class="dock-module">
         <div id="previewModuleHeader" class="panel-header-row panel-drag-handle" data-i18n-title="title.drag_preview" title="${tAttr("title.drag_preview")}">
-          <label style="margin: 0; pointer-events: none" data-i18n="panel.preview">${tAttr("panel.preview")}</label>
+          <label class="preview-title-label" style="margin: 0; pointer-events: none">
+            <span class="preview-title-full" data-i18n="panel.preview">${tAttr("panel.preview")}</span>
+            <span class="preview-title-compact" aria-hidden="true">1:1</span>
+          </label>
           <div style="display: flex; align-items: center; gap: 3px">
             <button type="button" id="btnCollapsePreview" class="tool-btn" style="padding: 3px 5px; font-size: 11px" data-i18n-title="title.collapse_preview" title="${tAttr("title.collapse_preview")}">
               <i data-lucide="minus" class="ui-icon-sm"></i>

@@ -8,6 +8,20 @@ import { saveLayoutState, dockModuleTo, floatModuleAt, reclampFloatingModule } f
 
 function clearDropIndicators() {
   document.querySelectorAll(".dock-drop-before, .dock-drop-after").forEach((el) => el.classList.remove("dock-drop-before", "dock-drop-after"));
+  document.getElementById("workspace")?.classList.remove("frames-drop-top", "frames-drop-bottom");
+  document.getElementById("sidebar")?.classList.remove("dock-edge-highlight");
+  document.getElementById("rightSidebar")?.classList.remove("dock-edge-highlight");
+}
+
+/** Detecta si el módulo horizontal (Frames) está sobre la zona de acoplamiento superior o inferior del workspace. */
+function detectHorizontalEdgeDrop(moduleEl, clientY) {
+  const ws = document.getElementById("workspace");
+  if (!ws) return null;
+  const wsRect = ws.getBoundingClientRect();
+  const rect = moduleEl.getBoundingClientRect();
+  if (clientY <= wsRect.top + 56 || rect.top <= wsRect.top + 36) return "top";
+  if (!isDockPanelCollapsed("bottom") && (clientY >= wsRect.bottom - 56 || wsRect.bottom - rect.bottom <= 48)) return "bottom";
+  return null;
 }
 
 function isDockPanelCollapsed(side) {
@@ -68,7 +82,12 @@ function handleFloatButtonClick(moduleEl, floatBtn, defaultSide, expandSide) {
   }
 }
 
-function finalizeModuleDrop(moduleEl, floatBtn, defaultSide, activeDropTarget, activeInsertAfter) {
+function finalizeModuleDrop(moduleEl, floatBtn, defaultSide, activeDropTarget, activeInsertAfter, horizontalEdge) {
+  if (defaultSide === "bottom") {
+    if (horizontalEdge === "top" || horizontalEdge === "bottom") dockModuleTo(moduleEl, horizontalEdge, floatBtn);
+    else saveLayoutState();
+    return;
+  }
   if (activeDropTarget) {
     const targetSide = activeDropTarget.parentElement?.id === "sidebar" ? "left" : "right";
     dockModuleTo(moduleEl, targetSide, floatBtn, { targetEl: activeDropTarget, insertAfter: activeInsertAfter });
@@ -77,7 +96,6 @@ function finalizeModuleDrop(moduleEl, floatBtn, defaultSide, activeDropTarget, a
   const rect = moduleEl.getBoundingClientRect();
   if (rect.left <= 32 && !isDockPanelCollapsed("left")) dockModuleTo(moduleEl, "left", floatBtn);
   else if (window.innerWidth - rect.right <= 32 && !isDockPanelCollapsed("right")) dockModuleTo(moduleEl, "right", floatBtn);
-  else if (defaultSide === "bottom" && window.innerHeight - rect.bottom <= 48 && !isDockPanelCollapsed("bottom")) dockModuleTo(moduleEl, "bottom", floatBtn);
   else saveLayoutState();
 }
 
@@ -86,26 +104,54 @@ export function setupDockableModule(moduleEl, handle, floatBtn, defaultSide, exp
   if (!moduleEl || !handle) return;
   attachPinButton(moduleEl, handle, floatBtn);
 
-  let dragState = null, activeDropTarget = null, activeInsertAfter = false;
-  handle.addEventListener("mousedown", (e) => {
+  let dragState = null, activeDropTarget = null, activeInsertAfter = false, activeHorizontalEdge = null;
+  const onHandleMouseDown = (e) => {
     if (e.button !== 0 || e.target.closest(".module-pin-btn")) return;
     const fromButton = Boolean(floatBtn && e.target.closest(`#${floatBtn.id}`));
+    if (!fromButton && e.target.closest("button")) return;
     if (moduleEl.classList.contains("is-pinned")) { if (fromButton) setStatus({ key: "dock.pinned_hint" }); return; }
     const rect = moduleEl.getBoundingClientRect();
-    dragState = { startX: e.clientX, startY: e.clientY, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top, started: false, fromButton };
-  });
+    dragState = { startX: e.clientX, startY: e.clientY, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top, prevWidth: rect.width, started: false, fromButton };
+  };
+  handle.addEventListener("mousedown", onHandleMouseDown);
+  if (floatBtn && !handle.contains(floatBtn)) {
+    floatBtn.addEventListener("mousedown", onHandleMouseDown);
+  }
 
   window.addEventListener("mousemove", (e) => {
     if (!dragState) return;
     if (!dragState.started && Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY) < 6) return;
+    const firstDragFrame = !dragState.started;
     dragState.started = true;
     document.body.style.cursor = "grabbing";
     floatModuleAt(moduleEl, floatBtn, e.clientX - dragState.offsetX, e.clientY - dragState.offsetY, { persist: false });
+    if (firstDragFrame) {
+      const newWidth = moduleEl.offsetWidth || dragState.prevWidth;
+      if (newWidth && dragState.prevWidth && Math.abs(newWidth - dragState.prevWidth) > 8) {
+        dragState.offsetX = Math.max(12, Math.min(newWidth - 12, Math.round(dragState.offsetX * (newWidth / dragState.prevWidth))));
+        floatModuleAt(moduleEl, floatBtn, e.clientX - dragState.offsetX, e.clientY - dragState.offsetY, { persist: false });
+      }
+    }
     clearDropIndicators();
+    activeDropTarget = null;
+    activeInsertAfter = false;
+    activeHorizontalEdge = null;
+    if (defaultSide === "bottom") {
+      activeHorizontalEdge = detectHorizontalEdgeDrop(moduleEl, e.clientY);
+      if (activeHorizontalEdge === "top") document.getElementById("workspace")?.classList.add("frames-drop-top");
+      else if (activeHorizontalEdge === "bottom") document.getElementById("workspace")?.classList.add("frames-drop-bottom");
+      return;
+    }
     const hit = findDockedModuleUnder(moduleEl, e.clientX, e.clientY);
     activeDropTarget = hit ? hit.el : null;
     activeInsertAfter = hit ? hit.insertAfter : false;
-    if (activeDropTarget) activeDropTarget.classList.add(activeInsertAfter ? "dock-drop-after" : "dock-drop-before");
+    if (activeDropTarget) {
+      activeDropTarget.classList.add(activeInsertAfter ? "dock-drop-after" : "dock-drop-before");
+    } else {
+      const rect = moduleEl.getBoundingClientRect();
+      if (rect.left <= 32 && !isDockPanelCollapsed("left")) document.getElementById("sidebar")?.classList.add("dock-edge-highlight");
+      else if (window.innerWidth - rect.right <= 32 && !isDockPanelCollapsed("right")) document.getElementById("rightSidebar")?.classList.add("dock-edge-highlight");
+    }
   });
 
   window.addEventListener("mouseup", () => {
@@ -115,8 +161,9 @@ export function setupDockableModule(moduleEl, handle, floatBtn, defaultSide, exp
     document.body.style.cursor = "";
     clearDropIndicators();
     if (!started) { if (fromButton) handleFloatButtonClick(moduleEl, floatBtn, defaultSide, expandSide); return; }
-    finalizeModuleDrop(moduleEl, floatBtn, defaultSide, activeDropTarget, activeInsertAfter);
+    finalizeModuleDrop(moduleEl, floatBtn, defaultSide, activeDropTarget, activeInsertAfter, activeHorizontalEdge);
     activeDropTarget = null;
+    activeHorizontalEdge = null;
   });
 
   if (typeof ResizeObserver !== "undefined") {

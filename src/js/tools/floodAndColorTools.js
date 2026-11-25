@@ -2,20 +2,11 @@
  * floodAndColorTools.js: Relleno Scanline/Tiled iterativo, gotero y reemplazo/borrado por color.
  */
 
-import { state, pushState, getGridDims } from "../core/state.js";
+import { state, pushState, getGridDims, isSymmetryActive, getSymmetryPoints } from "../core/state.js";
 import { isInsideSelection, wrapCoordX, wrapCoordY } from "./selectionOps.js";
 
 // --- SCANLINE FLOOD FILL ITERATIVO (STACK-SAFE) ---
-/**
- * Relleno por inundación iterativo (Scanline Flood Fill en modo normal,
- * y BFS plano con TypedArray en Tiled Mode para envolver bordes sin recursión).
- * @param {number} startX
- * @param {number} startY
- * @param {number} newColor
- */
-export function floodFill(startX, startY, newColor) {
-  const { w, h } = getGridDims();
-  const hasSelection = Boolean(state.selection);
+function floodFillSingle(startX, startY, newColor, w, h, hasSelection) {
   if (startX < 0 || startX >= w || startY < 0 || startY >= h) return;
   if (hasSelection && !isInsideSelection(startX, startY)) return;
 
@@ -116,6 +107,30 @@ export function floodFill(startX, startY, newColor) {
         }
       }
     }
+  }
+}
+
+/**
+ * Rellena la región conectada del mismo color desde `(startX, startY)` con `newColor`.
+ * Respeta la selección activa, el modo Tiled y los ejes de simetría cuando están habilitados.
+ * @param {number} startX
+ * @param {number} startY
+ * @param {number} newColor
+ */
+export function floodFill(startX, startY, newColor) {
+  const { w, h } = getGridDims();
+  const hasSelection = Boolean(state.selection);
+  if (!isSymmetryActive()) {
+    floodFillSingle(startX, startY, newColor, w, h, hasSelection);
+    return;
+  }
+
+  const seen = new Set();
+  for (const [sx, sy] of getSymmetryPoints(startX, startY, w, h)) {
+    const key = `${sx},${sy}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    floodFillSingle(sx, sy, newColor, w, h, hasSelection);
   }
 }
 
