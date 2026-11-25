@@ -1,4 +1,4 @@
-# Spritium (`v0.9.0-beta.4`)
+# Spritium (`v0.9.0-beta.5`)
 
 [English](./README.md) | [Español](./README.es.md)
 
@@ -46,7 +46,7 @@
 
 ## Beta Status
 
-Spritium is currently in **public Beta (`v0.9.0-beta.4`)**. Core features are usable, but active improvements and testing are ongoing.
+Spritium is currently in **public Beta (`v0.9.0-beta.5`)**. Core features are usable, but active improvements and testing are ongoing.
 
 Found a bug or have a suggestion?
 * Use **Help → Send Feedback / Report Bug** directly inside Spritium (automatically attaches reproducible steps without leaving the editor).
