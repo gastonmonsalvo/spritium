@@ -99,6 +99,14 @@ export function renderPreferencesModal() {
                 <span data-i18n="pref.reticle_outline">${escapeHtml(i18n.t("pref.reticle_outline"))}</span>
               </label>
             </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding-top: 2px;">
+              <label for="prefReticleCodeInput" style="font-size: 11px; color: var(--text-secondary); white-space: nowrap;" data-i18n="pref.reticle_code">${escapeHtml(i18n.t("pref.reticle_code"))}</label>
+              <input type="text" id="prefReticleCodeInput" spellcheck="false" autocomplete="off" style="flex: 1; min-width: 0; padding: 4px 7px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.4px;" placeholder="SPR-XXXX-XXXX-XXXX" />
+              <button type="button" id="btnCopyReticleCode" class="tool-btn" style="padding: 4px 7px;" data-i18n-title="title.reticle_copy_code" title="${escapeHtml(i18n.t("title.reticle_copy_code"))}">
+                <i data-lucide="copy" class="ui-icon-sm"></i>
+              </button>
+              <button type="button" id="btnApplyReticleCode" class="btn-primary" style="padding: 4px 9px; font-size: 11px;" data-i18n="opt.apply" data-i18n-title="title.reticle_apply_code" title="${escapeHtml(i18n.t("title.reticle_apply_code"))}">${escapeHtml(i18n.t("opt.apply"))}</button>
+            </div>
           </div>
 
           <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">

@@ -6,6 +6,7 @@ import { state, subscribe } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import { setStatus } from "./status.js";
 import { refreshCanvasToolCursor, getReticleSvgBody } from "./cursors.js";
+import { encodeReticleCode, decodeReticleCode } from "./reticleShareCode.js";
 import { openCustomRgbaPopover, closeRgbaPopover } from "./rgbaPopover.js";
 import {
   USER_PREFS_STORAGE_KEY,
@@ -25,8 +26,13 @@ function syncSwatchButton(btnId, hexVal) {
 
 function renderReticlePreview() {
   const box = document.getElementById("prefReticlePreview");
-  if (!box) return;
-  box.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24">${getReticleSvgBody(state.reticleConfig)}</svg>`;
+  if (box) {
+    box.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24">${getReticleSvgBody(state.reticleConfig)}</svg>`;
+  }
+  const codeInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefReticleCodeInput"));
+  if (codeInput && document.activeElement !== codeInput) {
+    codeInput.value = encodeReticleCode(state.reticleConfig);
+  }
 }
 
 /**
@@ -189,6 +195,38 @@ export function initPreferencesModal() {
       renderReticlePreview();
       refreshCanvasToolCursor();
     });
+  });
+
+  const codeInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefReticleCodeInput"));
+  const applyReticleCodeInput = () => {
+    if (!codeInput) return;
+    const decoded = decodeReticleCode(codeInput.value);
+    if (!decoded) {
+      setStatus({ key: "log.reticle_code_invalid" }, true);
+      return;
+    }
+    state.reticleConfig = decoded;
+    saveUserPreferences();
+    syncPreferencesModalControls();
+    refreshCanvasToolCursor();
+    setStatus({ key: "log.reticle_code_applied" });
+  };
+  document.getElementById("btnApplyReticleCode")?.addEventListener("click", applyReticleCodeInput);
+  codeInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applyReticleCodeInput();
+    }
+  });
+  document.getElementById("btnCopyReticleCode")?.addEventListener("click", async () => {
+    const code = encodeReticleCode(state.reticleConfig);
+    if (codeInput) codeInput.value = code;
+    try {
+      await navigator.clipboard?.writeText(code);
+      setStatus({ key: "log.reticle_code_copied", params: { code } });
+    } catch {
+      codeInput?.select();
+    }
   });
 
   // Vista Previa de Píxel (V) y Balde
