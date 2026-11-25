@@ -8,6 +8,7 @@ import { escapeHtml, renderList } from "./uiHtml.js";
 
 const SAVE_MENU_ITEMS = [
   { icon: "save", labelKey: "save.project_spritium", action: "saveProjectFile" },
+  { icon: "save-all", labelKey: "menu.file.save_as", action: "saveProjectFileAs" },
   { icon: "image", labelKey: "save.png_fast", action: "downloadCurrent" },
   { icon: "sliders", labelKey: "save.png_options", action: "openExportModal", arg: "png" },
   { divider: true },

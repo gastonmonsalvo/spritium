@@ -42,6 +42,7 @@ import {
   toggleWin98Theme,
 } from "./ui/index.js";
 import { syncCanvasColorsToPalette } from "./workspace/paletteManager.js";
+import { saveProjectFile, saveProjectFileAs, openProjectWithPicker } from "./core/projectIO.js";
 
 const CLOSE_MODAL_IDS = [
   "helpModal", "preferencesModal", "languageModal", "aboutModal",
@@ -177,9 +178,11 @@ function handleDeleteKey(e) {
 }
 
 function handleModifierShortcuts(e, key, isMod) {
+  if (e.altKey && e.shiftKey && !isMod && key === "s") { e.preventDefault(); e.stopPropagation(); saveProjectFileAs(); return true; }
+  if (e.altKey && !e.shiftKey && !isMod && key === "s") { e.preventDefault(); e.stopPropagation(); saveProjectFile(); return true; }
   if (e.altKey && !isMod && key === "t") { e.preventDefault(); e.stopPropagation(); toggleTilesetPanel(); return true; }
   if ((isMod && key === "t") || (e.shiftKey && key === "t" && !isMod)) { e.preventDefault(); e.stopPropagation(); startFreeTransform(); return true; }
-  if (isMod && key === "o") { e.preventDefault(); e.stopPropagation(); document.getElementById("projectFileInput")?.click(); return true; }
+  if (isMod && key === "o") { e.preventDefault(); e.stopPropagation(); openProjectWithPicker(); return true; }
   if (isMod && key === "z") { e.preventDefault(); performUndo(); return true; }
   if (isMod && key === "y") { e.preventDefault(); performRedo(); return true; }
   if (e.altKey && !isMod && key === "n") {

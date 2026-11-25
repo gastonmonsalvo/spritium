@@ -35,7 +35,7 @@ const HELP_SECTIONS = [
       ["help.r46", "Regla · Alt+Mover / Clic Der"],
       ["help.r16", "V"],
       ["help.r17", "Menú Lienzo"],
-      ["help.r18", "Alt+N / Ctrl+O / Archivo"],
+      ["help.r18", "Alt+N / Ctrl+O / Alt+S / Alt+Shift+S"],
     ],
   },
   {

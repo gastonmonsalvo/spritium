@@ -155,6 +155,9 @@ body.theme-win98 .tool-btn,
 body.theme-win98 .menu-trigger,
 body.theme-win98 .btn-primary,
 body.theme-win98 .btn-secondary,
+body.theme-win98 .btn-subtle-success,
+body.theme-win98 .btn-subtle-accent,
+body.theme-win98 .btn-subtle-danger,
 body.theme-win98 .custom-select-trigger,
 body.theme-win98 .launcher-btn {
   background: #c0c0c0;
@@ -168,6 +171,9 @@ body.theme-win98 .tool-btn:hover,
 body.theme-win98 .menu-trigger:hover,
 body.theme-win98 .btn-primary:hover,
 body.theme-win98 .btn-secondary:hover,
+body.theme-win98 .btn-subtle-success:hover,
+body.theme-win98 .btn-subtle-accent:hover,
+body.theme-win98 .btn-subtle-danger:hover,
 body.theme-win98 .custom-select-trigger:hover,
 body.theme-win98 .launcher-btn:hover {
   background: #d4d0c8;
@@ -178,7 +184,10 @@ body.theme-win98 .tool-btn:active,
 body.theme-win98 .tool-btn.active,
 body.theme-win98 .menu-trigger[aria-expanded="true"],
 body.theme-win98 .btn-primary:active,
-body.theme-win98 .btn-secondary:active {
+body.theme-win98 .btn-secondary:active,
+body.theme-win98 .btn-subtle-success:active,
+body.theme-win98 .btn-subtle-accent:active,
+body.theme-win98 .btn-subtle-danger:active {
   box-shadow: var(--win98-pressed);
   background-color: #dfdfdf;
   background-image: repeating-conic-gradient(#ffffff 0% 25%, #c0c0c0 0% 50%);
@@ -190,6 +199,21 @@ body.theme-win98 .btn-primary {
   font-weight: 700;
   outline: 1px dotted #000000;
   outline-offset: -4px;
+}
+
+body.theme-win98 .btn-subtle-success {
+  background: #bac9ba;
+  color: #004d00;
+  font-weight: 700;
+}
+
+body.theme-win98 .btn-subtle-success:hover {
+  background: #c6d6c6;
+  color: #003d00;
+}
+
+body.theme-win98 .btn-subtle-success svg {
+  color: #006400;
 }
 
 /* Menú desplegable estilo Win98 */

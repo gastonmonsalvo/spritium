@@ -5,7 +5,7 @@
 import { fetchConfig } from "../core/api.js";
 import { state } from "../core/state.js";
 import { performUndo, performRedo } from "../input.js";
-import { saveProjectFile, loadProjectFile } from "../core/projectIO.js";
+import { saveProjectFile, saveProjectFileAs, loadProjectFile, openProjectWithPicker } from "../core/projectIO.js";
 import * as ui from "./index.js";
 import * as ft from "../tools/freeTransform.js";
 import * as tr from "../tools/transforms.js";
@@ -251,7 +251,8 @@ export function registerAppActions() {
     exportCustomBrushes: cb.exportCustomBrushes,
     openCustomBrushDialog: () => document.getElementById("brushFileInput")?.click(),
     saveProjectFile,
-    openProjectDialog: () => document.getElementById("projectFileInput")?.click(),
+    saveProjectFileAs,
+    openProjectDialog: openProjectWithPicker,
     openImageDialog: () => document.getElementById("fileInput")?.click(),
     reopenImportOptions: ln.reopenImportOptionsModal,
     openCustomResModal: () => document.getElementById("customResModal")?.classList.add("open"),

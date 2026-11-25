@@ -91,6 +91,7 @@ export function openNewDocTab(name = "nuevo_proyecto") {
     tabs[0].gridWidth = state.gridWidth || state.gridSize;
     tabs[0].gridHeight = state.gridHeight || state.gridSize;
     tabs[0].dirty = false;
+    tabs[0].fileHandle = null;
     activeTabId = tabs[0].id;
     if (typeof document !== "undefined") {
       const assetEl = document.getElementById("assetName");
@@ -119,6 +120,7 @@ export function openNewDocTab(name = "nuevo_proyecto") {
     snapshot: null,
     zoom: 1,
     tiledMode: "none",
+    fileHandle: null,
     currentColorIndex: 1,
     secondaryColorIndex: 0,
     undoStack: [],
@@ -253,6 +255,26 @@ export function closeDocTab(tabId) {
 }
 
 /**
+ * Devuelve el `FileSystemFileHandle` vinculado a la pestaña activa (o `null`).
+ * @returns {any}
+ */
+export function getActiveTabFileHandle() {
+  const tab = tabs.find((t) => t.id === activeTabId);
+  return tab?.fileHandle || null;
+}
+
+/**
+ * Vincula o limpia el `FileSystemFileHandle` de la pestaña activa.
+ * @param {any} handle
+ */
+export function setActiveTabFileHandle(handle) {
+  const tab = tabs.find((t) => t.id === activeTabId);
+  if (!tab) return;
+  tab.fileHandle = handle || null;
+  renderDocTabsUI();
+}
+
+/**
  * Sincroniza el título de la pestaña activa cuando cambia el nombre del asset.
  * @param {string} name
  */
@@ -291,6 +313,7 @@ export function duplicateDocTab(tabId) {
     id: newId,
     name: copyName,
     dirty: true,
+    fileHandle: null,
     snapshot: clonedSnap,
     tilesets: cloneTilesets(source.tilesets),
     undoStack: [],
@@ -393,6 +416,14 @@ function openDocTabContextMenu(tab, tabIndex, clientX, clientY) {
       action: () => {
         if (tab.id !== activeTabId) switchToTab(tab.id);
         getRegisteredAction("saveProjectFile")?.();
+      },
+    },
+    {
+      icon: "save-all",
+      label: i18n.t("tabs.ctx_save_as"),
+      action: () => {
+        if (tab.id !== activeTabId) switchToTab(tab.id);
+        getRegisteredAction("saveProjectFileAs")?.();
       },
     },
     { divider: true },

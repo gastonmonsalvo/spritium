@@ -183,6 +183,14 @@ export function scanlineFillPolygon(vertices, options = {}) {
     const intersections = [];
 
     for (let i = 0, j = n - 1; i < n; j = i++) {
+      if (verts[j].y === py && verts[i].y === py) {
+        const sx = Math.min(verts[j].x, verts[i].x);
+        const ex = Math.max(verts[j].x, verts[i].x);
+        for (let px = sx; px <= ex; px++) {
+          pushUnique(px, py);
+        }
+        continue;
+      }
       const ay = verts[j].y + 0.5;
       const by = verts[i].y + 0.5;
       if ((ay > sy) === (by > sy)) continue;
