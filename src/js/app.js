@@ -91,6 +91,7 @@ function initSubsystems() {
   ui.initCanvasBgIntensity();
   initTilemapModule();
   ui.updateToolOptionsUI(state.currentTool || "pencil");
+  ui.initActionAvailability();
   ui.refreshIcons();
 }
 

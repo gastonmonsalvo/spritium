@@ -203,34 +203,74 @@ function buildPatternIconSvg(patternId) {
   const rects = [];
   for (let y = 0; y < 4; y++) {
     for (let x = 0; x < 4; x++) {
-      const on = patternId === "checker" ? ((x + y) & 1) === 0 : (x + y) % 3 === 0;
+      const on = patternId === "checker"
+        ? ((x + y) & 1) === 0
+        : patternId === "diag2"
+          ? (((x - y) % 3) + 3) % 3 === 0
+          : (x + y) % 3 === 0;
       if (on) rects.push(`<rect x="${x * 3}" y="${y * 3}" width="2.4" height="2.4"/>`);
     }
   }
   return `<svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">${rects.join("")}</svg>`;
 }
 
+let lastDiagPattern = "diag";
+
 /**
  * Renderiza la grilla de patrones integrados y pinceles personalizados.
  */
 export function renderCustomBrushesUI() {
   const patContainer = document.getElementById("brushPatternPresets");
+  const diagRow = document.getElementById("brushDiagDirRow");
+  const activePat = state.activeCustomBrushId ? null : state.activeBrushPattern || "solid";
+  if (activePat === "diag" || activePat === "diag2") lastDiagPattern = activePat;
+
   if (patContainer) {
     patContainer.innerHTML = "";
-    const activePat = state.activeCustomBrushId ? null : state.activeBrushPattern || "solid";
     for (const p of BUILTIN_BRUSH_PATTERNS) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.dataset.patternId = p.id;
-      btn.className = `tool-btn${activePat === p.id ? " active" : ""}`;
+      const isDiagGroup = p.id === "diag" && (activePat === "diag" || activePat === "diag2");
+      const isActive = isDiagGroup || activePat === p.id;
+      btn.className = `tool-btn${isActive ? " active" : ""}`;
       btn.style.cssText = "padding: 4px 2px; display: inline-flex; align-items: center; justify-content: center;";
-      const label = i18n.t(p.labelKey);
-      const title = i18n.t(p.titleKey);
+      const effectivePat = isDiagGroup ? activePat : p.id;
+      const label = i18n.t(effectivePat === "diag2" ? "brush.pat_diag2" : p.labelKey);
+      const title = i18n.t(effectivePat === "diag2" ? "brush.pat_diag2_title" : p.titleKey);
       btn.title = `${label} — ${title}`;
       btn.setAttribute("aria-label", label);
-      btn.innerHTML = buildPatternIconSvg(p.id);
-      btn.addEventListener("click", () => setBrushPattern(p.id));
+      btn.innerHTML = buildPatternIconSvg(effectivePat);
+      btn.addEventListener("click", () => {
+        setBrushPattern(p.id === "diag" ? lastDiagPattern : p.id);
+        renderCustomBrushesUI();
+      });
       patContainer.appendChild(btn);
+    }
+  }
+
+  if (diagRow) {
+    const showDiagDir = activePat === "diag" || activePat === "diag2";
+    diagRow.style.display = showDiagDir ? "flex" : "none";
+    diagRow.innerHTML = "";
+    if (showDiagDir) {
+      for (const dir of [
+        { id: "diag", labelKey: "brush.pat_diag", titleKey: "brush.pat_diag_title", symbol: "╱" },
+        { id: "diag2", labelKey: "brush.pat_diag2", titleKey: "brush.pat_diag2_title", symbol: "╲" },
+      ]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = `tool-btn${activePat === dir.id ? " active" : ""}`;
+        b.style.cssText = "flex: 1; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;";
+        b.title = i18n.t(dir.titleKey);
+        b.setAttribute("aria-label", i18n.t(dir.labelKey));
+        b.innerHTML = buildPatternIconSvg(dir.id);
+        b.addEventListener("click", () => {
+          setBrushPattern(dir.id);
+          renderCustomBrushesUI();
+        });
+        diagRow.appendChild(b);
+      }
     }
   }
 

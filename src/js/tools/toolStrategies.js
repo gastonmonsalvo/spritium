@@ -3,7 +3,7 @@
  */
 
 import { state, pushLayerState, cloneGrid, getGridDims, isSymmetryActive, getSymmetryPoints } from "../core/state.js";
-import { renderAll } from "../canvas/canvas.js";
+import { renderAll, zoomAtClientPoint } from "../canvas/canvas.js";
 import {
   applyToolAt,
   pickColorAt,
@@ -25,6 +25,7 @@ import {
   drawBezierCurve,
   drawPixelRect,
   drawMidpointCircle,
+  drawMidpointEllipse,
   drawPixelTriangle,
 } from "./shapes.js";
 import { translateFromSnapshot, computeSnappedDelta } from "./transforms.js";
@@ -36,6 +37,7 @@ import {
   getFixedCircleRadius,
   cancelSelectionIfOutside,
   resolveStrokeColor,
+  resolveShapeBox,
   createShapeStrategy,
   isPixelPerfectEnabled,
   filterPixelPerfectPoints,
@@ -182,8 +184,13 @@ const circleStrategy = (() => {
       baseGrid = cloneGrid(state.grid);
       const col = resolveStrokeColor(button);
       const fixedR = getFixedCircleRadius();
-      drawMidpointCircle(x, y, fixedR, col, shouldFillShape(event), state.brushSize, state.lineStyle || "solid");
-      setStatus({ key: "log.circle_radius", params: { r: fixedR } }, false, "pixel");
+      if (fixedR > 0) {
+        drawMidpointCircle(x, y, fixedR, col, shouldFillShape(event), state.brushSize, state.lineStyle || "solid");
+        setStatus({ key: "log.circle_radius", params: { r: fixedR } }, false, "pixel");
+      } else {
+        drawMidpointEllipse(x, y, x, y, col, shouldFillShape(event), state.brushSize, state.lineStyle || "solid");
+        setStatus({ key: "log.circle_radius", params: { r: 0 } }, false, "pixel");
+      }
       renderAll();
     },
     onMove({ x, y, button, event }) {
@@ -198,9 +205,10 @@ const circleStrategy = (() => {
         drawMidpointCircle(x, y, fixedR, col, filled, state.brushSize, style);
         setStatus({ key: "log.circle_center_fixed", params: { x, y, r: fixedR } }, false, "pixel");
       } else {
-        const r = Math.round(Math.hypot(x - start.x, y - start.y));
-        drawMidpointCircle(start.x, start.y, r, col, filled, state.brushSize, style);
-        setStatus({ key: "log.circle_radius", params: { r } }, false, "pixel");
+        const box = resolveShapeBox(start, x, y, event);
+        drawMidpointEllipse(box.x0, box.y0, box.x1, box.y1, col, filled, state.brushSize, style);
+        const rx = Math.round(Math.abs(box.x1 - box.x0) / 2);
+        setStatus({ key: "log.circle_radius", params: { r: rx } }, false, "pixel");
       }
       renderAll();
     },
@@ -525,6 +533,18 @@ const sprayStrategy = (() => {
 const polygonStrategy = createPolygonStrategy();
 const contourStrategy = createContourStrategy();
 
+const zoomStrategy = {
+  onDown({ button, event }) {
+    if (button !== 0 && button !== 2) return;
+    const prevZoom = state.zoom || 1;
+    const step = prevZoom >= 4 ? 1 : prevZoom >= 2 ? 0.5 : 0.25;
+    const nextZoom = button === 2 ? prevZoom - step : prevZoom + step;
+    zoomAtClientPoint(nextZoom, event?.clientX ?? null, event?.clientY ?? null);
+  },
+  onMove() {},
+  onUp() {},
+};
+
 // --- TABLA DE DESPACHO STRATEGY ---
 export const TOOL_STRATEGIES = {
   pencil: strokeStrategy,
@@ -553,5 +573,6 @@ export const TOOL_STRATEGIES = {
   magicSelect: magicSelectStrategy,
   eyedropper: eyedropperStrategy,
   backgroundEraser: backgroundEraserStrategy,
+  zoom: zoomStrategy,
 };
 

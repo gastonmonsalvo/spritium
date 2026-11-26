@@ -10,10 +10,18 @@ import { i18n } from "../i18n/I18nService.js";
 import { getToolCursorCss } from "./cursors.js";
 
 
+let lastPencilTool = "pencil";
 let lastShapeTool = "rect";
 let lastSelectTool = "select";
 let lastPolyTool = "polygon";
 let lastFilterTool = "blur";
+
+/**
+ * Activa la última herramienta de pincel usada (Lápiz o Spray).
+ */
+export function selectActivePencilTool() {
+  setTool(lastPencilTool);
+}
 
 /**
  * Activa la última herramienta geométrica usada (rectángulo, círculo o triángulo).
@@ -197,6 +205,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
   const optMagic = document.getElementById("optMagicWand");
   const optSpray = document.getElementById("optSprayOptions");
   const optFT = document.getElementById("optFreeTransform");
+  const optPencil = document.getElementById("optPencilSelector");
 
   const ftActive = Boolean(state.freeTransform);
   if (optFT) {
@@ -209,6 +218,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
     }
   }
 
+  const isPencilGroup = toolName === "pencil" || toolName === "spray";
   const isShape = toolName === "rect" || toolName === "circle" || toolName === "triangle";
   const isSelectShape = toolName === "select" || toolName === "ellipseSelect" || toolName === "triangleSelect";
   const isPoly = toolName === "polygon" || toolName === "contour";
@@ -257,6 +267,7 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
       }
     }
   }
+  if (optPencil) optPencil.style.display = isPencilGroup ? "flex" : "none";
   if (optShapes) optShapes.style.display = isShape ? "flex" : "none";
   if (optSelectShapes) optSelectShapes.style.display = isSelectShape ? "flex" : "none";
   if (optPoly) optPoly.style.display = isPoly ? "flex" : "none";
@@ -313,6 +324,18 @@ export function updateToolOptionsUI(toolName = state.currentTool) {
     }
   }
 
+  if (isPencilGroup) {
+    lastPencilTool = toolName;
+    const pencilBtn = document.getElementById("toolPencil");
+    const iconName = toolName === "spray" ? "spray-can" : "pencil";
+    if (pencilBtn) {
+      pencilBtn.setAttribute("data-active-tool", toolName);
+      pencilBtn.innerHTML = `<i data-lucide="${iconName}" class="ui-icon"></i>`;
+      refreshIcons(pencilBtn);
+    }
+    document.getElementById("pencilBtnPencil")?.classList.toggle("active", toolName === "pencil");
+    document.getElementById("pencilBtnSpray")?.classList.toggle("active", toolName === "spray");
+  }
   if (isShape) {
     lastShapeTool = toolName;
     const shapeBtn = document.getElementById("toolShapes");
@@ -517,9 +540,10 @@ export function setTool(toolName) {
       blur: "toolFilterBrush",
       jumble: "toolFilterBrush",
       noise: "toolFilterBrush",
-      spray: "toolSpray",
+      spray: "toolPencil",
       move: "toolMove",
       pan: "toolPan",
+      zoom: "toolZoom",
       shading: "toolShading",
       bucket: "toolBucket",
       eyedropper: "toolEyedropper",

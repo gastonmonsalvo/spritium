@@ -59,6 +59,7 @@ body.theme-win98 #rightSidebar,
 body.theme-win98 #timelineBar,
 body.theme-win98 .panel-section-card,
 body.theme-win98 .menu-dropdown,
+body.theme-win98 .menu-submenu,
 body.theme-win98 .context-menu,
 body.theme-win98 .modal-card,
 body.theme-win98 .floating-panel {
@@ -98,6 +99,61 @@ body.theme-win98 .modal-header h3 {
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
+}
+
+body.theme-win98 .modal-card input[type="text"],
+body.theme-win98 .modal-card input[type="number"],
+body.theme-win98 .modal-card select {
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #808080;
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 .pref-sidebar {
+  border-color: #808080;
+}
+
+body.theme-win98 .pref-nav-btn {
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
+  border: 1px solid #808080;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .pref-nav-btn:hover {
+  background: #dfdfdf;
+  color: #000000;
+}
+
+body.theme-win98 .pref-nav-btn.active {
+  background: #000080;
+  color: #ffffff;
+  border-color: #000080;
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 .rgba-picker-btn,
+body.theme-win98 #prefReticlePreview {
+  border-radius: 0;
+  box-shadow: var(--win98-sunken);
+}
+
+body.theme-win98 .outline-dir-btn {
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
+  border: 1px solid #808080;
+  box-shadow: var(--win98-raised);
+}
+
+body.theme-win98 .outline-dir-btn.active {
+  background: #000080;
+  color: #ffffff;
+  border-color: #000080;
+  box-shadow: var(--win98-sunken);
 }
 
 body.theme-win98 #workspace,
@@ -531,7 +587,7 @@ body.theme-win98 #toolEraser,
 body.theme-win98 #toolBucket,
 body.theme-win98 #toolEyedropper,
 body.theme-win98 #toolPencil,
-body.theme-win98 #toolSpray,
+body.theme-win98 #pencilBtnSpray,
 body.theme-win98 #toolLine,
 body.theme-win98 #lineModeCurve,
 body.theme-win98 #toolShapes,
@@ -546,7 +602,7 @@ body.theme-win98 #toolEraser svg.lucide,
 body.theme-win98 #toolBucket svg.lucide,
 body.theme-win98 #toolEyedropper svg.lucide,
 body.theme-win98 #toolPencil svg.lucide,
-body.theme-win98 #toolSpray svg.lucide,
+body.theme-win98 #pencilBtnSpray svg.lucide,
 body.theme-win98 #toolLine svg.lucide,
 body.theme-win98 #lineModeCurve svg.lucide,
 body.theme-win98 #toolShapes svg.lucide,
@@ -561,7 +617,7 @@ body.theme-win98 #toolEraser::before,
 body.theme-win98 #toolBucket::before,
 body.theme-win98 #toolEyedropper::before,
 body.theme-win98 #toolPencil::before,
-body.theme-win98 #toolSpray::before,
+body.theme-win98 #pencilBtnSpray::before,
 body.theme-win98 #toolLine::before,
 body.theme-win98 #lineModeCurve::before,
 body.theme-win98 #toolShapes::before,
@@ -580,7 +636,8 @@ body.theme-win98 #shapeBtnCircle::before {
   pointer-events: none;
 }
 
-body.theme-win98 #lineModeCurve::before {
+body.theme-win98 #lineModeCurve::before,
+body.theme-win98 #pencilBtnSpray::before {
   position: static;
   transform: none;
   flex-shrink: 0;
@@ -592,7 +649,8 @@ body.theme-win98 #toolEraser { --win98-icon: 2; }
 body.theme-win98 #toolBucket { --win98-icon: 3; }
 body.theme-win98 #toolEyedropper { --win98-icon: 4; }
 body.theme-win98 #toolPencil { --win98-icon: 6; }
-body.theme-win98 #toolSpray { --win98-icon: 8; }
+body.theme-win98 #toolPencil[data-active-tool="spray"],
+body.theme-win98 #pencilBtnSpray { --win98-icon: 8; }
 body.theme-win98 #toolLine { --win98-icon: 10; }
 body.theme-win98 #lineModeCurve { --win98-icon: 11; }
 body.theme-win98 #toolShapes { --win98-icon: 12; }
@@ -648,7 +706,6 @@ body.theme-win98 .tool-btn[data-action="flipSelectionV"] svg.lucide,
 body.theme-win98 .tool-btn[data-action="rotateSelection90"] svg.lucide,
 body.theme-win98 .tool-btn[data-action="rotateSelection180"] svg.lucide,
 body.theme-win98 .tool-btn[data-action="outlineAction"] svg.lucide,
-body.theme-win98 .tool-btn[data-action="erodeOutlineAction"] svg.lucide,
 body.theme-win98 .tool-btn[data-action="alignAction"] svg.lucide {
   display: none;
 }
@@ -667,7 +724,6 @@ body.theme-win98 .tool-btn[data-action="flipSelectionV"]::before,
 body.theme-win98 .tool-btn[data-action="rotateSelection90"]::before,
 body.theme-win98 .tool-btn[data-action="rotateSelection180"]::before,
 body.theme-win98 .tool-btn[data-action="outlineAction"]::before,
-body.theme-win98 .tool-btn[data-action="erodeOutlineAction"]::before,
 body.theme-win98 .tool-btn[data-action="alignAction"]::before {
   content: "";
   width: 14px;
@@ -698,7 +754,6 @@ body.theme-win98 .tool-btn[data-action="flipSelectionV"]::before { background-im
 body.theme-win98 .tool-btn[data-action="rotateSelection90"]::before { background-image: url("../assets/win98/rotate-90.svg"); }
 body.theme-win98 .tool-btn[data-action="rotateSelection180"]::before { background-image: url("../assets/win98/rotate-180.svg"); }
 body.theme-win98 .tool-btn[data-action="outlineAction"]::before { background-image: url("../assets/win98/outline-add.svg"); }
-body.theme-win98 .tool-btn[data-action="erodeOutlineAction"]::before { background-image: url("../assets/win98/outline-erode.svg"); }
 body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="center"]::before { background-image: url("../assets/win98/align-center.svg"); }
 body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="left"]::before { background-image: url("../assets/win98/align-left.svg"); }
 body.theme-win98 .tool-btn[data-action="alignAction"][data-action-arg="right"]::before { background-image: url("../assets/win98/align-right.svg"); }
@@ -721,7 +776,6 @@ body.theme-win98 .menu-action[data-action="rotateSelection90"] svg.lucide,
 body.theme-win98 .menu-action[data-action="rotateSelection180"] svg.lucide,
 body.theme-win98 .menu-action[data-action="startFreeTransform"] svg.lucide,
 body.theme-win98 .menu-action[data-action="outlineAction"] svg.lucide,
-body.theme-win98 .menu-action[data-action="erodeOutlineAction"] svg.lucide,
 body.theme-win98 .menu-action[data-action="alignAction"] svg.lucide {
   display: none;
 }
@@ -762,7 +816,6 @@ body.theme-win98 .menu-action[data-action="rotateSelection90"] .menu-action-labe
 body.theme-win98 .menu-action[data-action="rotateSelection180"] .menu-action-label::before,
 body.theme-win98 .menu-action[data-action="startFreeTransform"] .menu-action-label::before,
 body.theme-win98 .menu-action[data-action="outlineAction"] .menu-action-label::before,
-body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before,
 body.theme-win98 .menu-action[data-action="alignAction"] .menu-action-label::before {
   content: "";
   width: 16px;
@@ -819,10 +872,6 @@ body.theme-win98 .menu-action[data-action="rotateSelection180"] .menu-action-lab
 
 body.theme-win98 .menu-action[data-action="outlineAction"] .menu-action-label::before {
   background-image: url("../assets/win98/outline-add.svg");
-}
-
-body.theme-win98 .menu-action[data-action="erodeOutlineAction"] .menu-action-label::before {
-  background-image: url("../assets/win98/outline-erode.svg");
 }
 
 body.theme-win98 .menu-action[data-action="alignAction"][data-action-arg="center"] .menu-action-label::before {

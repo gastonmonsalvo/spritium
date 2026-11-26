@@ -1,4 +1,4 @@
-# Spritium (`v0.9.0-beta.5`)
+# Spritium (`v0.9.0-beta.6`)
 
 [English](./README.md) | [Español](./README.es.md)
 
@@ -26,7 +26,7 @@
 * **Supported resolutions:** presets from `16×16` up to `512×512`, plus custom `N × M` (`4–512 px`) from **Edit → Resolution**.
 * **1:1 Open, Clipboard Paste (`Ctrl+V`) & Pixel Art Conversion:** open PNG sprites at native `1:1` size, paste OS clipboard images directly into the canvas import modal, convert high-res images to pixel art with live preview, and optionally remove connected backgrounds.
 * **Tilemap Importer:** import tileset sheets or full tilemaps (`PNG + JSON` / Tiled `.tmj`) with instant tile deduplication and Drag & Drop reordering.
-* **Built-in + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Game Boy)**, **Terminal 1-Bit**, **Grayscale (16)**, and **Indexed (16)**, using **OKLab** perceptual quantization and optional **Bayer 4×4 / 8×8** ordered dithering.
+* **Built-in + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Classic Handheld)**, **Terminal 1-Bit**, **Grayscale (16)**, and **Starter 16 (Base Palette)**, using **OKLab** perceptual quantization and optional **Bayer 4×4 / 8×8** ordered dithering.
 * **Adaptive Palette Reduction:** weighted K-Means++ in OKLab (`16 / 24 / 32 / 48 / 64` colors) with non-destructive re-adjustment.
 
 ### 2. Layers, Matrix Timeline & Animation
@@ -36,9 +36,9 @@
 * **Multi-Format Export:** live preview, *Nearest-Neighbor* scaling (`1×–16×`), **Animated GIF** (100% client-side LZW), **PNG Strip** (`Row` / `Column` / `Grid N×M`), **Atlas (PNG + JSON)**, and `.spritium` project files.
 
 ### 3. Drawing Tools, Symmetry 2.0 & Precision Guides
-* **Tools & Custom Brushes:** **Pencil (`B`)** with **Pixel-Perfect**, **Line (`L`)** (45° snap or Bézier curves), **Shapes (`R`/`C`/`U`)**, **Polygon (`N`) & Contour (`O`)** with Scanline Even-Odd fill, **Bucket (`T`/`F`)**, **OKLab Shading (`K`)**, **Blur / Jumble / Noise** (`Mono` / `RGB` / `B&W`), **Spray**, **Eyedropper (`I`)**, **Eraser (`E`)**, and custom `.sbrush.json` brushes.
+* **Tools & Custom Brushes:** **Pencil (`B`)** with **Pixel-Perfect**, **Line (`L`)** (45° snap or Bézier curves), **Shapes (`R`/`C`/`U`)** (`Alt` center-out), **Polygon (`N`) & Contour (`O`)** with Scanline Even-Odd fill, **Bucket (`T`/`F`)**, **OKLab Shading (`K`)**, **Blur / Jumble / Noise** (`Mono` / `RGB` / `B&W`), **Spray**, **Eyedropper (`I`)**, **Eraser (`E`)**, **Zoom (`Z` / `1–8` / `0`)**, **Advanced 8-way Outline**, and custom `.sbrush.json` brushes.
 * **Symmetry 2.0:** Horizontal (`X`), Vertical (`Y`), Diagonals (`╲` / `╱`), and Radial (`90°` / `45°`), with **2px even / 1px odd (Heart)** center modes, free axis positioning (`Alt+Click/Drag` or coordinates), and selection-centered symmetry.
-* **Rulers, Guides & Workspace Background:** pixel rulers, draggable reference guides, and customizable workspace background (RGBA/Alpha picker + Checkerboard/Solid toggle).
+* **Rulers, Sub-Grid (`N×M`), Snap & Workspace Background:** pixel rulers, draggable reference guides, custom `N×M` sub-grid with tool snapping and Lock-to-Cell painting, plus customizable workspace background (RGBA/Alpha picker + Checkerboard/Solid toggle).
 * **RGBA Color & Palette Tools:** full `#RRGGBBAA`, HSV Wheel with color harmonies, and `.hex` / `.gpl` / `.pal` / `.json` import/export.
 * **Boolean Selection & CS Crosshair:** Rectangle, Ellipse & Triangle (`S`), Lasso (`Q`), Magic Wand (`W`), Free Transform (`Shift+T`), live tool preview (`V`), and shareable CS-style mouse reticle codes (`SPR-XXXX-XXXX-XXXX`).
 
@@ -100,7 +100,7 @@ Use **Help → Send Feedback / Report Bug** inside the app (it attaches steps an
 
 ## Beta Status & Community
 
-Spritium is currently in **public Beta (`v0.9.0-beta.5`)**. Core features are ready for production use, while active improvements and testing continue.
+Spritium is currently in **public Beta (`v0.9.0-beta.6`)**. Core features are ready for production use, while active improvements and testing continue.
 
 * **Discord:** Ask questions, share sprites, and report issues in our [Discord Community](https://discord.gg/cxPmhUNFPj).
 * **In-App Feedback:** **Help → Send Feedback / Report Bug** directly from the editor.

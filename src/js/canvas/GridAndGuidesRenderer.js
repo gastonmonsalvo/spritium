@@ -74,7 +74,9 @@ export function estimateCanvasLuminance(layersStack, w, h) {
  */
 export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX, tilesY, totalW, totalH, zoom) {
   const overlay = typeof document !== "undefined" ? document.getElementById("gridOverlay") : null;
-  if (state.showGrid === false) {
+  const cg = state.customGrid;
+  const hasCustomGrid = Boolean(cg?.enabled && (cg.w || 0) >= 2 && (cg.h || 0) >= 2);
+  if (state.showGrid === false && !hasCustomGrid) {
     if (overlay) overlay.style.display = "none";
     return;
   }
@@ -91,22 +93,37 @@ export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX,
     layers.push({ step, alpha });
   };
 
-  if (screenPixelSize < 3) {
-    addStep(32, blockAlpha);
-  } else if (screenPixelSize < 5) {
-    addStep(8, blockAlpha * 0.55);
-    addStep(16, blockAlpha);
-  } else if (screenPixelSize < 8) {
-    addStep(screenPixelSize >= 6.5 ? 2 : 4, blockAlpha * 0.55);
-    addStep(8, blockAlpha);
-  } else {
-    const fineAlpha = Math.min(0.26, (avgLum > 0.52 ? 0.16 : 0.13) + (screenPixelSize - 8) * 0.01);
-    addStep(1, Number(fineAlpha.toFixed(3)));
-    addStep(8, blockAlpha);
+  if (state.showGrid !== false) {
+    if (screenPixelSize < 3) {
+      addStep(32, blockAlpha);
+    } else if (screenPixelSize < 5) {
+      addStep(8, blockAlpha * 0.55);
+      addStep(16, blockAlpha);
+    } else if (screenPixelSize < 8) {
+      addStep(screenPixelSize >= 6.5 ? 2 : 4, blockAlpha * 0.55);
+      addStep(8, blockAlpha);
+    } else {
+      const fineAlpha = Math.min(0.26, (avgLum > 0.52 ? 0.16 : 0.13) + (screenPixelSize - 8) * 0.01);
+      addStep(1, Number(fineAlpha.toFixed(3)));
+      addStep(8, blockAlpha);
+    }
   }
 
+  const customAlpha = Math.max(0.1, Math.min(1, Number(cg?.opacity ?? 0.45)));
+  const customThickness = Math.max(1, Math.min(3, Number(cg?.thickness ?? 1) || 1));
+  const useAutoColor = cg?.autoColor !== false;
+  const customRgb = hasCustomGrid
+    ? (useAutoColor
+      ? (avgLum > 0.52 ? [37, 99, 235] : [167, 139, 250])
+      : (parseColorToRgb(cg.color || "#8b5cf6") || [139, 92, 246]))
+    : null;
+  const effectiveCustomAlpha = useAutoColor && avgLum > 0.52 ? Math.max(0.6, customAlpha) : customAlpha;
+  const customRgba = hasCustomGrid && customRgb
+    ? `rgba(${customRgb[0]}, ${customRgb[1]}, ${customRgb[2]}, ${effectiveCustomAlpha})`
+    : null;
+
   if (overlay) {
-    if (layers.length === 0) {
+    if (layers.length === 0 && !hasCustomGrid) {
       overlay.style.display = "none";
       return;
     }
@@ -116,10 +133,19 @@ export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX,
     const cellCssX = scaledW / (w * tilesX);
     const cellCssY = scaledH / (h * tilesY);
 
-    // En orden inverso para que las líneas de bloque (8/16/32) queden arriba de la grilla fina
+    // En orden inverso para que la sub-grilla custom y los bloques queden encima de la grilla fina
     const ordered = [...layers].reverse();
     const bgImages = [];
     const bgSizes = [];
+    if (hasCustomGrid && customRgba) {
+      const stepW = (cellCssX * Math.max(2, Math.round(cg.w))).toFixed(4);
+      const stepH = (cellCssY * Math.max(2, Math.round(cg.h))).toFixed(4);
+      bgImages.push(
+        `linear-gradient(to right, ${customRgba} 0, ${customRgba} ${customThickness}px, transparent ${customThickness}px)`,
+        `linear-gradient(to bottom, ${customRgba} 0, ${customRgba} ${customThickness}px, transparent ${customThickness}px)`,
+      );
+      bgSizes.push(`${stepW}px ${stepH}px`, `${stepW}px ${stepH}px`);
+    }
     for (const { step, alpha } of ordered) {
       const color = `rgba(${gridRgb}, ${alpha})`;
       const stepW = (cellCssX * step).toFixed(4);

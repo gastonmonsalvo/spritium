@@ -50,6 +50,28 @@ export function resolveStrokeColor(button) {
 }
 
 /**
+ * Resuelve la caja `[x0, y0] → [x1, y1]` aplicando `Shift` (1:1) y `Alt` (desde el centro).
+ * @param {{x: number, y: number}} start
+ * @param {number} x
+ * @param {number} y
+ * @param {any} event
+ * @returns {{x0: number, y0: number, x1: number, y1: number}}
+ */
+export function resolveShapeBox(start, x, y, event) {
+  let dx = x - start.x;
+  let dy = y - start.y;
+  if (event?.shiftKey) {
+    const side = Math.max(Math.abs(dx), Math.abs(dy));
+    dx = dx < 0 ? -side : side;
+    dy = dy < 0 ? -side : side;
+  }
+  if (event?.altKey) {
+    return { x0: start.x - dx, y0: start.y - dy, x1: start.x + dx, y1: start.y + dy };
+  }
+  return { x0: start.x, y0: start.y, x1: start.x + dx, y1: start.y + dy };
+}
+
+/**
  * Fábrica de estrategias para formas geométricas con preview en vivo (Línea / Rectángulo).
  */
 export function createShapeStrategy(drawFn) {
@@ -63,14 +85,16 @@ export function createShapeStrategy(drawFn) {
       start = { x, y };
       baseGrid = cloneGrid(state.grid);
       const col = resolveStrokeColor(button);
-      drawFn({ start, x, y }, col, shouldFillShape(event));
+      const box = resolveShapeBox(start, x, y, event);
+      drawFn({ start: { x: box.x0, y: box.y0 }, x: box.x1, y: box.y1 }, col, shouldFillShape(event));
       renderAll();
     },
     onMove({ x, y, button, event }) {
       if (!start || !baseGrid) return;
       restoreActiveLayerFromSnapshot(baseGrid);
       const col = resolveStrokeColor(button);
-      drawFn({ start, x, y }, col, shouldFillShape(event));
+      const box = resolveShapeBox(start, x, y, event);
+      drawFn({ start: { x: box.x0, y: box.y0 }, x: box.x1, y: box.y1 }, col, shouldFillShape(event));
       renderAll();
     },
     onUp() {

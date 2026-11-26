@@ -8,16 +8,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [Unreleased] — post `v0.9.0-beta.5` (`2026-11-24` → `2026-11-25`)
+## [0.9.0-beta.6] - 2026-11-26
 
 ### Added
 - **CS-Style Reticle Share Code (`SPR-XXXX-XXXX-XXXX`)** in Preferences (`reticleShareCode.js`): encode, decode, validate, copy, and apply mouse crosshair presets via shareable codes.
 - **OS Clipboard Image Paste (`Ctrl+V`):** pasting an image from the system clipboard onto the canvas opens the non-destructive Import Modal (`openImportModal`), while internal sprite `Ctrl+C` → `Ctrl+V` preserves its own selection marker.
 - **Symmetry Support for Paint Bucket (`floodFill`):** Bucket now fills across active symmetry axes (`getSymmetryPoints`) with `O(1)` short-circuiting for connected regions crossing an axis, plus live multi-region hover preview in `CursorPreviewOverlay`.
+- **Direct Wheel Zoom-to-Cursor & `1–8` / `0` Zoom Presets:** mouse wheel now zooms directly toward the cursor without holding `Ctrl` (`Shift+Wheel` scrolls horizontally, `Alt+Wheel` scrolls vertically), and number keys `1`–`8` (`100%–1600%`) zoom toward the pointer while `0` fits the canvas to the viewport.
+- **Independent 1:1 Preview Playback (`#btnPreviewPlay`):** when a project has multiple frames, a Play/Pause toggle in the 1:1 Preview header loops the animation inside the preview window without moving the main canvas.
+- **Unified Ellipse / Circle (`C`) & Center-Out `Alt` Drawing:** implemented Zingl/Midpoint `drawMidpointEllipse` for free-aspect ellipses, holding `Shift` locks 1:1 circles/squares, and holding `Alt` draws shapes from the center across Rect, Ellipse/Circle, and Triangle (`resolveShapeBox`).
 - **Top & Bottom Docking for Frames (`#moduleFrames`):** Frames/Timeline can now dock at the top (below document tabs) or bottom of the workspace with `--accent-primary` violet drop highlights, automatically inverting the matrix resizer direction, collapse/reopen button placement, and chevron orientation.
+- **GIF Nearest-Neighbor Auto-Scale (`exportModal.js`):** added `10×` scale preset and automatic recommended integer scaling (`>= 256px`) when switching to GIF export.
+- **Advanced Outline Modal (`OutlineModal.js`, `morphologyOps.js`):** Aseprite-style 8-way neighborhood matrix, directional presets, `outside` / `inside` / `erode` modes, thickness `1–4`, and custom RGBA popover (`rgbaPopover.js`), replacing the old `+1px`/`-1px` split buttons.
+- **Interactive Preview Zoom & Pan (`previewZoom.js`):** mouse-wheel zoom (`1×–8×`), drag panning, double-click reset, and subtle hint text on modal preview canvases (`Outline`, `HSL`, `Drop Shadow`, `Noise`, `Import`).
+- **Zoom Tool (`Z`):** dedicated magnifying-glass tool in the toolbar (`left-click` zoom in, `right-click` zoom out toward cursor).
+- **Custom Sub-Grid (`N×M`), Snap, Lock Cell, Auto-Contrast & Thickness:** configurable `N×M` sub-grid (`16×16` default) with adaptive light/dark auto-color, adjustable line thickness (`1–3 px`), tool snapping (Selection/Shapes/Line/Move), and Lock-to-Cell painting (Pencil/Eraser/Bucket/Spray/Filters), plus direct configuration shortcut in `View → Guides & Grid`.
+- **Context-Sensitive Action Availability (`actionAvailability.js`):** declarative `ACTION_GUARDS` that automatically disable invalid actions (empty canvas, locked/folder layer, empty undo/redo stack, single frame/layer, no selection) with explanatory tooltips.
 - **Documentation & Showcase:** added app screenshot (`src/assets/screenshot.jpg`), browser/Android support table, collapsible `<details>` FAQ, MIT/Discord/Browser badges, and VS Code Live Server local setup instructions in `README.md` & `README.es.md`.
 
+### Changed
+- **4×4 Toolbar Grid & Grouped Pencil / Spray (`ToolbarConfig.js`, `toolsUI.js`):** grouped `Spray` inside the `Pencil` slot with a contextual `Pencil | Spray` selector, restoring a clean 4×4 (16-button) toolbar grid with Win98 sprite support.
+- **Grouped Top Menus (`TopMenuConfig.js`, `menus.js`):** nested Export formats under `File → Export ▸` and organized `View` into `Guides & Grid ▸`, `Symmetry & Tiled ▸`, `Zoom ▸`, and `Panels & Interface ▸`, with smart viewport-edge submenu flipping.
+- **Preferences Modal (`PreferencesModal.js`):** reorganized into a 2-column category sidebar (`General`, `Mouse Reticle`, `Pixel Cursor`, `Canvas & Guides`) with complete Windows 98 modal/input styling.
+- **Contextual Diagonal Pattern Direction (`customBrushStore.js`, `customBrushesUI.js`):** kept the 4-button pattern row (`solid`, `checker`, `diag`, `dots`) and added a contextual `╱` | `╲` direction sub-row when Diagonal is active.
+- **Palette Labels:** renamed `DMG-01 (Game Boy)` → `DMG-01 (Classic Handheld)` / `DMG-01 (Portátil Clásica)` and `Indexed (16)` → `Starter 16 (Base Palette)` / `Starter 16 (Paleta Base)` without altering internal IDs.
+
 ### Fixed
+- **Even-Sized Brush Centering (`canvas.js`):** `pencil` and `eraser` brushes with even pixel sizes (`2, 4, 6, ...`) now center on pixel intersections (`Math.round(raw / cellSize) - 1`) instead of feeling offset.
+- **Free Transform Pivot Tracking (`freeTransform.js`):** auto-centered pivot now follows `ft.corners` across move, scale, rotate, and skew; manually moved pivots (`pivotCustom`) scale proportionally inside the bounding box and reset to center on double-click.
 - **Floating 1:1 Preview (`#modulePreview`) Layout & Container Query:** locked floating bounds (`144px × 136px` minimum, `152px` default), prevented header icon overflow via `overflow: hidden`, and added a CSS Container Query that cleanly switches `"1:1 Preview"` / `"Vista 1:1"` to `"1:1"` at compact widths.
 - **Docking Drag Offset, Reset & Frames Dragging:** scaled `offsetX` proportionally on first drag frame when floating modules resize, cleared inline dimensions/anchors on **View → Reset Panels**, wired `#btnFloatFrames` outside `#framesModuleHeader`, added side-edge highlight feedback, and made dragging `#timelineResizer` from collapsed expand smoothly from `0px`.
 
@@ -105,7 +123,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Python Backend Era:** Spritium originally began as a local tool backed by a Python server and experimental AI model/quantization experiments.
 - **Migration to 100% Client-Side:** Replaced the Python server and AI runtime dependencies with pure browser-native **OKLab** perceptual quantization, K-Means++ palette reduction, client-side **LZW GIF encoding**, **IndexedDB** checkpoints, and **Zero-Build ES Modules**, enabling instant deployment on GitHub Pages.
 
-[Unreleased]: https://github.com/gastonmonsalvo/spritium/compare/v0.9.0-beta.5...dev
+[Unreleased]: https://github.com/gastonmonsalvo/spritium/compare/v0.9.0-beta.6...dev
+[0.9.0-beta.6]: https://github.com/gastonmonsalvo/spritium/compare/v0.9.0-beta.5...v0.9.0-beta.6
 [0.9.0-beta.5]: https://github.com/gastonmonsalvo/spritium/compare/v0.9.0-beta.4...v0.9.0-beta.5
 [0.9.0-beta.4]: https://github.com/gastonmonsalvo/spritium/compare/v0.9.0-beta.3...v0.9.0-beta.4
 [0.9.0-beta.3]: https://github.com/gastonmonsalvo/spritium/compare/v0.9.0-beta.2...v0.9.0-beta.3

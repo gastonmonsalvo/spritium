@@ -2,7 +2,8 @@
  * docking.js: Paneles colapsables, divisores redimensionables y fachada de módulos acoplables/flotantes.
  */
 
-import { applyZoom } from "../canvas/canvas.js";
+import { applyZoom, togglePreviewPlayback, syncPreviewPlayButton } from "../canvas/canvas.js";
+import { refreshIcons } from "./status.js";
 import { i18n } from "../i18n/I18nService.js";
 import { setBrushSize, initToolOptionsControls } from "./toolsUI.js";
 import { swapPrimarySecondaryColors } from "../workspace/paletteManager.js";
@@ -166,6 +167,17 @@ function bindBrushAndZoomSliders() {
 
   const zoomSlider = document.getElementById("zoomSlider");
   if (zoomSlider) zoomSlider.addEventListener("input", () => applyZoom(Number(zoomSlider.value) / 100));
+
+  const btnPreviewPlay = document.getElementById("btnPreviewPlay");
+  if (btnPreviewPlay) {
+    btnPreviewPlay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      togglePreviewPlayback();
+      refreshIcons(btnPreviewPlay);
+    });
+    syncPreviewPlayButton();
+    refreshIcons(btnPreviewPlay);
+  }
 
   const btnCollapsePreview = document.getElementById("btnCollapsePreview");
   const modulePreview = document.getElementById("modulePreview");

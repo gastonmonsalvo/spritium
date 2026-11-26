@@ -1,4 +1,4 @@
-# Spritium (`v0.9.0-beta.5`)
+# Spritium (`v0.9.0-beta.6`)
 
 [English](./README.md) | [Español](./README.es.md)
 
@@ -26,7 +26,7 @@
 * **Resoluciones soportadas:** presets desde `16×16` hasta `512×512` y tamaño personalizado `N × M` (`4–512 px`) desde **Edición → Resolución**.
 * **Apertura 1:1, Pegado desde Portapapeles (`Ctrl+V`) y Conversión a Pixel Art:** abrí PNGs en tamaño real `1:1`, pegá imágenes directo desde el portapapeles del sistema al importador, convertí imágenes a pixel art con vista previa en vivo y quitá el fondo conectado opcionalmente.
 * **Importador de Tilemaps:** importá hojas de tileset o mapas completos (`PNG + JSON` / Tiled `.tmj`) con deduplicado instantáneo y reordenamiento Drag & Drop.
-* **Paletas integradas + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Game Boy)**, **Terminal 1-Bit**, **Grayscale (16)** e **Indexed (16)**, usando cuantización perceptual en **OKLab** y **Dithering ordenado (Bayer 4×4 / 8×8)** opcional.
+* **Paletas integradas + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Portátil Clásica)**, **Terminal 1-Bit**, **Grayscale (16)** y **Starter 16 (Paleta Base)**, usando cuantización perceptual en **OKLab** y **Dithering ordenado (Bayer 4×4 / 8×8)** opcional.
 * **Reducción Adaptativa de Paleta:** K-Means++ ponderado en OKLab (`16 / 24 / 32 / 48 / 64` colores propios) con re-ajuste no destructivo.
 
 ### 2. Capas, Timeline Matriz y Animación
@@ -36,9 +36,9 @@
 * **Exportación Multi-Formato:** vista previa en vivo, escala *Nearest-Neighbor* (`1×–16×`), **GIF Animado** (LZW 100% client-side), **Tira PNG** (`Fila` / `Columna` / `Grilla N×M`), **Atlas (PNG + JSON)** y archivos de proyecto `.spritium`.
 
 ### 3. Herramientas, Simetría 2.0 y Guías de Precisión
-* **Herramientas y Pinceles Custom:** **Lápiz (`B`)** con **Pixel-Perfect**, **Línea (`L`)** (recta a 45° o curvas Bézier), **Formas (`R`/`C`/`U`)**, **Polígono (`N`) y Contorno (`O`)** con relleno Scanline Even-Odd, **Tarro (`T`/`F`)**, **Shading OKLab (`K`)**, **Blur / Jumble / Ruido** (`Mono` / `Color` / `B&N`), **Spray**, **Gotero (`I`)**, **Goma (`E`)** y pinceles propios `.sbrush.json`.
+* **Herramientas y Pinceles Custom:** **Lápiz (`B`)** con **Pixel-Perfect**, **Línea (`L`)** (recta a 45° o curvas Bézier), **Formas (`R`/`C`/`U`)** (`Alt` desde el centro), **Polígono (`N`) y Contorno (`O`)** con relleno Scanline Even-Odd, **Tarro (`T`/`F`)**, **Shading OKLab (`K`)**, **Blur / Jumble / Ruido** (`Mono` / `Color` / `B&N`), **Spray**, **Gotero (`I`)**, **Goma (`E`)**, **Lupa (`Z` / `1–8` / `0`)**, **Contorno Avanzado (8 direcciones)** y pinceles propios `.sbrush.json`.
 * **Simetría 2.0:** Horizontal (`X`), Vertical (`Y`), Diagonales (`╲` / `╱`) y Radial (`90°` / `45°`), con modo de centro **par (2px) / impar (1px corazón)**, posicionamiento libre del eje (`Alt+Clic/Arrastrar` o coordenadas) y centrado sobre selección.
-* **Reglas, Guías y Fondo de Trabajo:** reglas en píxeles, guías arrastrables y fondo personalizable con picker RGBA/Alpha y alternancia Damero ↔ Sólido.
+* **Reglas, Sub-Grilla (`N×M`), Snap y Fondo de Trabajo:** reglas en píxeles, guías arrastrables, sub-grilla `N×M` con ajuste (*snap*) y bloqueo a celda, y fondo personalizable con picker RGBA/Alpha y alternancia Damero ↔ Sólido.
 * **Color RGBA y Paletas:** soporte completo `#RRGGBBAA`, Rueda HSV con armonías cromáticas e importación/exportación `.hex`, `.gpl`, `.pal` y `.json`.
 * **Selección Booleana y Mira CS:** Rectángulo, Elipse y Triángulo (`S`), Lazo (`Q`), Varita Mágica (`W`), Transformación Libre (`Shift+T`), vista previa en vivo (`V`) y códigos compartibles de mira (`SPR-XXXX-XXXX-XXXX`).
 
@@ -100,7 +100,7 @@ Usá **Ayuda → Enviar Feedback / Reportar Bug** dentro de la app (adjunta paso
 
 ## Estado Beta y Comunidad
 
-Spritium se encuentra actualmente en **Beta pública (`v0.9.0-beta.5`)**. Las herramientas principales son estables para producción, pero seguimos puliendo detalles y testeando fuerte.
+Spritium se encuentra actualmente en **Beta pública (`v0.9.0-beta.6`)**. Las herramientas principales son estables para producción, pero seguimos puliendo detalles y testeando fuerte.
 
 * **Discord:** Sumate a nuestra [Comunidad en Discord](https://discord.gg/cxPmhUNFPj) para compartir sprites, dudas o sugerencias.
 * **Feedback integrado:** **Ayuda → Enviar Feedback / Reportar Bug** directo desde el editor.

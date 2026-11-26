@@ -37,6 +37,22 @@ function renderScaledFrameCanvas(frame, w, h, scale, bgColor = null) {
   return dst;
 }
 
+const SUPPORTED_EXPORT_SCALES = [1, 2, 4, 8, 10, 16];
+let lastExportModalFormat = null;
+
+/**
+ * Sugiere la escala entera óptima (Nearest-Neighbor) según el tamaño del lienzo
+ * para alcanzar resoluciones web/sociales nítidas (≥ 256 px) sin borrosidad.
+ * @param {number} w
+ * @param {number} h
+ * @returns {number}
+ */
+export function getRecommendedGifScale(w, h) {
+  const maxDim = Math.max(1, Number(w) || 1, Number(h) || 1);
+  if (maxDim >= 256) return 1;
+  return SUPPORTED_EXPORT_SCALES.find((s) => maxDim * s >= 256) || 16;
+}
+
 function getExportOptionsFromDom() {
   const format = document.getElementById("exportFormatSelect")?.value || "png";
   const scale = Math.max(1, Math.min(16, Number(document.getElementById("exportScaleSelect")?.value || 1)));
@@ -153,8 +169,16 @@ function renderExportPreviewVisual(opts, w, h) {
  * Actualiza los bloques visibles del modal y muestra las dimensiones finales calculadas.
  */
 export function updateExportModalPreview() {
-  const opts = getExportOptionsFromDom();
+  const formatSelect = document.getElementById("exportFormatSelect");
+  const scaleSelect = document.getElementById("exportScaleSelect");
+  const currentFormat = formatSelect?.value || "png";
   const { w, h } = getGridDims();
+  if (currentFormat === "gif" && lastExportModalFormat !== "gif" && scaleSelect) {
+    scaleSelect.value = String(getRecommendedGifScale(w, h));
+  }
+  lastExportModalFormat = currentFormat;
+
+  const opts = getExportOptionsFromDom();
   const frameCount = Math.max(1, state.frames.length);
 
   const bgColorEl = document.getElementById("exportBgColor");
@@ -169,7 +193,6 @@ export function updateExportModalPreview() {
   const colsRow = document.getElementById("exportStripColsRow");
   if (colsRow) colsRow.style.display = opts.stripLayout === "grid" ? "flex" : "none";
 
-  const scaleSelect = document.getElementById("exportScaleSelect");
   if (scaleSelect) scaleSelect.disabled = opts.format === "atlas";
 
   const previewEl = document.getElementById("exportResolutionPreview");
@@ -212,6 +235,7 @@ export function openExportModal(defaultFormat = "png") {
   const resolvedFormat = typeof defaultFormat === "string" ? defaultFormat : "png";
   const formatSelect = document.getElementById("exportFormatSelect");
   if (formatSelect) formatSelect.value = resolvedFormat;
+  lastExportModalFormat = null;
 
   const animFps = document.getElementById("animFpsInput")?.value;
   const gifFpsInput = document.getElementById("exportGifFps");

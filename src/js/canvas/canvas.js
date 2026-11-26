@@ -296,6 +296,7 @@ export function renderAll() {
   drawSelectionAndGizmosOverlay(ctx, cellSize, tileOriginX, tileOriginY, baseW, baseH, zoom, renderAll);
 
   // 5. Miniatura en vivo, reglas y coordenadas de cuadrícula
+  syncPreviewPlayButton();
   renderPreview();
   renderRulers();
   renderGridCoordsOverlay();
@@ -337,8 +338,10 @@ export function getGridCoordinates(e, canvasElement, { unclampedTiled = false, u
   const rawX = (e.clientX - rect.left) * scaleX;
   const rawY = (e.clientY - rect.top) * scaleY;
 
-  const x = Math.floor(rawX / cellSize);
-  const y = Math.floor(rawY / cellSize);
+  const bSize = Math.max(1, Math.round(Number(state.brushSize) || 1));
+  const useEvenCenter = (state.currentTool === "pencil" || state.currentTool === "eraser") && !state.activeCustomBrushId && bSize % 2 === 0;
+  const x = useEvenCenter ? Math.round(rawX / cellSize) - 1 : Math.floor(rawX / cellSize);
+  const y = useEvenCenter ? Math.round(rawY / cellSize) - 1 : Math.floor(rawY / cellSize);
 
   const tiledX = state.tiledMode === "x" || state.tiledMode === "both";
   const tiledY = state.tiledMode === "y" || state.tiledMode === "both";
@@ -366,6 +369,61 @@ export function fitZoomToViewport() {
   const availH = Math.max(96, container.clientHeight - 40);
   const targetZoom = Math.min(availW / baseW, availH / baseH);
   applyZoom(Math.max(0.25, Math.min(4, targetZoom)));
+}
+
+let lastPointerClient = null;
+
+/** Registra la última posición del puntero dentro del visor del lienzo para hacer zoom al cursor. */
+export function trackCanvasPointer(clientX, clientY) {
+  if (typeof clientX === "number" && typeof clientY === "number") {
+    lastPointerClient = { x: clientX, y: clientY };
+  } else {
+    lastPointerClient = null;
+  }
+}
+
+/**
+ * Aplica `newZoom` manteniendo fijo en pantalla el píxel bajo `(clientX, clientY)`.
+ * @param {number} newZoom
+ * @param {number|null} [clientX=null]
+ * @param {number|null} [clientY=null]
+ */
+export function zoomAtClientPoint(newZoom, clientX = null, clientY = null) {
+  if (typeof document === "undefined" || clientX === null || clientY === null) {
+    applyZoom(newZoom);
+    return;
+  }
+  const canvas = document.getElementById("paintCanvas");
+  const container = document.getElementById("canvasContainer");
+  if (!canvas || !container) {
+    applyZoom(newZoom);
+    return;
+  }
+  const cRect = container.getBoundingClientRect();
+  const insideContainer = clientX >= cRect.left && clientX <= cRect.right && clientY >= cRect.top && clientY <= cRect.bottom;
+  if (!insideContainer) {
+    applyZoom(newZoom);
+    return;
+  }
+  const prevZoom = state.zoom || 1;
+  const rectBefore = canvas.getBoundingClientRect();
+  const relX = rectBefore.width > 0 ? (clientX - rectBefore.left) / rectBefore.width : 0.5;
+  const relY = rectBefore.height > 0 ? (clientY - rectBefore.top) / rectBefore.height : 0.5;
+  applyZoom(newZoom);
+  if (state.zoom !== prevZoom) {
+    const rectAfter = canvas.getBoundingClientRect();
+    const targetScreenX = rectAfter.left + relX * rectAfter.width;
+    const targetScreenY = rectAfter.top + relY * rectAfter.height;
+    container.scrollLeft += targetScreenX - clientX;
+    container.scrollTop += targetScreenY - clientY;
+    if (rectAfter.width <= cRect.width) container.scrollLeft = 0;
+    if (rectAfter.height <= cRect.height) container.scrollTop = 0;
+  }
+}
+
+/** Aplica `newZoom` hacia la última posición del ratón registrada en el lienzo. */
+export function zoomAtLastPointer(newZoom) {
+  zoomAtClientPoint(newZoom, lastPointerClient?.x ?? null, lastPointerClient?.y ?? null);
 }
 
 /**
@@ -432,6 +490,76 @@ let previewTileBuffer = null;
 /**
  * Renderiza la vista previa 1:1 (o mosaico 3×3 / 3×1 / 1×3 en Tiled Mode) componiendo todas las capas visibles.
  */
+let previewAnimPlaying = false;
+let previewAnimTimer = null;
+let previewAnimIndex = 0;
+
+function stopPreviewLoopInternal() {
+  if (previewAnimTimer !== null) {
+    clearTimeout(previewAnimTimer);
+    previewAnimTimer = null;
+  }
+  previewAnimPlaying = false;
+}
+
+/** Sincroniza visibilidad y estado activo del botón Play en la Vista 1:1. */
+export function syncPreviewPlayButton() {
+  if (typeof document === "undefined") return;
+  const btn = document.getElementById("btnPreviewPlay");
+  if (!btn) return;
+  const multiFrame = (state.frames?.length || 0) > 1;
+  btn.style.display = multiFrame ? "inline-flex" : "none";
+  if (!multiFrame && previewAnimPlaying) stopPreviewLoopInternal();
+  const active = previewAnimPlaying && !state.isPlaying;
+  btn.classList.toggle("active", active);
+  const icon = btn.querySelector("i, svg");
+  const targetIcon = active ? "pause" : "play";
+  if (icon && icon.getAttribute("data-lucide") !== targetIcon) {
+    btn.innerHTML = `<i data-lucide="${targetIcon}" class="ui-icon-sm"></i>`;
+  }
+}
+
+/** Alterna la reproducción independiente del loop de frames dentro de la Vista 1:1. */
+export function togglePreviewPlayback() {
+  const frames = state.frames || [];
+  if (frames.length <= 1) {
+    stopPreviewLoopInternal();
+    syncPreviewPlayButton();
+    renderPreview();
+    return false;
+  }
+  if (previewAnimPlaying) {
+    stopPreviewLoopInternal();
+    syncPreviewPlayButton();
+    renderPreview();
+    return false;
+  }
+  previewAnimPlaying = true;
+  previewAnimIndex = state.activeFrameIndex || 0;
+  syncPreviewPlayButton();
+
+  const tick = () => {
+    if (!previewAnimPlaying) return;
+    const total = state.frames?.length || 1;
+    if (total <= 1) {
+      stopPreviewLoopInternal();
+      syncPreviewPlayButton();
+      renderPreview();
+      return;
+    }
+    previewAnimIndex = (previewAnimIndex + 1) % total;
+    if (!state.isPlaying) renderPreview();
+    const frameDuration = state.frames[previewAnimIndex]?.duration || 0;
+    const fps = Math.max(1, Math.min(60, Number(state.fps || document.getElementById("animFpsInput")?.value || 8)));
+    const delayMs = frameDuration > 0 ? frameDuration : Math.round(1000 / fps);
+    previewAnimTimer = setTimeout(tick, delayMs);
+  };
+  const fps = Math.max(1, Math.min(60, Number(state.fps || document.getElementById("animFpsInput")?.value || 8)));
+  previewAnimTimer = setTimeout(tick, Math.round(1000 / fps));
+  renderPreview();
+  return true;
+}
+
 export function renderPreview() {
   const preview = document.getElementById("previewCanvas");
   if (!preview) return;
@@ -452,10 +580,16 @@ export function renderPreview() {
 
   pCtx.clearRect(0, 0, targetW, targetH);
 
-  const layersToDraw =
+  let layersToDraw =
     state.layers && state.layers.length > 0
       ? state.layers
       : [{ visible: true, grid: state.grid }];
+  if (previewAnimPlaying && !state.isPlaying && (state.frames?.length || 0) > 1) {
+    const idx = previewAnimIndex % state.frames.length;
+    if (idx !== state.activeFrameIndex && state.frames[idx]?.layers?.length) {
+      layersToDraw = state.frames[idx].layers;
+    }
+  }
 
   const previewRgbaLut = buildPaletteRgbaLut();
   const drawSingleTile = (targetCtx) => {

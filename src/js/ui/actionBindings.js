@@ -26,6 +26,7 @@ import * as nm from "./modals/NoiseModal.js";
 import * as nrm from "./modals/NormalMapModal.js";
 import * as hsl from "./modals/HslModal.js";
 import * as dsm from "./modals/DropShadowModal.js";
+import * as olm from "./modals/OutlineModal.js";
 import * as cm from "./modals/ConfirmModal.js";
 
 function buildTransformActions() {
@@ -52,8 +53,7 @@ function buildTransformActions() {
       ui.setStatus({ key: "log.rotsprite_applied", params: { deg } }, false, "pixel");
     },
     outlineAction: () => {
-      const count = tr.applyOutline();
-      ui.setStatus(count > 0 ? { key: "log.outline_applied", params: { count } } : { key: "log.outline_none" }, false, count > 0 ? "pixel" : "ui");
+      olm.openOutlineModal();
     },
     erodeOutlineAction: () => {
       const count = tr.erodeOutline();
@@ -164,6 +164,7 @@ export function registerAppActions() {
     toggleUiLogs: ui.toggleUiLogs,
     setTool: ui.setTool,
     setBrushSize: ui.setBrushSize,
+    selectActivePencilTool: ui.selectActivePencilTool,
     selectActiveShapeTool: ui.selectActiveShapeTool,
     selectActiveSelectTool: ui.selectActiveSelectTool,
     selectActivePolyTool: ui.selectActivePolyTool,
@@ -194,6 +195,7 @@ export function registerAppActions() {
     resetSymmetryAxes: ui.resetSymmetryAxes,
     clearRulerGuides: ui.clearRulerGuides,
     toggleGrid: ui.toggleGrid,
+    toggleCustomGrid: ui.toggleCustomGrid,
     toggleCenterGuides: ui.toggleCenterGuides,
     toggleCenterRulerMarks: ui.toggleCenterRulerMarks,
     toggleRulers: ui.toggleRulers,
@@ -227,6 +229,7 @@ export function registerAppActions() {
     openHelpModal: ui.openHelpModal,
     closeHelpModal: ui.closeHelpModal,
     openPreferencesModal: ui.openPreferencesModal,
+    openPreferencesGuides: () => ui.openPreferencesModal("canvas"),
     closePreferencesModal: ui.closePreferencesModal,
     openLanguageModal: ui.openLanguageModal,
     closeLanguageModal: ui.closeLanguageModal,
@@ -283,6 +286,9 @@ export function registerAppActions() {
     openDropShadowModal: dsm.openDropShadowModal,
     closeDropShadowModal: dsm.closeDropShadowModal,
     applyDropShadowModal: dsm.applyDropShadowModal,
+    openOutlineModal: olm.openOutlineModal,
+    closeOutlineModal: olm.closeOutlineModal,
+    applyOutlineModal: olm.applyOutlineModal,
     resolveConfirmDialog: cm.resolveConfirmDialog,
     openNormalMapModal: nrm.openNormalMapModal,
     closeNormalMapModal: nrm.closeNormalMapModal,

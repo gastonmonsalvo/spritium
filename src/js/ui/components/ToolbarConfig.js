@@ -4,7 +4,7 @@
  */
 
 export const TOOL_GRID_ITEMS = [
-  { id: "toolPencil", icon: "pencil", titleKey: "tool.pencil", aria: "Lápiz [B]", action: "setTool", arg: "pencil", active: true },
+  { id: "toolPencil", icon: "pencil", titleKey: "tool.pencil", aria: "Lápiz / Spray [B]", action: "selectActivePencilTool", active: true },
   { id: "toolEraser", icon: "eraser", titleKey: "tool.eraser", aria: "Goma [E]", action: "setTool", arg: "eraser" },
   { id: "toolBucket", icon: "paint-bucket", titleKey: "tool.bucket", aria: "Tarro [T]", action: "setTool", arg: "bucket" },
   { id: "toolEyedropper", icon: "pipette", titleKey: "tool.eyedropper", aria: "Gotero [I]", action: "setTool", arg: "eyedropper" },
@@ -13,16 +13,21 @@ export const TOOL_GRID_ITEMS = [
   { id: "toolShapes", icon: "square", titleKey: "tool.shapes", aria: "Formas Geométricas", action: "selectActiveShapeTool" },
   { id: "toolPolyGroup", icon: "pentagon", titleKey: "tool.poly_group", aria: "Polígono / Contorno", action: "selectActivePolyTool" },
   { id: "toolShading", icon: "sun-moon", titleKey: "tool.shading", aria: "Shading [K]", action: "setTool", arg: "shading" },
-  { id: "toolBackgroundEraser", icon: "sparkles", titleKey: "tool.bg_eraser", aria: "Quitar Fondo [D]", action: "setTool", arg: "backgroundEraser" },
 
   { id: "toolSelect", icon: "box-select", titleKey: "tool.select_group", aria: "Selección Geométrica [S]", action: "selectActiveSelectTool" },
   { id: "toolLasso", icon: "lasso", titleKey: "tool.lasso", aria: "Selección Lazo [Q]", action: "setTool", arg: "lasso" },
   { id: "toolMagicSelect", icon: "wand-2", titleKey: "tool.magic_select", aria: "Selección Inteligente [W]", action: "setTool", arg: "magicSelect" },
+  { id: "toolBackgroundEraser", icon: "sparkles", titleKey: "tool.bg_eraser", aria: "Quitar Fondo [D]", action: "setTool", arg: "backgroundEraser" },
 
   { id: "toolMove", icon: "move", titleKey: "tool.move", aria: "Mover [M]", action: "setTool", arg: "move" },
   { id: "toolPan", icon: "hand", titleKey: "tool.pan", aria: "Mano [H]", action: "setTool", arg: "pan" },
+  { id: "toolZoom", icon: "zoom-in", titleKey: "tool.zoom", aria: "Lupa [Z]", action: "setTool", arg: "zoom" },
   { id: "toolFilterBrush", icon: "droplet", titleKey: "tool.filters", aria: "Blur / Jumble", action: "selectActiveFilterTool" },
-  { id: "toolSpray", icon: "spray-can", titleKey: "tool.spray", aria: "Spray", action: "setTool", arg: "spray" },
+];
+
+export const PENCIL_TOOL_ITEMS = [
+  { id: "pencilBtnPencil", tool: "pencil", icon: "pencil", titleKey: "tool.pencil", labelKey: "tool.pencil_short", active: true },
+  { id: "pencilBtnSpray", tool: "spray", icon: "spray-can", titleKey: "tool.spray", labelKey: "tool.spray_short" },
 ];
 
 export const LINE_STYLE_ITEMS = [

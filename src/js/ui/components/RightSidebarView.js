@@ -201,6 +201,9 @@ export function renderRightSidebarHtml() {
             <span class="preview-title-compact" aria-hidden="true">1:1</span>
           </label>
           <div style="display: flex; align-items: center; gap: 3px">
+            <button type="button" id="btnPreviewPlay" class="tool-btn" style="display: none; padding: 3px 5px; font-size: 11px" data-i18n-title="title.preview_play" title="${tAttr("title.preview_play")}">
+              <i data-lucide="play" class="ui-icon-sm"></i>
+            </button>
             <button type="button" id="btnCollapsePreview" class="tool-btn" style="padding: 3px 5px; font-size: 11px" data-i18n-title="title.collapse_preview" title="${tAttr("title.collapse_preview")}">
               <i data-lucide="minus" class="ui-icon-sm"></i>
             </button>

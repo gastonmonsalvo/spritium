@@ -4,7 +4,7 @@
  */
 
 import { state, getGridDims, isSymmetryActive } from "./core/state.js";
-import { renderAll, getGridCoordinates, getFloatGridCoordinates, applyZoom } from "./canvas/canvas.js";
+import { renderAll, getGridCoordinates, getFloatGridCoordinates, zoomAtClientPoint, trackCanvasPointer } from "./canvas/canvas.js";
 import { createFreeTransformController, getFreeTransformCursor } from "./tools/freeTransform.js";
 import { renderRulers } from "./canvas/rulers.js";
 import { renderGridCoordsOverlay } from "./canvas/gridCoordsOverlay.js";
@@ -24,6 +24,38 @@ const REGION_TOOLS = new Set(["bucket", "fill", "backgroundEraser", "magicSelect
 const READ_ONLY_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect", "eyedropper", "zoom", "pan"]);
 const SELECTION_CTX_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect", "move"]);
 const ALT_SELECTION_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "lasso", "magicSelect", "move"]);
+const SNAP_GRID_TOOLS = new Set(["select", "ellipseSelect", "triangleSelect", "rect", "circle", "triangle", "line", "move"]);
+const PAINT_LOCK_TOOLS = new Set(["pencil", "eraser", "bucket", "spray", "blur", "jumble", "noise"]);
+
+function applyCustomGridConstraints(x, y, ptr, phase) {
+  const cg = state.customGrid;
+  if (!cg?.enabled) return { x, y };
+  const cw = Math.max(2, Math.round(Number(cg.w) || 32));
+  const ch = Math.max(2, Math.round(Number(cg.h) || 32));
+  const { w: gw, h: gh } = getGridDims();
+
+  if (cg.lockCell && PAINT_LOCK_TOOLS.has(state.currentTool)) {
+    if (phase === "down") {
+      const cx = Math.floor(x / cw) * cw;
+      const cy = Math.floor(y / ch) * ch;
+      ptr.lockedCell = { minX: cx, minY: cy, maxX: Math.min(gw - 1, cx + cw - 1), maxY: Math.min(gh - 1, cy + ch - 1) };
+    }
+    if (ptr.lockedCell && (phase === "down" || phase === "move" || phase === "up")) {
+      return {
+        x: Math.max(ptr.lockedCell.minX, Math.min(ptr.lockedCell.maxX, x)),
+        y: Math.max(ptr.lockedCell.minY, Math.min(ptr.lockedCell.maxY, y)),
+      };
+    }
+  }
+
+  if (cg.snap && SNAP_GRID_TOOLS.has(state.currentTool)) {
+    return {
+      x: Math.max(0, Math.min(gw, Math.round(x / cw) * cw)),
+      y: Math.max(0, Math.min(gh, Math.round(y / ch) * ch)),
+    };
+  }
+  return { x, y };
+}
 
 function wantsSymmetryAxisDrag(e) {
   if (!isSymmetryActive()) return false;
@@ -177,11 +209,15 @@ function handleCanvasMouseDown(e, canvas, ptr) {
   }
   ptr.usedTilemapStrategy = isTilemapTileModeActive();
   ptr.activeStrategy = ptr.usedTilemapStrategy ? getTilemapToolStrategy(state.currentTool) : (TOOL_STRATEGIES[state.currentTool] || TOOL_STRATEGIES.pencil);
-  ptr.activeStrategy.onDown({ x, y, button: e.button, event: e });
+  const ptDown = applyCustomGridConstraints(x, y, ptr, "down");
+  state.cursorPos = { x: ptDown.x, y: ptDown.y };
+  ptr.activeStrategy.onDown({ x: ptDown.x, y: ptDown.y, button: e.button, event: e });
 }
 
 function handleCanvasMouseMove(e, canvas, ptr) {
-  const { x, y } = getGridCoordinates(e, canvas);
+  const rawPt = getGridCoordinates(e, canvas);
+  const ptMove = applyCustomGridConstraints(rawPt.x, rawPt.y, ptr, ptr.isMouseDown ? "move" : "hover");
+  const { x, y } = ptMove;
   state.cursorPos = { x, y };
   renderRulers();
   renderGridCoordsOverlay();
@@ -264,8 +300,10 @@ function handleWindowMouseUp(e, canvas, ptr) {
   ptr.isMouseDown = false;
   if (state.freeTransform) { ptr.ftController.onUp(); return; }
   if (!ptr.activeStrategy) return;
-  const { x, y } = getGridCoordinates(e, canvas, { unclampedTiled: state.tiledMode !== "none", unclamped: state.currentTool === "move" });
-  ptr.activeStrategy.onUp({ x, y, button: ptr.mouseButton, event: e });
+  const rawUp = getGridCoordinates(e, canvas, { unclampedTiled: state.tiledMode !== "none", unclamped: state.currentTool === "move" });
+  const ptUp = applyCustomGridConstraints(rawUp.x, rawUp.y, ptr, "up");
+  ptr.activeStrategy.onUp({ x: ptUp.x, y: ptUp.y, button: ptr.mouseButton, event: e });
+  ptr.lockedCell = null;
   if (!ptr.usedTilemapStrategy && state.layers?.[state.activeLayerIndex]?.type === "tilemap") reconcileActiveTilemapLayer();
   syncLinkedCelsForActiveLayer();
   ptr.usedTilemapStrategy = false;
@@ -307,9 +345,28 @@ export function setupMouseEvents(canvas) {
     renderGridCoordsOverlay();
     if (state.showPixelCursor || wantsRegionPreview() || state.layers?.[state.activeLayerIndex]?.type === "tilemap") renderAll();
   });
-  canvas.addEventListener("wheel", (e) => {
-    if (e.ctrlKey || state.currentTool === "zoom") { e.preventDefault(); applyZoom(state.zoom + (e.deltaY < 0 ? 0.25 : -0.25)); }
-  }, { passive: false });
+  const handleCanvasWheelZoom = (e) => {
+    const container = document.getElementById("canvasContainer");
+    if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      if (container) container.scrollLeft += Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      return;
+    }
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      if (container) container.scrollTop += e.deltaY;
+      return;
+    }
+    e.preventDefault();
+    const prevZoom = state.zoom || 1;
+    const step = prevZoom >= 4 ? 0.5 : 0.25;
+    trackCanvasPointer(e.clientX, e.clientY);
+    zoomAtClientPoint(prevZoom + (e.deltaY < 0 ? step : -step), e.clientX, e.clientY);
+  };
+  const wheelTarget = document.getElementById("canvasContainer") || canvas;
+  wheelTarget.addEventListener("wheel", handleCanvasWheelZoom, { passive: false });
+  wheelTarget.addEventListener("pointermove", (e) => trackCanvasPointer(e.clientX, e.clientY));
+  wheelTarget.addEventListener("pointerleave", () => trackCanvasPointer(null, null));
   canvas.addEventListener("pointerdown", (e) => {
     state.lastPointerType = e.pointerType || "mouse";
     if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault();

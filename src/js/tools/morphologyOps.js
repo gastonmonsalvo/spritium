@@ -8,24 +8,77 @@ import { isActiveLayerLocked } from "../workspace/layers.js";
 import { reconcileActiveTilemapLayer } from "../workspace/tilemap.js";
 import { isInsideSelection } from "./tools.js";
 
-/** Agrega un contorno de 1px (4-conectado) alrededor de píxeles opacos usando el color activo. */
-export function applyOutline() {
-  if (isActiveLayerLocked()) return 0;
-  const outlineColor = state.currentColorIndex || 1;
-  const { w: gw, h: gh } = getGridDims();
-  const toOutline = [];
+export const FOUR_WAY_DIRS = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+export const EIGHT_WAY_DIRS = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
 
-  for (let y = 0; y < gh; y++) {
-    for (let x = 0; x < gw; x++) {
-      if (state.grid[y]?.[x] !== 0 || !isInsideSelection(x, y)) continue;
-      const hasOpaque = (y > 0 && state.grid[y - 1][x] !== 0) || (y < gh - 1 && state.grid[y + 1][x] !== 0) ||
-        (x > 0 && state.grid[y][x - 1] !== 0) || (x < gw - 1 && state.grid[y][x + 1] !== 0);
-      if (hasOpaque) toOutline.push([x, y]);
+/**
+ * Calcula las coordenadas `[x, y]` que recibirán contorno según direcciones, grosor y modo.
+ * @param {number[][]} grid
+ * @param {number} gw
+ * @param {number} gh
+ * @param {{ dirs?: number[][], thickness?: number, mode?: "outside"|"inside", respectSelection?: boolean }} [options]
+ * @returns {Array<[number, number]>}
+ */
+export function computeOutlineCells(grid, gw, gh, { dirs = FOUR_WAY_DIRS, thickness = 1, mode = "outside", respectSelection = true } = {}) {
+  if (!grid || gw <= 0 || gh <= 0 || !dirs?.length) return [];
+  const steps = Math.max(1, Math.min(8, Math.round(Number(thickness) || 1)));
+  const work = grid.map((row) => [...row]);
+  const added = [];
+  const seen = new Set();
+  const canEdit = (x, y) => !respectSelection || isInsideSelection(x, y);
+
+  for (let step = 0; step < steps; step++) {
+    const passCells = [];
+    if (mode === "inside" || mode === "erode") {
+      for (let y = 0; y < gh; y++) {
+        for (let x = 0; x < gw; x++) {
+          if (!work[y]?.[x] || !canEdit(x, y)) continue;
+          const touchesBorder = dirs.some(([dx, dy]) => {
+            const nx = x + dx;
+            const ny = y + dy;
+            return nx < 0 || nx >= gw || ny < 0 || ny >= gh || work[ny][nx] === 0;
+          });
+          if (touchesBorder) passCells.push([x, y]);
+        }
+      }
+      for (const [x, y] of passCells) {
+        work[y][x] = 0;
+        const key = `${x},${y}`;
+        if (!seen.has(key)) { seen.add(key); added.push([x, y]); }
+      }
+    } else {
+      for (let y = 0; y < gh; y++) {
+        for (let x = 0; x < gw; x++) {
+          if (!work[y]?.[x]) continue;
+          for (const [dx, dy] of dirs) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || nx >= gw || ny < 0 || ny >= gh) continue;
+            if (work[ny][nx] !== 0 || !canEdit(nx, ny)) continue;
+            const key = `${nx},${ny}`;
+            if (!seen.has(key)) { seen.add(key); passCells.push([nx, ny]); }
+          }
+        }
+      }
+      for (const [x, y] of passCells) {
+        work[y][x] = 1;
+        added.push([x, y]);
+      }
     }
+    if (passCells.length === 0) break;
   }
+  return added;
+}
+
+/** Agrega o erosiona un contorno configurable (direcciones, grosor, exterior/interior/erosionar). */
+export function applyOutline(options = {}) {
+  if (isActiveLayerLocked()) return 0;
+  const targetColor = options.mode === "erode" ? 0 : (options.colorIndex ?? (state.currentColorIndex || 1));
+  const { w: gw, h: gh } = getGridDims();
+  const toOutline = computeOutlineCells(state.grid, gw, gh, options);
   if (toOutline.length === 0) return 0;
   pushState();
-  for (const [x, y] of toOutline) state.grid[y][x] = outlineColor;
+  for (const [x, y] of toOutline) state.grid[y][x] = targetColor;
   state.isDirtySinceImport = true;
   reconcileActiveTilemapLayer("auto");
   renderAll();

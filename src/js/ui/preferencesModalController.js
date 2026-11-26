@@ -97,14 +97,43 @@ export function syncPreferencesModalControls() {
   setVal("prefGridCoordsOpacity", Math.round((gc.opacity ?? 0.14) * 100));
   setText("prefGridCoordsOpacityVal", `${Math.round((gc.opacity ?? 0.14) * 100)}%`);
   syncSwatchButton("prefGridCoordsColorBtn", gc.color || "#38bdf8");
+
+  const cg = state.customGrid || DEFAULT_USER_PREFS.customGrid;
+  setChecked("chkPrefCustomGrid", Boolean(cg.enabled));
+  setVal("prefCustomGridW", cg.w || 16);
+  setVal("prefCustomGridH", cg.h || 16);
+  setChecked("chkPrefCustomGridSnap", Boolean(cg.snap));
+  setChecked("chkPrefCustomGridLock", Boolean(cg.lockCell));
+  const autoCol = cg.autoColor !== false;
+  setChecked("chkPrefCustomGridAutoColor", autoCol);
+  const thick = Number(cg.thickness ?? 1) || 1;
+  setVal("prefCustomGridThickness", thick);
+  setText("prefCustomGridThicknessVal", `${thick} px`);
+  setVal("prefCustomGridOpacity", Math.round((cg.opacity ?? 0.45) * 100));
+  setText("prefCustomGridOpacityVal", `${Math.round((cg.opacity ?? 0.45) * 100)}%`);
+  syncSwatchButton("prefCustomGridColorBtn", cg.color || "#8b5cf6");
+  const cgColorBtn = document.getElementById("prefCustomGridColorBtn");
+  if (cgColorBtn) cgColorBtn.style.opacity = autoCol ? "0.45" : "1";
 }
 
 /**
  * Abre el modal de Preferencias de Usuario.
+ * @param {string} [initialTab]
  */
-export function openPreferencesModal() {
+export function openPreferencesModal(initialTab = null) {
   syncPreferencesModalControls();
-  document.getElementById("preferencesModal")?.classList.add("open");
+  const modal = document.getElementById("preferencesModal");
+  if (typeof initialTab === "string" && initialTab && modal) {
+    modal.querySelectorAll(".pref-nav-btn").forEach((b) => {
+      const isTarget = b.getAttribute("data-pref-tab") === initialTab;
+      b.classList.toggle("active", isTarget);
+      b.setAttribute("aria-selected", String(isTarget));
+    });
+    modal.querySelectorAll(".pref-panel").forEach((p) => {
+      p.classList.toggle("active", p.getAttribute("data-pref-panel") === initialTab);
+    });
+  }
+  modal?.classList.add("open");
 }
 
 /**
@@ -138,6 +167,20 @@ export function initPreferencesModal() {
   const modal = document.getElementById("preferencesModal");
   if (!modal || modal.dataset.bound === "1") return;
   modal.dataset.bound = "1";
+
+  const navBtns = Array.from(modal.querySelectorAll("[data-pref-tab]"));
+  const panels = Array.from(modal.querySelectorAll("[data-pref-panel]"));
+  navBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetTab = btn.getAttribute("data-pref-tab");
+      navBtns.forEach((b) => {
+        const isTarget = b === btn;
+        b.classList.toggle("active", isTarget);
+        b.setAttribute("aria-selected", String(isTarget));
+      });
+      panels.forEach((p) => p.classList.toggle("active", p.getAttribute("data-pref-panel") === targetTab));
+    });
+  });
 
   subscribe("prefs:changed", syncPreferencesModalControls);
 
@@ -264,6 +307,90 @@ export function initPreferencesModal() {
     openCustomRgbaPopover(gcColorBtn, curHex, (newHex) => {
       state.gridCoordsConfig = { ...DEFAULT_USER_PREFS.gridCoordsConfig, ...state.gridCoordsConfig, color: newHex };
       syncSwatchButton("prefGridCoordsColorBtn", newHex);
+      saveUserPreferences();
+      renderAll();
+    });
+  });
+
+  const ensureCustomGrid = () => {
+    if (!state.customGrid) state.customGrid = { ...DEFAULT_USER_PREFS.customGrid };
+    return state.customGrid;
+  };
+  bindCheck("chkPrefCustomGrid", (v) => { ensureCustomGrid().enabled = v; });
+  bindCheck("chkPrefCustomGridSnap", (v) => { ensureCustomGrid().snap = v; });
+  bindCheck("chkPrefCustomGridLock", (v) => { ensureCustomGrid().lockCell = v; });
+  bindCheck("chkPrefCustomGridAutoColor", (v) => {
+    ensureCustomGrid().autoColor = v;
+    const btn = document.getElementById("prefCustomGridColorBtn");
+    if (btn) btn.style.opacity = v ? "0.45" : "1";
+  });
+
+  const bindCustomDim = (id, axis) => {
+    const el = /** @type {HTMLInputElement|null} */ (document.getElementById(id));
+    el?.addEventListener("input", () => {
+      const n = Math.round(Number(el.value));
+      if (!Number.isFinite(n) || n < 2 || n > 256) return;
+      ensureCustomGrid()[axis] = n;
+      saveUserPreferences();
+      renderAll();
+    });
+    el?.addEventListener("change", () => {
+      const val = Math.max(2, Math.min(256, Math.round(Number(el.value) || 16)));
+      el.value = String(val);
+      ensureCustomGrid()[axis] = val;
+      saveUserPreferences();
+      renderAll();
+    });
+  };
+  bindCustomDim("prefCustomGridW", "w");
+  bindCustomDim("prefCustomGridH", "h");
+
+  modal.querySelectorAll(".pref-cg-preset").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const sz = Number(btn.getAttribute("data-cg-size")) || 32;
+      const cg = ensureCustomGrid();
+      cg.w = sz;
+      cg.h = sz;
+      cg.enabled = true;
+      syncPreferencesModalControls();
+      syncViewTogglesUI();
+      saveUserPreferences();
+      renderAll();
+    });
+  });
+
+  const cgOpInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefCustomGridOpacity"));
+  cgOpInput?.addEventListener("input", () => {
+    const val = Math.max(10, Math.min(100, Number(cgOpInput.value) || 45));
+    ensureCustomGrid().opacity = val / 100;
+    const label = document.getElementById("prefCustomGridOpacityVal");
+    if (label) label.textContent = `${val}%`;
+    saveUserPreferences();
+    renderAll();
+  });
+
+  const cgThickInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefCustomGridThickness"));
+  cgThickInput?.addEventListener("input", () => {
+    const val = Math.max(1, Math.min(3, Math.round((Number(cgThickInput.value) || 1) * 2) / 2));
+    ensureCustomGrid().thickness = val;
+    const label = document.getElementById("prefCustomGridThicknessVal");
+    if (label) label.textContent = `${val} px`;
+    saveUserPreferences();
+    renderAll();
+  });
+
+  const cgColorBtn = document.getElementById("prefCustomGridColorBtn");
+  cgColorBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const curHex = state.customGrid?.color || "#8b5cf6";
+    openCustomRgbaPopover(cgColorBtn, curHex, (newHex) => {
+      const cg = ensureCustomGrid();
+      cg.color = newHex;
+      cg.autoColor = false;
+      const autoEl = /** @type {HTMLInputElement|null} */ (document.getElementById("chkPrefCustomGridAutoColor"));
+      if (autoEl) autoEl.checked = false;
+      cgColorBtn.style.opacity = "1";
+      syncSwatchButton("prefCustomGridColorBtn", newHex);
       saveUserPreferences();
       renderAll();
     });

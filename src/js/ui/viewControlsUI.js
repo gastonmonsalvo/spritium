@@ -35,6 +35,19 @@ export function toggleGrid() {
   setStatus({ key: state.showGrid ? "status.grid_on" : "status.grid_off" });
 }
 
+/** Alterna la visibilidad de la sub-grilla personalizable (N×M). */
+export function toggleCustomGrid() {
+  if (!state.customGrid) state.customGrid = { enabled: false, w: 16, h: 16, color: "#8b5cf6", autoColor: true, thickness: 1, opacity: 0.45, snap: false, lockCell: false };
+  state.customGrid.enabled = !state.customGrid.enabled;
+  saveUserPreferences();
+  syncViewTogglesUI();
+  renderAll();
+  setStatus({
+    key: state.customGrid.enabled ? "status.custom_grid_on" : "status.custom_grid_off",
+    params: { w: state.customGrid.w, h: state.customGrid.h },
+  });
+}
+
 /**
  * Muestra u oculta las reglas del lienzo.
  */

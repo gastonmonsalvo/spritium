@@ -269,3 +269,11 @@ button.tool-btn.active, .tool-btn.active {
   border-color: var(--accent-secondary);
 }
 
+.tool-btn:disabled,
+.tool-btn.is-disabled,
+.menu-action:disabled,
+.menu-action.is-disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+

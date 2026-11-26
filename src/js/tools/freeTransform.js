@@ -125,6 +125,7 @@ export function startFreeTransform() {
     originalGrid, baseOutOfBounds, ...data, hadSelection: hasSelection, mode: "scale", angleDeg: 0,
     corners: [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }],
     pivot: { x: x + w / 2, y: y + h / 2 },
+    pivotCustom: false,
   };
   renderFreeTransformPreview();
   updateToolOptionsUI();
@@ -251,27 +252,45 @@ export function getFreeTransformCursor(rawX, rawY, event) {
 /** Crea el controlador de interacción del mouse sobre el lienzo durante Transformación Libre. */
 export function createFreeTransformController() {
   let dragType = null, startPos = null, startCorners = null, startPivot = null, startAngle = 0;
+  const getCentroid = (c) => ({
+    x: (c[0].x + c[1].x + c[2].x + c[3].x) / 4,
+    y: (c[0].y + c[1].y + c[2].y + c[3].y) / 4,
+  });
+  const getBBox = (c) => {
+    const xs = c.map((p) => p.x), ys = c.map((p) => p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    return { minX, minY, w: maxX - minX, h: maxY - minY };
+  };
+
   return {
     onDown({ rawX, rawY, button, event }) {
       const ft = state.freeTransform;
       if (!ft || button !== 0) return false;
-      if (event?.altKey) {
+      const hit = hitTestFreeTransform(rawX, rawY);
+      if (event?.altKey || (hit === "pivot" && event?.detail === 2)) {
+        if (event?.detail === 2) {
+          ft.pivotCustom = false;
+          ft.pivot = getCentroid(ft.corners);
+          dragType = null;
+          renderAll();
+          return true;
+        }
         dragType = "pivot";
         const px = Math.round(rawX * 2) / 2, py = Math.round(rawY * 2) / 2;
         ft.pivot = { x: px, y: py };
+        ft.pivotCustom = true;
         startPos = { x: rawX, y: rawY };
         startCorners = ft.corners.map((c) => ({ ...c }));
         startPivot = { ...ft.pivot };
         renderAll();
         return true;
       }
-      dragType = hitTestFreeTransform(rawX, rawY);
+      dragType = hit;
       startPos = { x: rawX, y: rawY };
       startCorners = ft.corners.map((c) => ({ ...c }));
-      const cx = ft.pivot?.x ?? (startCorners[0].x + startCorners[1].x + startCorners[2].x + startCorners[3].x) / 4;
-      const cy = ft.pivot?.y ?? (startCorners[0].y + startCorners[1].y + startCorners[2].y + startCorners[3].y) / 4;
-      startPivot = { x: cx, y: cy };
-      startAngle = Math.atan2(rawY - cy, rawX - cx);
+      const center = ft.pivot || getCentroid(startCorners);
+      startPivot = { x: center.x, y: center.y };
+      startAngle = Math.atan2(rawY - center.y, rawX - center.x);
       return true;
     },
     onMove({ rawX, rawY, event }) {
@@ -284,23 +303,48 @@ export function createFreeTransformController() {
       if (dragType === "pivot") {
         const nx = startPivot.x + dx, ny = startPivot.y + dy;
         ft.pivot = isShift ? { x: Math.round(nx * 2) / 2, y: Math.round(ny * 2) / 2 } : { x: nx, y: ny };
+        ft.pivotCustom = true;
         renderAll();
         return true;
       } else if (dragType === "move") {
         ft.corners = isCtrl
           ? c.map((p, i) => ({ x: p.x + (i < 2 ? dx * 0.5 : -dx * 0.5), y: p.y }))
           : c.map((p) => ({ x: p.x + dx, y: p.y + dy }));
-        if (!isCtrl && startPivot) ft.pivot = { x: startPivot.x + dx, y: startPivot.y + dy };
+        if (!ft.pivotCustom) ft.pivot = getCentroid(ft.corners);
+        else if (!isCtrl && startPivot) ft.pivot = { x: startPivot.x + dx, y: startPivot.y + dy };
       } else if (dragType === "rot") {
-        const cx = startPivot?.x ?? (c[0].x + c[1].x + c[2].x + c[3].x) / 4;
-        const cy = startPivot?.y ?? (c[0].y + c[1].y + c[2].y + c[3].y) / 4;
+        const cx = startPivot?.x ?? getCentroid(c).x;
+        const cy = startPivot?.y ?? getCentroid(c).y;
         let delta = Math.atan2(rawY - cy, rawX - cx) - startAngle;
         if (isShift) delta = Math.round(delta / (Math.PI / 12)) * (Math.PI / 12);
         ft.corners = rotateCornersAroundPoint(c, delta, { x: cx, y: cy });
+        if (!ft.pivotCustom) ft.pivot = getCentroid(ft.corners);
       } else if (["tl", "tr", "br", "bl"].includes(dragType)) {
         ft.corners = applyCornerDrag(c, dragType, dx, dy, effectiveMode, isShift);
+        if (!ft.pivotCustom) {
+          ft.pivot = getCentroid(ft.corners);
+        } else if (startPivot) {
+          const b0 = getBBox(c), b1 = getBBox(ft.corners);
+          if (b0.w > 0 && b0.h > 0) {
+            ft.pivot = {
+              x: b1.minX + ((startPivot.x - b0.minX) / b0.w) * b1.w,
+              y: b1.minY + ((startPivot.y - b0.minY) / b0.h) * b1.h,
+            };
+          }
+        }
       } else if (["t", "r", "b", "l"].includes(dragType)) {
         ft.corners = applyEdgeDrag(c, dragType, dx, dy, effectiveMode, isCtrl);
+        if (!ft.pivotCustom) {
+          ft.pivot = getCentroid(ft.corners);
+        } else if (startPivot) {
+          const b0 = getBBox(c), b1 = getBBox(ft.corners);
+          if (b0.w > 0 && b0.h > 0) {
+            ft.pivot = {
+              x: b1.minX + ((startPivot.x - b0.minX) / b0.w) * b1.w,
+              y: b1.minY + ((startPivot.y - b0.minY) / b0.h) * b1.h,
+            };
+          }
+        }
       }
       renderFreeTransformPreview();
       renderAll();
