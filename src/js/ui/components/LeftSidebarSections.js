@@ -6,6 +6,7 @@
 import { i18n } from "../../i18n/I18nService.js";
 import {
   TOOL_GRID_ITEMS,
+  PENCIL_TOOL_ITEMS,
   LINE_STYLE_ITEMS,
   CURVE_POINT_PRESETS,
   SHAPE_SELECTOR_ITEMS,
@@ -61,8 +62,10 @@ function renderLineAndShapeOptions() {
   const curvePtsHtml = renderList(CURVE_POINT_PRESETS, (p) => `<button type="button" id="${p.id}" class="tool-btn${p.active ? " active" : ""}" data-action="setCurveControlPoints" data-action-arg="${p.count}" style="font-size: 10px; padding: 2px 7px" data-i18n-title="${p.titleKey}" title="${tAttr(p.titleKey)}">${p.count}</button>`);
   const shapeBtnsHtml = renderList(SHAPE_SELECTOR_ITEMS, (s) => `<button type="button" id="${s.id}" class="tool-btn${s.active ? " active" : ""}" data-action="setTool" data-action-arg="${s.tool}" style="flex: 1" data-i18n-title="${s.titleKey}" title="${tAttr(s.titleKey)}"><i data-lucide="${s.icon}" class="ui-icon-sm"></i></button>`);
   const selectShapeBtnsHtml = renderList(SELECT_SHAPE_ITEMS, (s) => `<button type="button" id="${s.id}" class="tool-btn${s.active ? " active" : ""}" data-action="setTool" data-action-arg="${s.tool}" style="flex: 1" data-i18n-title="${s.titleKey}" title="${tAttr(s.titleKey)}"><i data-lucide="${s.icon}" class="ui-icon-sm"></i></button>`);
+  const pencilBtnsHtml = renderList(PENCIL_TOOL_ITEMS, (p) => `<button type="button" id="${p.id}" class="tool-btn${p.active ? " active" : ""}" data-action="setTool" data-action-arg="${p.tool}" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="${p.titleKey}" title="${tAttr(p.titleKey)}"><i data-lucide="${p.icon}" class="ui-icon-sm"></i><span data-i18n="${p.labelKey}">${tAttr(p.labelKey)}</span></button>`);
   const polyBtnsHtml = renderList(POLY_TOOL_ITEMS, (p) => `<button type="button" id="${p.id}" class="tool-btn${p.active ? " active" : ""}" data-action="setTool" data-action-arg="${p.tool}" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="${p.titleKey}" title="${tAttr(p.titleKey)}"><i data-lucide="${p.icon}" class="ui-icon-sm"></i><span data-i18n="${p.labelKey}">${tAttr(p.labelKey)}</span></button>`);
   return `
+    <div id="optPencilSelector" style="display: none; gap: 4px">${pencilBtnsHtml}</div>
     <div id="optLineOptions" style="display: none; flex-direction: column; gap: 6px">
       <div id="optLineModeRow" style="display: flex; gap: 4px">
         <button type="button" id="lineModeStraight" class="tool-btn active" data-action="setLineMode" data-action-arg="straight" style="flex: 1; font-size: 10.5px; padding: 4px" data-i18n-title="title.line_straight" title="${tAttr("title.line_straight")}"><i data-lucide="slash" class="ui-icon-sm"></i><span data-i18n="opt.straight">${tAttr("opt.straight")}</span></button>
@@ -119,6 +122,7 @@ function renderBrushAndWandOptions() {
         <button type="button" id="btnCustomBrushMode" class="tool-btn" data-action="toggleCustomBrushColorMode" data-i18n="opt.ink_primary" style="display: none; font-size: 9.5px; padding: 2px 5px" data-i18n-title="title.ink_toggle" title="${tAttr("title.ink_toggle")}">${tAttr("opt.ink_primary")}</button>
       </div>
       <div id="brushPatternPresets" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px"></div>
+      <div id="brushDiagDirRow" style="display: none; gap: 4px"></div>
       <div id="customBrushPicker" class="brush-picker">
         <button type="button" id="btnCustomBrushDropdown" class="brush-picker-trigger" aria-expanded="false" aria-controls="customBrushDropdownMenu" data-i18n-title="title.custom_brush" title="${tAttr("title.custom_brush")}">
           <canvas id="activeCustomBrushThumb" class="brush-thumb-sm" width="18" height="18" style="display: none"></canvas>

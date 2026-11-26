@@ -133,6 +133,8 @@ export default {
   "panel.tileset": "Tileset / Tilemap",
   "panel.preview": "Vista 1:1",
   "tool.pencil": "Lápiz (B) — Pixel-Perfect",
+  "tool.pencil_short": "Lápiz",
+  "tool.spray_short": "Spray",
   "tool.eraser": "Goma (E)",
   "tool.bucket": "Tarro de pintura / Balde (T / F)",
   "tool.eyedropper": "Gotero (I)",

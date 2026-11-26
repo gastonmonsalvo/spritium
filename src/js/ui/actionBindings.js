@@ -164,6 +164,7 @@ export function registerAppActions() {
     toggleUiLogs: ui.toggleUiLogs,
     setTool: ui.setTool,
     setBrushSize: ui.setBrushSize,
+    selectActivePencilTool: ui.selectActivePencilTool,
     selectActiveShapeTool: ui.selectActiveShapeTool,
     selectActiveSelectTool: ui.selectActiveSelectTool,
     selectActivePolyTool: ui.selectActivePolyTool,

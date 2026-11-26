@@ -587,7 +587,7 @@ body.theme-win98 #toolEraser,
 body.theme-win98 #toolBucket,
 body.theme-win98 #toolEyedropper,
 body.theme-win98 #toolPencil,
-body.theme-win98 #toolSpray,
+body.theme-win98 #pencilBtnSpray,
 body.theme-win98 #toolLine,
 body.theme-win98 #lineModeCurve,
 body.theme-win98 #toolShapes,
@@ -602,7 +602,7 @@ body.theme-win98 #toolEraser svg.lucide,
 body.theme-win98 #toolBucket svg.lucide,
 body.theme-win98 #toolEyedropper svg.lucide,
 body.theme-win98 #toolPencil svg.lucide,
-body.theme-win98 #toolSpray svg.lucide,
+body.theme-win98 #pencilBtnSpray svg.lucide,
 body.theme-win98 #toolLine svg.lucide,
 body.theme-win98 #lineModeCurve svg.lucide,
 body.theme-win98 #toolShapes svg.lucide,
@@ -617,7 +617,7 @@ body.theme-win98 #toolEraser::before,
 body.theme-win98 #toolBucket::before,
 body.theme-win98 #toolEyedropper::before,
 body.theme-win98 #toolPencil::before,
-body.theme-win98 #toolSpray::before,
+body.theme-win98 #pencilBtnSpray::before,
 body.theme-win98 #toolLine::before,
 body.theme-win98 #lineModeCurve::before,
 body.theme-win98 #toolShapes::before,
@@ -636,7 +636,8 @@ body.theme-win98 #shapeBtnCircle::before {
   pointer-events: none;
 }
 
-body.theme-win98 #lineModeCurve::before {
+body.theme-win98 #lineModeCurve::before,
+body.theme-win98 #pencilBtnSpray::before {
   position: static;
   transform: none;
   flex-shrink: 0;
@@ -648,7 +649,8 @@ body.theme-win98 #toolEraser { --win98-icon: 2; }
 body.theme-win98 #toolBucket { --win98-icon: 3; }
 body.theme-win98 #toolEyedropper { --win98-icon: 4; }
 body.theme-win98 #toolPencil { --win98-icon: 6; }
-body.theme-win98 #toolSpray { --win98-icon: 8; }
+body.theme-win98 #toolPencil[data-active-tool="spray"],
+body.theme-win98 #pencilBtnSpray { --win98-icon: 8; }
 body.theme-win98 #toolLine { --win98-icon: 10; }
 body.theme-win98 #lineModeCurve { --win98-icon: 11; }
 body.theme-win98 #toolShapes { --win98-icon: 12; }

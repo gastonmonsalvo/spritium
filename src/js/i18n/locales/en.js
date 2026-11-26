@@ -131,6 +131,8 @@ export default {
   "panel.tileset": "Tileset / Tilemap",
   "panel.preview": "1:1 Preview",
   "tool.pencil": "Pencil (B) — Pixel-Perfect",
+  "tool.pencil_short": "Pencil",
+  "tool.spray_short": "Spray",
   "tool.eraser": "Eraser (E)",
   "tool.bucket": "Paint Bucket / Fill (T / F)",
   "tool.eyedropper": "Eyedropper (I)",
