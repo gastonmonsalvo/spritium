@@ -187,6 +187,17 @@ export const state = {
     showGuides: true,
     showBadge: true,
   },
+  customGrid: {
+    enabled: false,
+    w: 16,
+    h: 16,
+    color: "#8b5cf6",
+    autoColor: true,
+    thickness: 1,
+    opacity: 0.45,
+    snap: false,
+    lockCell: false,
+  },
   showPixelCursor: false,
   pixelCursorConfig: {
     opacity: 0.75,

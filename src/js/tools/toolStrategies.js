@@ -3,7 +3,7 @@
  */
 
 import { state, pushLayerState, cloneGrid, getGridDims, isSymmetryActive, getSymmetryPoints } from "../core/state.js";
-import { renderAll } from "../canvas/canvas.js";
+import { renderAll, zoomAtClientPoint } from "../canvas/canvas.js";
 import {
   applyToolAt,
   pickColorAt,
@@ -533,6 +533,18 @@ const sprayStrategy = (() => {
 const polygonStrategy = createPolygonStrategy();
 const contourStrategy = createContourStrategy();
 
+const zoomStrategy = {
+  onDown({ button, event }) {
+    if (button !== 0 && button !== 2) return;
+    const prevZoom = state.zoom || 1;
+    const step = prevZoom >= 4 ? 1 : prevZoom >= 2 ? 0.5 : 0.25;
+    const nextZoom = button === 2 ? prevZoom - step : prevZoom + step;
+    zoomAtClientPoint(nextZoom, event?.clientX ?? null, event?.clientY ?? null);
+  },
+  onMove() {},
+  onUp() {},
+};
+
 // --- TABLA DE DESPACHO STRATEGY ---
 export const TOOL_STRATEGIES = {
   pencil: strokeStrategy,
@@ -561,5 +573,6 @@ export const TOOL_STRATEGIES = {
   magicSelect: magicSelectStrategy,
   eyedropper: eyedropperStrategy,
   backgroundEraser: backgroundEraserStrategy,
+  zoom: zoomStrategy,
 };
 

@@ -520,6 +520,7 @@ export function setTool(toolName) {
       spray: "toolSpray",
       move: "toolMove",
       pan: "toolPan",
+      zoom: "toolZoom",
       shading: "toolShading",
       bucket: "toolBucket",
       eyedropper: "toolEyedropper",

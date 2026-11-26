@@ -19,12 +19,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Unified Ellipse / Circle (`C`) & Center-Out `Alt` Drawing:** implemented Zingl/Midpoint `drawMidpointEllipse` for free-aspect ellipses, holding `Shift` locks 1:1 circles/squares, and holding `Alt` draws shapes from the center across Rect, Ellipse/Circle, and Triangle (`resolveShapeBox`).
 - **Top & Bottom Docking for Frames (`#moduleFrames`):** Frames/Timeline can now dock at the top (below document tabs) or bottom of the workspace with `--accent-primary` violet drop highlights, automatically inverting the matrix resizer direction, collapse/reopen button placement, and chevron orientation.
 - **GIF Nearest-Neighbor Auto-Scale (`exportModal.js`):** added `10×` scale preset and automatic recommended integer scaling (`>= 256px`) when switching to GIF export.
+- **Advanced Outline Modal (`OutlineModal.js`, `morphologyOps.js`):** Aseprite-style 8-way neighborhood matrix, directional presets, `outside` / `inside` / `erode` modes, thickness `1–4`, and custom RGBA popover (`rgbaPopover.js`), replacing the old `+1px`/`-1px` split buttons.
+- **Interactive Preview Zoom & Pan (`previewZoom.js`):** mouse-wheel zoom (`1×–8×`), drag panning, double-click reset, and subtle hint text on modal preview canvases (`Outline`, `HSL`, `Drop Shadow`, `Noise`, `Import`).
+- **Zoom Tool (`Z`):** dedicated magnifying-glass tool in the toolbar (`left-click` zoom in, `right-click` zoom out toward cursor).
+- **Custom Sub-Grid (`N×M`), Snap & Lock Cell:** configurable sub-grid cell dimensions in Preferences and `View → Guides & Grid`, snapping for Selection/Shapes/Line/Move, and Lock-to-Cell painting for Pencil/Eraser/Bucket/Spray/Filters.
+- **Context-Sensitive Action Availability (`actionAvailability.js`):** declarative `ACTION_GUARDS` that automatically disable invalid actions (empty canvas, locked/folder layer, empty undo/redo stack, single frame/layer, no selection) with explanatory tooltips.
 - **Documentation & Showcase:** added app screenshot (`src/assets/screenshot.jpg`), browser/Android support table, collapsible `<details>` FAQ, MIT/Discord/Browser badges, and VS Code Live Server local setup instructions in `README.md` & `README.es.md`.
 
 ### Changed
+- **Grouped Top Menus (`TopMenuConfig.js`, `menus.js`):** nested Export formats under `File → Export ▸` and organized `View` into `Guides & Grid ▸`, `Symmetry & Tiled ▸`, `Zoom ▸`, and `Panels & Interface ▸`, with smart viewport-edge submenu flipping.
+- **Preferences Modal (`PreferencesModal.js`):** reorganized into a 2-column category sidebar (`General`, `Mouse Reticle`, `Pixel Cursor`, `Canvas & Guides`) with complete Windows 98 modal/input styling.
+- **Unified Diagonal Brush Toggle (`customBrushStore.js`, `customBrushesUI.js`):** unified `/` (`diag`) and `\` (`diag2`) into a single toggling Diagonal preset button in the 4-button row.
 - **Palette Labels:** renamed `DMG-01 (Game Boy)` → `DMG-01 (Classic Handheld)` / `DMG-01 (Portátil Clásica)` and `Indexed (16)` → `Starter 16 (Base Palette)` / `Starter 16 (Paleta Base)` without altering internal IDs.
 
 ### Fixed
+- **Even-Sized Brush Centering (`canvas.js`):** `pencil` and `eraser` brushes with even pixel sizes (`2, 4, 6, ...`) now center on pixel intersections (`Math.round(raw / cellSize) - 1`) instead of feeling offset.
 - **Free Transform Pivot Tracking (`freeTransform.js`):** auto-centered pivot now follows `ft.corners` across move, scale, rotate, and skew; manually moved pivots (`pivotCustom`) scale proportionally inside the bounding box and reset to center on double-click.
 - **Floating 1:1 Preview (`#modulePreview`) Layout & Container Query:** locked floating bounds (`144px × 136px` minimum, `152px` default), prevented header icon overflow via `overflow: hidden`, and added a CSS Container Query that cleanly switches `"1:1 Preview"` / `"Vista 1:1"` to `"1:1"` at compact widths.
 - **Docking Drag Offset, Reset & Frames Dragging:** scaled `offsetX` proportionally on first drag frame when floating modules resize, cleared inline dimensions/anchors on **View → Reset Panels**, wired `#btnFloatFrames` outside `#framesModuleHeader`, added side-edge highlight feedback, and made dragging `#timelineResizer` from collapsed expand smoothly from `0px`.

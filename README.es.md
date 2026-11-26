@@ -36,9 +36,9 @@
 * **Exportación Multi-Formato:** vista previa en vivo, escala *Nearest-Neighbor* (`1×–16×`), **GIF Animado** (LZW 100% client-side), **Tira PNG** (`Fila` / `Columna` / `Grilla N×M`), **Atlas (PNG + JSON)** y archivos de proyecto `.spritium`.
 
 ### 3. Herramientas, Simetría 2.0 y Guías de Precisión
-* **Herramientas y Pinceles Custom:** **Lápiz (`B`)** con **Pixel-Perfect**, **Línea (`L`)** (recta a 45° o curvas Bézier), **Formas (`R`/`C`/`U`)**, **Polígono (`N`) y Contorno (`O`)** con relleno Scanline Even-Odd, **Tarro (`T`/`F`)**, **Shading OKLab (`K`)**, **Blur / Jumble / Ruido** (`Mono` / `Color` / `B&N`), **Spray**, **Gotero (`I`)**, **Goma (`E`)** y pinceles propios `.sbrush.json`.
+* **Herramientas y Pinceles Custom:** **Lápiz (`B`)** con **Pixel-Perfect**, **Línea (`L`)** (recta a 45° o curvas Bézier), **Formas (`R`/`C`/`U`)** (`Alt` desde el centro), **Polígono (`N`) y Contorno (`O`)** con relleno Scanline Even-Odd, **Tarro (`T`/`F`)**, **Shading OKLab (`K`)**, **Blur / Jumble / Ruido** (`Mono` / `Color` / `B&N`), **Spray**, **Gotero (`I`)**, **Goma (`E`)**, **Lupa (`Z` / `1–8` / `0`)**, **Contorno Avanzado (8 direcciones)** y pinceles propios `.sbrush.json`.
 * **Simetría 2.0:** Horizontal (`X`), Vertical (`Y`), Diagonales (`╲` / `╱`) y Radial (`90°` / `45°`), con modo de centro **par (2px) / impar (1px corazón)**, posicionamiento libre del eje (`Alt+Clic/Arrastrar` o coordenadas) y centrado sobre selección.
-* **Reglas, Guías y Fondo de Trabajo:** reglas en píxeles, guías arrastrables y fondo personalizable con picker RGBA/Alpha y alternancia Damero ↔ Sólido.
+* **Reglas, Sub-Grilla (`N×M`), Snap y Fondo de Trabajo:** reglas en píxeles, guías arrastrables, sub-grilla `N×M` con ajuste (*snap*) y bloqueo a celda, y fondo personalizable con picker RGBA/Alpha y alternancia Damero ↔ Sólido.
 * **Color RGBA y Paletas:** soporte completo `#RRGGBBAA`, Rueda HSV con armonías cromáticas e importación/exportación `.hex`, `.gpl`, `.pal` y `.json`.
 * **Selección Booleana y Mira CS:** Rectángulo, Elipse y Triángulo (`S`), Lazo (`Q`), Varita Mágica (`W`), Transformación Libre (`Shift+T`), vista previa en vivo (`V`) y códigos compartibles de mira (`SPR-XXXX-XXXX-XXXX`).
 

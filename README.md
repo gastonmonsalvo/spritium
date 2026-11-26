@@ -36,9 +36,9 @@
 * **Multi-Format Export:** live preview, *Nearest-Neighbor* scaling (`1×–16×`), **Animated GIF** (100% client-side LZW), **PNG Strip** (`Row` / `Column` / `Grid N×M`), **Atlas (PNG + JSON)**, and `.spritium` project files.
 
 ### 3. Drawing Tools, Symmetry 2.0 & Precision Guides
-* **Tools & Custom Brushes:** **Pencil (`B`)** with **Pixel-Perfect**, **Line (`L`)** (45° snap or Bézier curves), **Shapes (`R`/`C`/`U`)**, **Polygon (`N`) & Contour (`O`)** with Scanline Even-Odd fill, **Bucket (`T`/`F`)**, **OKLab Shading (`K`)**, **Blur / Jumble / Noise** (`Mono` / `RGB` / `B&W`), **Spray**, **Eyedropper (`I`)**, **Eraser (`E`)**, and custom `.sbrush.json` brushes.
+* **Tools & Custom Brushes:** **Pencil (`B`)** with **Pixel-Perfect**, **Line (`L`)** (45° snap or Bézier curves), **Shapes (`R`/`C`/`U`)** (`Alt` center-out), **Polygon (`N`) & Contour (`O`)** with Scanline Even-Odd fill, **Bucket (`T`/`F`)**, **OKLab Shading (`K`)**, **Blur / Jumble / Noise** (`Mono` / `RGB` / `B&W`), **Spray**, **Eyedropper (`I`)**, **Eraser (`E`)**, **Zoom (`Z` / `1–8` / `0`)**, **Advanced 8-way Outline**, and custom `.sbrush.json` brushes.
 * **Symmetry 2.0:** Horizontal (`X`), Vertical (`Y`), Diagonals (`╲` / `╱`), and Radial (`90°` / `45°`), with **2px even / 1px odd (Heart)** center modes, free axis positioning (`Alt+Click/Drag` or coordinates), and selection-centered symmetry.
-* **Rulers, Guides & Workspace Background:** pixel rulers, draggable reference guides, and customizable workspace background (RGBA/Alpha picker + Checkerboard/Solid toggle).
+* **Rulers, Sub-Grid (`N×M`), Snap & Workspace Background:** pixel rulers, draggable reference guides, custom `N×M` sub-grid with tool snapping and Lock-to-Cell painting, plus customizable workspace background (RGBA/Alpha picker + Checkerboard/Solid toggle).
 * **RGBA Color & Palette Tools:** full `#RRGGBBAA`, HSV Wheel with color harmonies, and `.hex` / `.gpl` / `.pal` / `.json` import/export.
 * **Boolean Selection & CS Crosshair:** Rectangle, Ellipse & Triangle (`S`), Lasso (`Q`), Magic Wand (`W`), Free Transform (`Shift+T`), live tool preview (`V`), and shareable CS-style mouse reticle codes (`SPR-XXXX-XXXX-XXXX`).
 

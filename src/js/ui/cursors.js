@@ -112,6 +112,7 @@ export function getToolCursorCss(toolName = state.currentTool) {
   const reticle = buildReticleCursor(state.reticleConfig);
   if (toolName === "move") return "move";
   if (toolName === "pan") return "grab";
+  if (toolName === "zoom") return "zoom-in";
   if (toolName === "eyedropper") return buildLucideButtonCursor("toolEyedropper", 1, 14, CURSOR_EYEDROPPER, 16);
   if (toolName === "bucket" || toolName === "fill") return buildLucideButtonCursor("toolBucket", 2, 13, reticle, 16);
   if (toolName === "magicSelect") return buildLucideButtonCursor("toolMagicSelect", 13, 3, reticle, 16);

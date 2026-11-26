@@ -282,10 +282,7 @@ export function renderUtilityModules() {
         </div>
         <div class="transform-group">
           <div class="transform-sublabel" data-i18n="section.edges_align">${tAttr("section.edges_align")}</div>
-          <div style="display: flex; gap: 4px">
-            <button type="button" class="tool-btn" data-action="outlineAction" style="flex: 1" data-i18n-title="title.outline_p1" title="${tAttr("title.outline_p1")}"><i data-lucide="square-plus" class="ui-icon-sm"></i><span>+1px</span></button>
-            <button type="button" class="tool-btn" data-action="erodeOutlineAction" style="flex: 1" data-i18n-title="title.erode_m1" title="${tAttr("title.erode_m1")}"><i data-lucide="square-minus" class="ui-icon-sm"></i><span>-1px</span></button>
-          </div>
+          <button type="button" class="tool-btn" data-action="outlineAction" style="width: 100%" data-i18n-title="menu.canvas.outline_advanced" title="${tAttr("menu.canvas.outline_advanced")}"><i data-lucide="square-dashed" class="ui-icon-sm"></i><span data-i18n="btn.outline">${tAttr("btn.outline")}</span></button>
           <div style="display: flex; gap: 4px; margin-top: 4px">${alignBtnsHtml}</div>
         </div>
       </div>

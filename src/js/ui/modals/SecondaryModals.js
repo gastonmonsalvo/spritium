@@ -16,7 +16,9 @@ import { renderNoiseModal } from "./NoiseModal.js";
 import { renderNormalMapModal } from "./NormalMapModal.js";
 import { renderHslModal } from "./HslModal.js";
 import { renderDropShadowModal } from "./DropShadowModal.js";
+import { renderOutlineModal } from "./OutlineModal.js";
 import { renderConfirmModal } from "./ConfirmModal.js";
+import { initModalPreviewZooms } from "../previewZoom.js";
 
 /**
  * Monta en `#secondaryModalsMount` los modales secundarios si todavía no fueron insertados.
@@ -38,7 +40,9 @@ export function mountSecondaryModals() {
     renderNormalMapModal(),
     renderHslModal(),
     renderDropShadowModal(),
+    renderOutlineModal(),
     renderConfirmModal(),
   ].join("");
   mount.dataset.mounted = "true";
+  initModalPreviewZooms();
 }

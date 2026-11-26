@@ -203,7 +203,11 @@ function buildPatternIconSvg(patternId) {
   const rects = [];
   for (let y = 0; y < 4; y++) {
     for (let x = 0; x < 4; x++) {
-      const on = patternId === "checker" ? ((x + y) & 1) === 0 : (x + y) % 3 === 0;
+      const on = patternId === "checker"
+        ? ((x + y) & 1) === 0
+        : patternId === "diag2"
+          ? (((x - y) % 3) + 3) % 3 === 0
+          : (x + y) % 3 === 0;
       if (on) rects.push(`<rect x="${x * 3}" y="${y * 3}" width="2.4" height="2.4"/>`);
     }
   }
@@ -222,14 +226,27 @@ export function renderCustomBrushesUI() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.dataset.patternId = p.id;
-      btn.className = `tool-btn${activePat === p.id ? " active" : ""}`;
-      btn.style.cssText = "padding: 4px 2px; display: inline-flex; align-items: center; justify-content: center;";
-      const label = i18n.t(p.labelKey);
-      const title = i18n.t(p.titleKey);
+      const isDiagGroup = p.id === "diag" && (activePat === "diag" || activePat === "diag2");
+      const isActive = isDiagGroup || activePat === p.id;
+      btn.className = `tool-btn${isActive ? " active" : ""}`;
+      btn.style.cssText = "position: relative; padding: 4px 2px; display: inline-flex; align-items: center; justify-content: center;";
+      const effectivePat = isDiagGroup ? activePat : p.id;
+      const label = i18n.t(effectivePat === "diag2" ? "brush.pat_diag2" : p.labelKey);
+      const title = i18n.t(effectivePat === "diag2" ? "brush.pat_diag2_title" : p.titleKey);
       btn.title = `${label} — ${title}`;
       btn.setAttribute("aria-label", label);
-      btn.innerHTML = buildPatternIconSvg(p.id);
-      btn.addEventListener("click", () => setBrushPattern(p.id));
+      const toggleHint = p.id === "diag"
+        ? `<span aria-hidden="true" style="position:absolute; right:2px; bottom:1px; font-size:8px; line-height:1; opacity:0.8;">⇄</span>`
+        : "";
+      btn.innerHTML = buildPatternIconSvg(effectivePat) + toggleHint;
+      btn.addEventListener("click", () => {
+        if (p.id === "diag" && !state.activeCustomBrushId) {
+          setBrushPattern(state.activeBrushPattern === "diag" ? "diag2" : "diag");
+          renderCustomBrushesUI();
+          return;
+        }
+        setBrushPattern(p.id);
+      });
       patContainer.appendChild(btn);
     }
   }

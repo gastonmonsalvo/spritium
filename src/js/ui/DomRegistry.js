@@ -118,7 +118,13 @@ export function initDeclarativeActions(root = typeof document !== "undefined" ? 
     }
 
     const el = target?.closest?.("[data-action]");
-    if (el) invokeAction(el, "data-action", e);
+    if (el) {
+      if (el.disabled || el.classList.contains("is-disabled") || el.getAttribute("aria-disabled") === "true") {
+        e.preventDefault();
+        return;
+      }
+      invokeAction(el, "data-action", e);
+    }
   });
 
   root.addEventListener("change", (e) => {

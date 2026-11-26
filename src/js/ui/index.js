@@ -17,6 +17,7 @@ export * from "./DomTranslator.js";
 export * from "./colorWheel.js";
 export * from "./rgbaPopover.js";
 export * from "./DomRegistry.js";
+export * from "./actionAvailability.js";
 export * from "./modals/PrimaryModals.js";
 export * from "./modals/SecondaryModals.js";
 export * from "./components/LauncherView.js";

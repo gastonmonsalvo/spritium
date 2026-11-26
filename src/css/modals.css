@@ -283,6 +283,132 @@
   flex-direction: column;
 }
 
+/* --- MODAL DE PREFERENCIAS CON CATEGORÍAS --- */
+.pref-modal-card {
+  width: min(680px, 94vw);
+  max-width: 680px;
+  max-height: 86vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pref-layout {
+  display: grid;
+  grid-template-columns: 174px minmax(0, 1fr);
+  gap: 16px;
+  min-height: 300px;
+  max-height: calc(86vh - 125px);
+  overflow: hidden;
+}
+
+.pref-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid var(--border-subtle);
+  padding-right: 12px;
+}
+
+.pref-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.pref-nav-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.pref-nav-btn.active {
+  background: var(--accent-primary-bg, rgba(139, 92, 246, 0.14));
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+.pref-content {
+  overflow-y: auto;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.pref-panel {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.pref-panel.active {
+  display: flex;
+}
+
+@media (max-width: 640px) {
+  .pref-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .pref-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
+
+  .pref-nav-btn {
+    width: auto;
+    white-space: nowrap;
+  }
+}
+
+.outline-dir-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  gap: 4px;
+}
+
+.outline-dir-btn {
+  width: 30px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.outline-dir-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+.outline-dir-center {
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
 .help-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));

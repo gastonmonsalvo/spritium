@@ -5,6 +5,7 @@
 import { refreshIcons } from "./status.js";
 import { i18n } from "../i18n/I18nService.js";
 import { resetWin98EasterEggClicks } from "./theme.js";
+import { syncActionAvailability } from "./actionAvailability.js";
 
 /** Abre el modal de atajos de teclado y refresca sus íconos. */
 export function openHelpModal() {
@@ -164,7 +165,39 @@ export function setupTopMenu() {
   if (!topMenu) return;
 
   const items = Array.from(topMenu.querySelectorAll(".menu-item"));
-  const closeAll = () => items.forEach((item) => item.classList.remove("open"));
+  const closeAll = () => {
+    items.forEach((item) => item.classList.remove("open"));
+    topMenu.querySelectorAll(".menu-submenu-item.submenu-open").forEach((s) => s.classList.remove("submenu-open"));
+  };
+
+  topMenu.querySelectorAll(".menu-submenu-item").forEach((subItem) => {
+    const subMenu = /** @type {HTMLElement | null} */ (subItem.querySelector(":scope > .menu-submenu"));
+    const triggerBtn = subItem.querySelector(":scope > .menu-action");
+    const fitSubmenu = () => {
+      if (!subMenu) return;
+      subMenu.classList.remove("submenu-flip-left");
+      const vw = typeof window !== "undefined" ? window.innerWidth : 0;
+      if (!vw || vw <= 860) return;
+      const r = subMenu.getBoundingClientRect();
+      if (r.right > vw - 8) subMenu.classList.add("submenu-flip-left");
+    };
+    subItem.addEventListener("mouseenter", fitSubmenu);
+    subItem.addEventListener("focusin", fitSubmenu);
+    triggerBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isMobile = typeof window !== "undefined" && window.innerWidth <= 860;
+      if (isMobile) {
+        subItem.classList.toggle("submenu-open");
+      } else {
+        topMenu.querySelectorAll(".menu-submenu-item.submenu-open").forEach((s) => {
+          if (s !== subItem) s.classList.remove("submenu-open");
+        });
+        subItem.classList.add("submenu-open");
+        fitSubmenu();
+      }
+    });
+  });
 
   const syncDropdownScrollHints = (dropdown) => {
     if (!dropdown) return;
@@ -214,6 +247,7 @@ export function setupTopMenu() {
       const wasOpen = item.classList.contains("open");
       closeAll();
       if (!wasOpen) {
+        syncActionAvailability();
         item.classList.add("open");
         fitDropdownInViewport(item);
       }
@@ -228,7 +262,7 @@ export function setupTopMenu() {
     });
   });
 
-  topMenu.querySelectorAll(".menu-action").forEach((btn) => {
+  topMenu.querySelectorAll('.menu-action:not([aria-haspopup="true"])').forEach((btn) => {
     btn.addEventListener("click", () => closeAll());
   });
 
@@ -246,6 +280,7 @@ export function setupTopMenu() {
     if (!menuEl || !btnEl) return;
     btnEl.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (!menuEl.classList.contains("open")) syncActionAvailability();
       menuEl.classList.toggle("open");
     });
     menuEl.querySelectorAll(".menu-action").forEach((b) => {

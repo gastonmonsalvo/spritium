@@ -54,7 +54,7 @@ const CLOSE_MODAL_IDS = [
 const SINGLE_KEY_TOOL_MAP = {
   s: "select", q: "lasso", w: "magicSelect", b: "pencil", l: "line",
   r: "rect", c: "circle", u: "triangle", n: "polygon", o: "contour",
-  m: "move", h: "pan",
+  m: "move", h: "pan", z: "zoom",
   k: "shading", i: "eyedropper", f: "bucket", t: "bucket", e: "eraser", d: "backgroundEraser",
 };
 

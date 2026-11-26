@@ -21,6 +21,7 @@ export const TOOL_GRID_ITEMS = [
 
   { id: "toolMove", icon: "move", titleKey: "tool.move", aria: "Mover [M]", action: "setTool", arg: "move" },
   { id: "toolPan", icon: "hand", titleKey: "tool.pan", aria: "Mano [H]", action: "setTool", arg: "pan" },
+  { id: "toolZoom", icon: "zoom-in", titleKey: "tool.zoom", aria: "Lupa [Z]", action: "setTool", arg: "zoom" },
   { id: "toolFilterBrush", icon: "droplet", titleKey: "tool.filters", aria: "Blur / Jumble", action: "selectActiveFilterTool" },
   { id: "toolSpray", icon: "spray-can", titleKey: "tool.spray", aria: "Spray", action: "setTool", arg: "spray" },
 ];

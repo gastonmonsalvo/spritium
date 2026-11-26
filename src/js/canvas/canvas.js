@@ -338,8 +338,10 @@ export function getGridCoordinates(e, canvasElement, { unclampedTiled = false, u
   const rawX = (e.clientX - rect.left) * scaleX;
   const rawY = (e.clientY - rect.top) * scaleY;
 
-  const x = Math.floor(rawX / cellSize);
-  const y = Math.floor(rawY / cellSize);
+  const bSize = Math.max(1, Math.round(Number(state.brushSize) || 1));
+  const useEvenCenter = (state.currentTool === "pencil" || state.currentTool === "eraser") && !state.activeCustomBrushId && bSize % 2 === 0;
+  const x = useEvenCenter ? Math.round(rawX / cellSize) - 1 : Math.floor(rawX / cellSize);
+  const y = useEvenCenter ? Math.round(rawY / cellSize) - 1 : Math.floor(rawY / cellSize);
 
   const tiledX = state.tiledMode === "x" || state.tiledMode === "both";
   const tiledY = state.tiledMode === "y" || state.tiledMode === "both";

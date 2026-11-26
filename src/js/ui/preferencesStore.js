@@ -44,6 +44,17 @@ export const DEFAULT_USER_PREFS = Object.freeze({
     showGuides: true,
     showBadge: true,
   }),
+  customGrid: Object.freeze({
+    enabled: false,
+    w: 16,
+    h: 16,
+    color: "#8b5cf6",
+    autoColor: true,
+    thickness: 1,
+    opacity: 0.45,
+    snap: false,
+    lockCell: false,
+  }),
 });
 
 function isHexColor(v) {
@@ -73,6 +84,7 @@ export function normalizeUserPreferences(raw) {
   const cfg = raw?.pixelCursorConfig || {};
   const ret = raw?.reticleConfig || {};
   const gcoords = raw?.gridCoordsConfig || {};
+  const cgrid = raw?.customGrid || {};
   const opacity = Math.max(0.2, Math.min(1, Number(cfg.opacity ?? DEFAULT_USER_PREFS.pixelCursorConfig.opacity) || 0.75));
   const activeColorAlpha = Math.max(0.1, Math.min(1, Number(cfg.activeColorAlpha ?? DEFAULT_USER_PREFS.pixelCursorConfig.activeColorAlpha) || 0.75));
   const gcOpacity = Math.max(0.05, Math.min(0.6, Number(gcoords.opacity ?? DEFAULT_USER_PREFS.gridCoordsConfig.opacity) || 0.14));
@@ -126,6 +138,17 @@ export function normalizeUserPreferences(raw) {
       showGuides: typeof gcoords.showGuides === "boolean" ? gcoords.showGuides : DEFAULT_USER_PREFS.gridCoordsConfig.showGuides,
       showBadge: typeof gcoords.showBadge === "boolean" ? gcoords.showBadge : DEFAULT_USER_PREFS.gridCoordsConfig.showBadge,
     },
+    customGrid: {
+      enabled: typeof cgrid.enabled === "boolean" ? cgrid.enabled : DEFAULT_USER_PREFS.customGrid.enabled,
+      w: Math.max(2, Math.min(256, Math.round(Number(cgrid.w ?? DEFAULT_USER_PREFS.customGrid.w) || 16))),
+      h: Math.max(2, Math.min(256, Math.round(Number(cgrid.h ?? DEFAULT_USER_PREFS.customGrid.h) || 16))),
+      color: isHexColor(cgrid.color) ? cgrid.color.trim() : DEFAULT_USER_PREFS.customGrid.color,
+      autoColor: typeof cgrid.autoColor === "boolean" ? cgrid.autoColor : DEFAULT_USER_PREFS.customGrid.autoColor,
+      thickness: Math.max(1, Math.min(3, Math.round((Number(cgrid.thickness ?? DEFAULT_USER_PREFS.customGrid.thickness) || 1) * 2) / 2)),
+      opacity: Math.max(0.1, Math.min(1, Number(cgrid.opacity ?? DEFAULT_USER_PREFS.customGrid.opacity) || 0.45)),
+      snap: typeof cgrid.snap === "boolean" ? cgrid.snap : DEFAULT_USER_PREFS.customGrid.snap,
+      lockCell: typeof cgrid.lockCell === "boolean" ? cgrid.lockCell : DEFAULT_USER_PREFS.customGrid.lockCell,
+    },
   };
 }
 
@@ -143,6 +166,7 @@ export function getUserPreferencesPayload() {
     pixelCursorConfig: state.pixelCursorConfig,
     reticleConfig: state.reticleConfig,
     gridCoordsConfig: state.gridCoordsConfig,
+    customGrid: state.customGrid,
   });
 }
 
@@ -154,6 +178,7 @@ export function syncViewTogglesUI() {
     document.getElementById(id)?.classList.toggle("active", Boolean(active));
   };
   toggleActive("menuGrid", state.showGrid !== false);
+  toggleActive("menuCustomGrid", Boolean(state.customGrid?.enabled));
   toggleActive("menuCenterGuides", state.showCenterGuides !== false);
   toggleActive("menuCenterRulerMarks", state.showCenterRulerMarks !== false);
   toggleActive("menuRulers", state.showRulers !== false);
@@ -189,6 +214,7 @@ export function applyUserPreferencesObject(raw, { persist = true } = {}) {
   state.pixelCursorConfig = { ...prefs.pixelCursorConfig };
   state.reticleConfig = { ...prefs.reticleConfig };
   state.gridCoordsConfig = { ...prefs.gridCoordsConfig };
+  state.customGrid = { ...prefs.customGrid };
 
   if (persist) saveUserPreferences();
   syncViewTogglesUI();

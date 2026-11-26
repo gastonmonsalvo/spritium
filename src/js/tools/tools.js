@@ -107,6 +107,7 @@ function matchesBrushPattern(x, y, pattern) {
   if (!pattern || pattern === "solid") return true;
   if (pattern === "checker") return ((x + y) & 1) === 0;
   if (pattern === "diag") return (((x + y) % 3) + 3) % 3 === 0;
+  if (pattern === "diag2") return (((x - y) % 3) + 3) % 3 === 0;
   if (pattern === "dots") return (x & 1) === 0 && (y & 1) === 0;
   return true;
 }
