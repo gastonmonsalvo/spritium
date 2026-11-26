@@ -217,6 +217,10 @@ export const state = {
     stepY: 8,
     checkerContrast: 14,
   },
+  rulerConfig: {
+    mode: "auto",
+    step: 8,
+  },
   showPixelCursor: false,
   pixelCursorConfig: {
     opacity: 0.75,

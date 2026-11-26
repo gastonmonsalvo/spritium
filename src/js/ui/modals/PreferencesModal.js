@@ -105,10 +105,6 @@ export function renderPreferencesModal() {
                     <i data-lucide="upload" class="ui-icon-sm"></i>
                     <span data-i18n="pref.config_import">${escapeHtml(i18n.t("pref.config_import"))}</span>
                   </button>
-                  <button type="button" class="btn-subtle-danger" data-action="resetAllUserConfig" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;">
-                    <i data-lucide="rotate-ccw" class="ui-icon-sm"></i>
-                    <span data-i18n="pref.config_reset_all">${escapeHtml(i18n.t("pref.config_reset_all"))}</span>
-                  </button>
                 </div>
               </div>
             </section>
@@ -238,6 +234,24 @@ export function renderPreferencesModal() {
                 <input type="checkbox" id="chkPrefShowRulers" />
                 <span data-i18n="pref.show_rulers">${escapeHtml(i18n.t("pref.show_rulers"))}</span>
               </label>
+              <div style="display: flex; align-items: center; gap: 8px; padding-left: 22px; flex-wrap: wrap;">
+                <label for="prefRulerMode" style="color: var(--text-secondary);" data-i18n="pref.ruler_step_mode">${escapeHtml(i18n.t("pref.ruler_step_mode"))}</label>
+                <select id="prefRulerMode" style="padding: 3px 6px;">
+                  <option value="auto" data-i18n="pref.ruler_mode_auto">${escapeHtml(i18n.t("pref.ruler_mode_auto"))}</option>
+                  <option value="fixed" data-i18n="pref.ruler_mode_fixed">${escapeHtml(i18n.t("pref.ruler_mode_fixed"))}</option>
+                </select>
+                <div id="prefRulerStepWrap" style="display: none; align-items: center; gap: 4px;">
+                  <select id="prefRulerStep" style="padding: 3px 6px;">
+                    <option value="1">1 px</option>
+                    <option value="2">2 px</option>
+                    <option value="4">4 px</option>
+                    <option value="8">8 px</option>
+                    <option value="16">16 px</option>
+                    <option value="32">32 px</option>
+                    <option value="64">64 px</option>
+                  </select>
+                </div>
+              </div>
               <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="chkPrefShowGridCoords" />
                 <span data-i18n="pref.show_grid_coords">${escapeHtml(i18n.t("pref.show_grid_coords"))}</span>
@@ -328,7 +342,10 @@ export function renderPreferencesModal() {
         </div>
 
         <div class="modal-actions" style="justify-content: space-between;">
-          <button type="button" id="btnResetPreferences" class="btn-subtle-danger" data-i18n="pref.reset">${escapeHtml(i18n.t("pref.reset"))}</button>
+          <button type="button" class="btn-subtle-danger" data-action="resetAllUserConfig" style="display: inline-flex; align-items: center; gap: 6px;">
+            <i data-lucide="rotate-ccw" class="ui-icon-sm"></i>
+            <span data-i18n="pref.config_reset_all">${escapeHtml(i18n.t("pref.config_reset_all"))}</span>
+          </button>
           <button type="button" class="btn-primary" data-action="closePreferencesModal" data-i18n="common.close">${escapeHtml(i18n.t("common.close"))}</button>
         </div>
       </div>

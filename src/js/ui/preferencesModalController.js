@@ -99,6 +99,11 @@ export function syncPreferencesModalControls() {
   setChecked("chkPrefShowCenterGuides", state.showCenterGuides !== false);
   setChecked("chkPrefShowCenterRulerMarks", state.showCenterRulerMarks !== false);
   setChecked("chkPrefShowRulers", state.showRulers !== false);
+  const rCfg = state.rulerConfig || DEFAULT_USER_PREFS.rulerConfig;
+  setVal("prefRulerMode", rCfg.mode === "fixed" ? "fixed" : "auto");
+  setVal("prefRulerStep", String(rCfg.step || 8));
+  const rStepWrap = document.getElementById("prefRulerStepWrap");
+  if (rStepWrap) rStepWrap.style.display = rCfg.mode === "fixed" ? "inline-flex" : "none";
   setChecked("chkPrefShowGridCoords", Boolean(state.showGridCoords));
   const gc = state.gridCoordsConfig || DEFAULT_USER_PREFS.gridCoordsConfig;
   setChecked("chkPrefGridCoordsGuides", gc.showGuides !== false);
@@ -358,6 +363,26 @@ export function initPreferencesModal() {
   bindCheck("chkPrefShowCenterGuides", (v) => { state.showCenterGuides = v; });
   bindCheck("chkPrefShowCenterRulerMarks", (v) => { state.showCenterRulerMarks = v; });
   bindCheck("chkPrefShowRulers", (v) => { state.showRulers = v; });
+  const ensureRulerCfg = () => {
+    if (!state.rulerConfig) state.rulerConfig = { ...DEFAULT_USER_PREFS.rulerConfig };
+    return state.rulerConfig;
+  };
+  const rModeEl = /** @type {HTMLSelectElement|null} */ (document.getElementById("prefRulerMode"));
+  rModeEl?.addEventListener("change", () => {
+    const mode = rModeEl.value === "fixed" ? "fixed" : "auto";
+    ensureRulerCfg().mode = mode;
+    const wrap = document.getElementById("prefRulerStepWrap");
+    if (wrap) wrap.style.display = mode === "fixed" ? "inline-flex" : "none";
+    saveUserPreferences();
+    renderAll();
+  });
+  const rStepEl = /** @type {HTMLSelectElement|null} */ (document.getElementById("prefRulerStep"));
+  rStepEl?.addEventListener("change", () => {
+    const step = Math.max(1, Math.min(64, Math.round(Number(rStepEl.value) || 8)));
+    ensureRulerCfg().step = step;
+    saveUserPreferences();
+    renderAll();
+  });
   bindCheck("chkPrefShowGridCoords", (v) => { state.showGridCoords = v; });
   bindCheck("chkPrefGridCoordsGuides", (v) => {
     state.gridCoordsConfig = { ...DEFAULT_USER_PREFS.gridCoordsConfig, ...state.gridCoordsConfig, showGuides: v };
@@ -611,5 +636,4 @@ export function initPreferencesModal() {
   bindPixelSwatch("prefMagicColorBtn", "magicPreviewColor", "#f472b644");
   bindPixelSwatch("prefBgEraserColorBtn", "bgEraserPreviewColor", "#fb718544");
 
-  document.getElementById("btnResetPreferences")?.addEventListener("click", resetUserPreferences);
 }

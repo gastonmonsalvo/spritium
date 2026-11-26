@@ -13,6 +13,19 @@ function getTickStep(gridSize, cellPx) {
   return step;
 }
 
+function resolveRulerSteps(gridSize, cellPx) {
+  const cfg = state.rulerConfig;
+  if (cfg?.mode === "fixed") {
+    const requested = Math.max(1, Math.min(64, Math.round(Number(cfg.step) || 8)));
+    const tickMult = Math.max(1, Math.ceil(3 / Math.max(0.5, requested * cellPx)));
+    const tickStep = requested * tickMult;
+    const labelMult = Math.max(1, Math.ceil(28 / Math.max(0.5, tickStep * cellPx)));
+    return { tickStep, labelStep: tickStep * labelMult };
+  }
+  const auto = getTickStep(gridSize, cellPx);
+  return { tickStep: auto, labelStep: auto };
+}
+
 /**
  * Dibuja las reglas superior e izquierda alineadas con el tamaño visual actual del canvas.
  */
@@ -43,8 +56,8 @@ export function renderRulers() {
   const centerTy = tilesY > 1 ? 1 : 0;
   const displayW = baseDisplayW * tilesX;
   const displayH = baseDisplayH * tilesY;
-  const stepX = getTickStep(w, cellPx);
-  const stepY = getTickStep(h, cellPx);
+  const { tickStep: stepX, labelStep: labelStepX } = resolveRulerSteps(w, cellPx);
+  const { tickStep: stepY, labelStep: labelStepY } = resolveRulerSteps(h, cellPx);
   const thickness = 20;
 
   if (topCanvas.width !== displayW || topCanvas.height !== thickness) {
@@ -104,17 +117,18 @@ export function renderRulers() {
   for (let i = 0; i <= totalCols; i++) {
     const localI = i % w;
     const isMajor = localI % stepX === 0;
+    const isLabel = localI % labelStepX === 0;
     const isMinor = !isMajor && stepX >= 4 && localI % (stepX / 2) === 0;
     if (!isMajor && !isMinor) continue;
 
     const pos = Math.floor(i * cellPx) + 0.5;
-    const tickLen = isMajor ? 8 : 4;
+    const tickLen = isLabel ? 8 : isMajor ? 6 : 4;
 
     tCtx.beginPath();
     tCtx.moveTo(pos, thickness);
     tCtx.lineTo(pos, thickness - tickLen);
     tCtx.stroke();
-    if (isMajor && i < totalCols) {
+    if (isLabel && i < totalCols) {
       tCtx.fillText(String(localI), pos + 2, 2);
     }
   }
@@ -122,17 +136,18 @@ export function renderRulers() {
   for (let i = 0; i <= totalRows; i++) {
     const localI = i % h;
     const isMajor = localI % stepY === 0;
+    const isLabel = localI % labelStepY === 0;
     const isMinor = !isMajor && stepY >= 4 && localI % (stepY / 2) === 0;
     if (!isMajor && !isMinor) continue;
 
     const pos = Math.floor(i * cellPx) + 0.5;
-    const tickLen = isMajor ? 8 : 4;
+    const tickLen = isLabel ? 8 : isMajor ? 6 : 4;
 
     lCtx.beginPath();
     lCtx.moveTo(thickness, pos);
     lCtx.lineTo(thickness - tickLen, pos);
     lCtx.stroke();
-    if (isMajor && i < totalRows) {
+    if (isLabel && i < totalRows) {
       lCtx.save();
       lCtx.translate(2, pos + 2);
       lCtx.fillText(String(localI), 0, 0);

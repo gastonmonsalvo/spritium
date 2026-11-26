@@ -74,6 +74,10 @@ export const DEFAULT_USER_PREFS = Object.freeze({
     stepY: 8,
     checkerContrast: 14,
   }),
+  rulerConfig: Object.freeze({
+    mode: "auto",
+    step: 8,
+  }),
 });
 
 function isHexColor(v) {
@@ -107,6 +111,7 @@ export function normalizeUserPreferences(raw) {
   const cguides = raw?.centerGuidesConfig || {};
   const goverlays = raw?.guidesOverlayConfig || {};
   const bgrid = raw?.baseGridConfig || {};
+  const rcfg = raw?.rulerConfig || {};
   const opacity = Math.max(0.2, Math.min(1, Number(cfg.opacity ?? DEFAULT_USER_PREFS.pixelCursorConfig.opacity) || 0.75));
   const activeColorAlpha = Math.max(0.1, Math.min(1, Number(cfg.activeColorAlpha ?? DEFAULT_USER_PREFS.pixelCursorConfig.activeColorAlpha) || 0.75));
   const gcOpacity = Math.max(0.05, Math.min(0.6, Number(gcoords.opacity ?? DEFAULT_USER_PREFS.gridCoordsConfig.opacity) || 0.14));
@@ -190,6 +195,10 @@ export function normalizeUserPreferences(raw) {
       stepY: Math.max(1, Math.min(128, Math.round(Number(bgrid.stepY ?? bgrid.step ?? DEFAULT_USER_PREFS.baseGridConfig.stepY) || 8))),
       checkerContrast: Math.max(4, Math.min(64, Math.round(Number(bgrid.checkerContrast ?? DEFAULT_USER_PREFS.baseGridConfig.checkerContrast) || 14))),
     },
+    rulerConfig: {
+      mode: rcfg.mode === "fixed" ? "fixed" : "auto",
+      step: Math.max(1, Math.min(64, Math.round(Number(rcfg.step ?? DEFAULT_USER_PREFS.rulerConfig.step) || 8))),
+    },
   };
 }
 
@@ -211,6 +220,7 @@ export function getUserPreferencesPayload() {
     centerGuidesConfig: state.centerGuidesConfig,
     guidesOverlayConfig: state.guidesOverlayConfig,
     baseGridConfig: state.baseGridConfig,
+    rulerConfig: state.rulerConfig,
   });
 }
 
@@ -262,6 +272,7 @@ export function applyUserPreferencesObject(raw, { persist = true } = {}) {
   state.centerGuidesConfig = { ...prefs.centerGuidesConfig };
   state.guidesOverlayConfig = { ...prefs.guidesOverlayConfig };
   state.baseGridConfig = { ...prefs.baseGridConfig };
+  state.rulerConfig = { ...prefs.rulerConfig };
 
   if (persist) saveUserPreferences();
   syncViewTogglesUI();
