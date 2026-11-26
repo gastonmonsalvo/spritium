@@ -1,4 +1,4 @@
-# Spritium (`v0.9.0-beta.5`)
+# Spritium (`v0.9.0-beta.6`)
 
 [English](./README.md) | [Español](./README.es.md)
 
@@ -100,7 +100,7 @@ Use **Help → Send Feedback / Report Bug** inside the app (it attaches steps an
 
 ## Beta Status & Community
 
-Spritium is currently in **public Beta (`v0.9.0-beta.5`)**. Core features are ready for production use, while active improvements and testing continue.
+Spritium is currently in **public Beta (`v0.9.0-beta.6`)**. Core features are ready for production use, while active improvements and testing continue.
 
 * **Discord:** Ask questions, share sprites, and report issues in our [Discord Community](https://discord.gg/cxPmhUNFPj).
 * **In-App Feedback:** **Help → Send Feedback / Report Bug** directly from the editor.
