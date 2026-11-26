@@ -8,16 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [Unreleased] — post `v0.9.0-beta.5` (`2026-11-24` → `2026-11-25`)
+## [Unreleased] — post `v0.9.0-beta.5` (`2026-11-24` → `2026-11-26`)
 
 ### Added
 - **CS-Style Reticle Share Code (`SPR-XXXX-XXXX-XXXX`)** in Preferences (`reticleShareCode.js`): encode, decode, validate, copy, and apply mouse crosshair presets via shareable codes.
 - **OS Clipboard Image Paste (`Ctrl+V`):** pasting an image from the system clipboard onto the canvas opens the non-destructive Import Modal (`openImportModal`), while internal sprite `Ctrl+C` → `Ctrl+V` preserves its own selection marker.
 - **Symmetry Support for Paint Bucket (`floodFill`):** Bucket now fills across active symmetry axes (`getSymmetryPoints`) with `O(1)` short-circuiting for connected regions crossing an axis, plus live multi-region hover preview in `CursorPreviewOverlay`.
+- **Direct Wheel Zoom-to-Cursor & `1–8` / `0` Zoom Presets:** mouse wheel now zooms directly toward the cursor without holding `Ctrl` (`Shift+Wheel` scrolls horizontally, `Alt+Wheel` scrolls vertically), and number keys `1`–`8` (`100%–1600%`) zoom toward the pointer while `0` fits the canvas to the viewport.
+- **Independent 1:1 Preview Playback (`#btnPreviewPlay`):** when a project has multiple frames, a Play/Pause toggle in the 1:1 Preview header loops the animation inside the preview window without moving the main canvas.
+- **Unified Ellipse / Circle (`C`) & Center-Out `Alt` Drawing:** implemented Zingl/Midpoint `drawMidpointEllipse` for free-aspect ellipses, holding `Shift` locks 1:1 circles/squares, and holding `Alt` draws shapes from the center across Rect, Ellipse/Circle, and Triangle (`resolveShapeBox`).
 - **Top & Bottom Docking for Frames (`#moduleFrames`):** Frames/Timeline can now dock at the top (below document tabs) or bottom of the workspace with `--accent-primary` violet drop highlights, automatically inverting the matrix resizer direction, collapse/reopen button placement, and chevron orientation.
+- **GIF Nearest-Neighbor Auto-Scale (`exportModal.js`):** added `10×` scale preset and automatic recommended integer scaling (`>= 256px`) when switching to GIF export.
 - **Documentation & Showcase:** added app screenshot (`src/assets/screenshot.jpg`), browser/Android support table, collapsible `<details>` FAQ, MIT/Discord/Browser badges, and VS Code Live Server local setup instructions in `README.md` & `README.es.md`.
 
+### Changed
+- **Palette Labels:** renamed `DMG-01 (Game Boy)` → `DMG-01 (Classic Handheld)` / `DMG-01 (Portátil Clásica)` and `Indexed (16)` → `Starter 16 (Base Palette)` / `Starter 16 (Paleta Base)` without altering internal IDs.
+
 ### Fixed
+- **Free Transform Pivot Tracking (`freeTransform.js`):** auto-centered pivot now follows `ft.corners` across move, scale, rotate, and skew; manually moved pivots (`pivotCustom`) scale proportionally inside the bounding box and reset to center on double-click.
 - **Floating 1:1 Preview (`#modulePreview`) Layout & Container Query:** locked floating bounds (`144px × 136px` minimum, `152px` default), prevented header icon overflow via `overflow: hidden`, and added a CSS Container Query that cleanly switches `"1:1 Preview"` / `"Vista 1:1"` to `"1:1"` at compact widths.
 - **Docking Drag Offset, Reset & Frames Dragging:** scaled `offsetX` proportionally on first drag frame when floating modules resize, cleared inline dimensions/anchors on **View → Reset Panels**, wired `#btnFloatFrames` outside `#framesModuleHeader`, added side-edge highlight feedback, and made dragging `#timelineResizer` from collapsed expand smoothly from `0px`.
 

@@ -26,7 +26,7 @@
 * **Resoluciones soportadas:** presets desde `16×16` hasta `512×512` y tamaño personalizado `N × M` (`4–512 px`) desde **Edición → Resolución**.
 * **Apertura 1:1, Pegado desde Portapapeles (`Ctrl+V`) y Conversión a Pixel Art:** abrí PNGs en tamaño real `1:1`, pegá imágenes directo desde el portapapeles del sistema al importador, convertí imágenes a pixel art con vista previa en vivo y quitá el fondo conectado opcionalmente.
 * **Importador de Tilemaps:** importá hojas de tileset o mapas completos (`PNG + JSON` / Tiled `.tmj`) con deduplicado instantáneo y reordenamiento Drag & Drop.
-* **Paletas integradas + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Game Boy)**, **Terminal 1-Bit**, **Grayscale (16)** e **Indexed (16)**, usando cuantización perceptual en **OKLab** y **Dithering ordenado (Bayer 4×4 / 8×8)** opcional.
+* **Paletas integradas + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Portátil Clásica)**, **Terminal 1-Bit**, **Grayscale (16)** y **Starter 16 (Paleta Base)**, usando cuantización perceptual en **OKLab** y **Dithering ordenado (Bayer 4×4 / 8×8)** opcional.
 * **Reducción Adaptativa de Paleta:** K-Means++ ponderado en OKLab (`16 / 24 / 32 / 48 / 64` colores propios) con re-ajuste no destructivo.
 
 ### 2. Capas, Timeline Matriz y Animación

@@ -3,7 +3,7 @@
  */
 
 import { state, pushLayerState, undo, redo } from "./core/state.js";
-import { renderAll } from "./canvas/canvas.js";
+import { renderAll, zoomAtLastPointer, fitZoomToViewport } from "./canvas/canvas.js";
 import { startFreeTransform, commitFreeTransform, cancelFreeTransform } from "./tools/freeTransform.js";
 import {
   addNewLayer,
@@ -218,8 +218,14 @@ function handleModifierShortcuts(e, key, isMod) {
   return false;
 }
 
+const ZOOM_KEY_PRESETS = { "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 8, "8": 16 };
+
 function handleNavigationAndTools(e, key, isMod) {
   if (e.code === "Space" && activeFocusZone === "frames") { e.preventDefault(); togglePlayAnimation(); return; }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (ZOOM_KEY_PRESETS[e.key]) { e.preventDefault(); zoomAtLastPointer(ZOOM_KEY_PRESETS[e.key]); return; }
+    if (e.key === "0") { e.preventDefault(); fitZoomToViewport(); return; }
+  }
   if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
     e.preventDefault();
     const dir = e.key === "ArrowLeft" ? -1 : 1;

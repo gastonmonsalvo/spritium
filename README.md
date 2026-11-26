@@ -26,7 +26,7 @@
 * **Supported resolutions:** presets from `16×16` up to `512×512`, plus custom `N × M` (`4–512 px`) from **Edit → Resolution**.
 * **1:1 Open, Clipboard Paste (`Ctrl+V`) & Pixel Art Conversion:** open PNG sprites at native `1:1` size, paste OS clipboard images directly into the canvas import modal, convert high-res images to pixel art with live preview, and optionally remove connected backgrounds.
 * **Tilemap Importer:** import tileset sheets or full tilemaps (`PNG + JSON` / Tiled `.tmj`) with instant tile deduplication and Drag & Drop reordering.
-* **Built-in + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Game Boy)**, **Terminal 1-Bit**, **Grayscale (16)**, and **Indexed (16)**, using **OKLab** perceptual quantization and optional **Bayer 4×4 / 8×8** ordered dithering.
+* **Built-in + Custom Palettes:** **Dawnbringer 32 (DB32)**, **DB16**, **PICO-8**, **Arne 16**, **DMG-01 (Classic Handheld)**, **Terminal 1-Bit**, **Grayscale (16)**, and **Starter 16 (Base Palette)**, using **OKLab** perceptual quantization and optional **Bayer 4×4 / 8×8** ordered dithering.
 * **Adaptive Palette Reduction:** weighted K-Means++ in OKLab (`16 / 24 / 32 / 48 / 64` colors) with non-destructive re-adjustment.
 
 ### 2. Layers, Matrix Timeline & Animation

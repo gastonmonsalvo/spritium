@@ -6,7 +6,7 @@
 import { i18n } from "../../i18n/I18nService.js";
 import { escapeHtml, renderList } from "../components/uiHtml.js";
 
-const EXPORT_SCALES = [2, 4, 8, 16];
+const EXPORT_SCALES = [2, 4, 8, 10, 16];
 
 /** Genera el HTML del modal de exportación configurable. */
 export function renderExportModal() {

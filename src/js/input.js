@@ -4,7 +4,7 @@
  */
 
 import { state, getGridDims, isSymmetryActive } from "./core/state.js";
-import { renderAll, getGridCoordinates, getFloatGridCoordinates, applyZoom } from "./canvas/canvas.js";
+import { renderAll, getGridCoordinates, getFloatGridCoordinates, zoomAtClientPoint, trackCanvasPointer } from "./canvas/canvas.js";
 import { createFreeTransformController, getFreeTransformCursor } from "./tools/freeTransform.js";
 import { renderRulers } from "./canvas/rulers.js";
 import { renderGridCoordsOverlay } from "./canvas/gridCoordsOverlay.js";
@@ -307,9 +307,28 @@ export function setupMouseEvents(canvas) {
     renderGridCoordsOverlay();
     if (state.showPixelCursor || wantsRegionPreview() || state.layers?.[state.activeLayerIndex]?.type === "tilemap") renderAll();
   });
-  canvas.addEventListener("wheel", (e) => {
-    if (e.ctrlKey || state.currentTool === "zoom") { e.preventDefault(); applyZoom(state.zoom + (e.deltaY < 0 ? 0.25 : -0.25)); }
-  }, { passive: false });
+  const handleCanvasWheelZoom = (e) => {
+    const container = document.getElementById("canvasContainer");
+    if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      if (container) container.scrollLeft += Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      return;
+    }
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      if (container) container.scrollTop += e.deltaY;
+      return;
+    }
+    e.preventDefault();
+    const prevZoom = state.zoom || 1;
+    const step = prevZoom >= 4 ? 0.5 : 0.25;
+    trackCanvasPointer(e.clientX, e.clientY);
+    zoomAtClientPoint(prevZoom + (e.deltaY < 0 ? step : -step), e.clientX, e.clientY);
+  };
+  const wheelTarget = document.getElementById("canvasContainer") || canvas;
+  wheelTarget.addEventListener("wheel", handleCanvasWheelZoom, { passive: false });
+  wheelTarget.addEventListener("pointermove", (e) => trackCanvasPointer(e.clientX, e.clientY));
+  wheelTarget.addEventListener("pointerleave", () => trackCanvasPointer(null, null));
   canvas.addEventListener("pointerdown", (e) => {
     state.lastPointerType = e.pointerType || "mouse";
     if (e.pointerType === "touch" || e.pointerType === "pen") e.preventDefault();

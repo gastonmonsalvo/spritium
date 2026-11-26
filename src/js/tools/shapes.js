@@ -287,6 +287,94 @@ export function drawMidpointCircle(cx, cy, radius, colorIndex, filled = false, t
 }
 
 /**
+ * Traza una elipse (o círculo si el bounding box es cuadrado) pixel-perfect
+ * usando el algoritmo de Zingl/Midpoint sobre `[x0, y0] → [x1, y1]`.
+ * @param {number} x0
+ * @param {number} y0
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} colorIndex
+ * @param {boolean} [filled=false]
+ * @param {number} [thickness=1]
+ * @param {"solid"|"dotted"|"dashed"|"dashdot"} [style="solid"]
+ */
+export function drawMidpointEllipse(x0, y0, x1, y1, colorIndex, filled = false, thickness = 1, style = "solid") {
+  let xa = Math.min(Math.round(x0), Math.round(x1));
+  let xb = Math.max(Math.round(x0), Math.round(x1));
+  let ya = Math.min(Math.round(y0), Math.round(y1));
+  let yb = Math.max(Math.round(y0), Math.round(y1));
+
+  let a = Math.abs(xb - xa);
+  const b = Math.abs(yb - ya);
+  let b1 = b & 1;
+  let dx = 4 * (1 - a) * b * b;
+  let dy = 4 * (b1 + 1) * a * a;
+  let err = dx + dy + b1 * a * a;
+
+  if (xa > xb) { xa = xb; xb += a; }
+  if (ya > yb) ya = yb;
+  ya += Math.floor((b + 1) / 2);
+  yb = ya - b1;
+  a *= 8 * a;
+  b1 = 8 * b * b;
+
+  const styledOutline = !filled && style && style !== "solid";
+  const ringPts = styledOutline ? new Map() : null;
+  const rowSpans = filled ? new Map() : null;
+
+  const recordPoint = (px, py) => {
+    if (filled) {
+      const span = rowSpans.get(py);
+      if (!span) rowSpans.set(py, [px, px]);
+      else {
+        if (px < span[0]) span[0] = px;
+        if (px > span[1]) span[1] = px;
+      }
+    } else if (styledOutline) {
+      const key = `${px},${py}`;
+      if (!ringPts.has(key)) ringPts.set(key, { x: px, y: py });
+    } else {
+      plotBrushWithMirror(px, py, colorIndex, thickness);
+    }
+  };
+
+  do {
+    recordPoint(xb, ya);
+    recordPoint(xa, ya);
+    recordPoint(xa, yb);
+    recordPoint(xb, yb);
+    const e2 = 2 * err;
+    if (e2 <= dy) { ya++; yb--; err += dy += a; }
+    if (e2 >= dx || 2 * err > dy) { xa++; xb--; err += dx += b1; }
+  } while (xa <= xb);
+
+  while (ya - yb < b) {
+    recordPoint(xa - 1, ya);
+    recordPoint(xb + 1, ya++);
+    recordPoint(xa - 1, yb);
+    recordPoint(xb + 1, yb--);
+  }
+
+  if (filled) {
+    for (const [py, [minX, maxX]] of rowSpans) {
+      for (let px = minX; px <= maxX; px++) plotWithMirror(px, py, colorIndex);
+    }
+  } else if (styledOutline) {
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const sorted = Array.from(ringPts.values()).sort(
+      (p, q) => Math.atan2(p.y - cy, p.x - cx) - Math.atan2(q.y - cy, q.x - cx),
+    );
+    for (let i = 0; i < sorted.length; i++) {
+      if (shouldPlotPatternStep(i, style, thickness)) {
+        plotBrushWithMirror(sorted[i].x, sorted[i].y, colorIndex, thickness);
+      }
+    }
+  }
+  state.isDirtySinceImport = true;
+}
+
+/**
  * Traza un triángulo isósceles pixel-perfect dentro del bounding box (contorno o relleno).
  * @param {any} x0
  * @param {any} y0
