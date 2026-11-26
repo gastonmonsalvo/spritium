@@ -12,6 +12,7 @@ import { i18n } from "../i18n/I18nService.js";
  * Construye el snapshot liviano de capacidades del editor en el frame actual.
  * @returns {{
  *   hasPixels: boolean,
+ *   hasActiveLayerPixels: boolean,
  *   hasSelection: boolean,
  *   isLocked: boolean,
  *   isFolder: boolean,
@@ -23,14 +24,20 @@ import { i18n } from "../i18n/I18nService.js";
  */
 export function buildActionContext() {
   const activeLayer = state.layers?.[state.activeLayerIndex];
-  const hasPixels =
-    (Array.isArray(state.layers) && state.layers.some((l) => l?.type !== "folder" && hasPaintedPixels(l?.grid))) ||
+  const isFolder = activeLayer?.type === "folder";
+  const hasActiveLayerPixels =
+    (!isFolder && hasPaintedPixels(activeLayer?.grid)) ||
     hasPaintedPixels(state.grid);
+  const hasPixels =
+    hasActiveLayerPixels ||
+    (Array.isArray(state.layers) && state.layers.some((l) => l?.type !== "folder" && hasPaintedPixels(l?.grid))) ||
+    (Array.isArray(state.frames) && state.frames.some((f) => Array.isArray(f?.layers) && f.layers.some((l) => l?.type !== "folder" && hasPaintedPixels(l?.grid))));
   return {
     hasPixels,
+    hasActiveLayerPixels,
     hasSelection: Boolean(state.selection),
     isLocked: Boolean(activeLayer?.locked),
-    isFolder: activeLayer?.type === "folder",
+    isFolder,
     frameCount: state.frames?.length || 1,
     layerCount: state.layers?.length || 1,
     canUndo: (state.undoStack?.length || 0) > 0,
@@ -41,8 +48,11 @@ export function buildActionContext() {
 const requireEditableLayer = (c) =>
   (!c.isLocked && !c.isFolder) || (c.isFolder ? "guard.folder_active" : "guard.layer_locked");
 
-const requirePixelsAndEditable = (c) =>
-  !c.hasPixels ? "guard.empty_canvas" : requireEditableLayer(c);
+const requireActiveLayerPixelsAndEditable = (c) => {
+  const layerErr = requireEditableLayer(c);
+  if (layerErr !== true) return layerErr;
+  return c.hasActiveLayerPixels || "guard.empty_layer";
+};
 
 /** Tabla declarativa de guardas: retorna `true` o la clave i18n del motivo de bloqueo. */
 export const ACTION_GUARDS = {
@@ -55,11 +65,11 @@ export const ACTION_GUARDS = {
   openNormalMapModal: (c) => c.hasPixels || "guard.empty_canvas",
   openDropShadowModal: (c) => c.hasPixels || "guard.empty_canvas",
   openNoiseModal: requireEditableLayer,
-  openHslModal: requirePixelsAndEditable,
-  outlineAction: requirePixelsAndEditable,
-  invertColorsAction: requirePixelsAndEditable,
-  startFreeTransform: requirePixelsAndEditable,
-  rotSpriteAction: requirePixelsAndEditable,
+  openHslModal: requireActiveLayerPixelsAndEditable,
+  outlineAction: requireActiveLayerPixelsAndEditable,
+  invertColorsAction: requireActiveLayerPixelsAndEditable,
+  startFreeTransform: requireActiveLayerPixelsAndEditable,
+  rotSpriteAction: requireActiveLayerPixelsAndEditable,
   deleteActiveFrame: (c) => c.frameCount > 1 || "guard.single_frame",
   deleteActiveLayer: (c) => c.layerCount > 1 || "guard.single_layer",
   deselectAction: (c) => c.hasSelection || "guard.no_selection",
@@ -107,15 +117,26 @@ export function syncActionAvailability() {
 }
 
 let initialized = false;
+let syncQueued = false;
+
+function scheduleSyncActionAvailability() {
+  if (syncQueued) return;
+  syncQueued = true;
+  queueMicrotask(() => {
+    syncQueued = false;
+    syncActionAvailability();
+  });
+}
+
 /** Suscribe la sincronización automática de disponibilidad contextual a los eventos del editor. */
 export function initActionAvailability() {
   if (initialized) return;
   initialized = true;
-  ["history", "dirty", "layers", "frames"].forEach((topic) => {
-    subscribe(topic, syncActionAvailability);
+  ["history", "dirty", "layers", "frames", "selection", "canvas:rendered"].forEach((topic) => {
+    subscribe(topic, scheduleSyncActionAvailability);
   });
   if (typeof window !== "undefined") {
-    i18n.addEventListener("langchange", syncActionAvailability);
+    i18n.addEventListener("langchange", scheduleSyncActionAvailability);
   }
   syncActionAvailability();
 }

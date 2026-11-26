@@ -1,9 +1,10 @@
 /**
  * canvas.js: Rendering con escala adaptativa (64 o 32).
  */
-import { CANVAS_PX, state, getGridDims } from "../core/state.js";
+import { CANVAS_PX, state, getGridDims, notify } from "../core/state.js";
 import { renderRulers } from "./rulers.js";
 import { renderGridCoordsOverlay } from "./gridCoordsOverlay.js";
+import { renderDistanceMeasureOverlay } from "./distanceMeasureOverlay.js";
 import { parseColorToRgba } from "../core/color.js";
 import {
   drawAdaptivePixelGrid,
@@ -183,13 +184,25 @@ function syncCheckerboardToGrid(screenPixelSize) {
   const canvasEl = ctx?.canvas;
   if (!canvasEl) return;
 
-  let tilePx = screenPixelSize;
-  if (screenPixelSize < 3) tilePx = screenPixelSize * 16;
-  else if (screenPixelSize < 5) tilePx = screenPixelSize * 8;
-  else if (screenPixelSize < 8) tilePx = screenPixelSize * 4;
+  let tilePxX = screenPixelSize;
+  let tilePxY = screenPixelSize;
+  if (state.baseGridConfig?.mode === "fixed") {
+    const fixedStepX = Math.max(1, Math.min(128, Math.round(Number(state.baseGridConfig?.stepX ?? state.baseGridConfig?.step) || 8)));
+    const fixedStepY = Math.max(1, Math.min(128, Math.round(Number(state.baseGridConfig?.stepY ?? state.baseGridConfig?.step) || 8)));
+    tilePxX = screenPixelSize * fixedStepX;
+    tilePxY = screenPixelSize * fixedStepY;
+  } else {
+    let mult = 1;
+    if (screenPixelSize < 3) mult = 16;
+    else if (screenPixelSize < 5) mult = 8;
+    else if (screenPixelSize < 8) mult = 4;
+    tilePxX = screenPixelSize * mult;
+    tilePxY = screenPixelSize * mult;
+  }
 
-  const patternPx = Math.max(4, tilePx * 2);
-  canvasEl.style.backgroundSize = `${patternPx}px ${patternPx}px`;
+  const patternW = Math.max(4, tilePxX * 2);
+  const patternH = Math.max(4, tilePxY * 2);
+  canvasEl.style.backgroundSize = `${patternW}px ${patternH}px`;
   canvasEl.style.backgroundPosition = "0 0";
 }
 
@@ -300,6 +313,8 @@ export function renderAll() {
   renderPreview();
   renderRulers();
   renderGridCoordsOverlay();
+  renderDistanceMeasureOverlay();
+  notify("canvas:rendered");
 }
 
 // --- COORDENADAS, ZOOM, PREVIEW 1:1 Y GRILLA ---

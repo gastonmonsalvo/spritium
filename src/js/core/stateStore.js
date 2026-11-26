@@ -198,6 +198,25 @@ export const state = {
     snap: false,
     lockCell: false,
   },
+  centerGuidesConfig: {
+    color: "#ef4444",
+    autoColor: true,
+    thickness: 1,
+    opacity: 0.45,
+    oddHalfLine: false,
+  },
+  guidesOverlayConfig: {
+    autoColor: true,
+    measureColor: "#f59e0b",
+    resizeColor: "#38bdf8",
+    thickness: 1.5,
+  },
+  baseGridConfig: {
+    mode: "adaptive",
+    stepX: 8,
+    stepY: 8,
+    checkerContrast: 14,
+  },
   showPixelCursor: false,
   pixelCursorConfig: {
     opacity: 0.75,

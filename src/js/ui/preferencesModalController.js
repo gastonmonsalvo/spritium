@@ -2,7 +2,7 @@
  * preferencesModalController.js: Controlador de UI y eventos en vivo del modal #preferencesModal.
  */
 
-import { state, subscribe } from "../core/state.js";
+import { state, subscribe, notify } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import { setStatus } from "./status.js";
 import { refreshCanvasToolCursor, getReticleSvgBody } from "./cursors.js";
@@ -87,6 +87,15 @@ export function syncPreferencesModalControls() {
 
   // 3. Lienzo y Guías
   setChecked("chkPrefShowGrid", state.showGrid !== false);
+  const bgCfg = state.baseGridConfig || DEFAULT_USER_PREFS.baseGridConfig;
+  setVal("prefBaseGridMode", bgCfg.mode === "fixed" ? "fixed" : "adaptive");
+  setVal("prefBaseGridStepX", bgCfg.stepX ?? bgCfg.step ?? 8);
+  setVal("prefBaseGridStepY", bgCfg.stepY ?? bgCfg.step ?? 8);
+  const chkContrast = Number(bgCfg.checkerContrast ?? 14) || 14;
+  setVal("prefCheckerContrast", chkContrast);
+  setText("prefCheckerContrastVal", String(chkContrast));
+  const bgStepWrap = document.getElementById("prefBaseGridStepWrap");
+  if (bgStepWrap) bgStepWrap.style.display = bgCfg.mode === "fixed" ? "inline-flex" : "none";
   setChecked("chkPrefShowCenterGuides", state.showCenterGuides !== false);
   setChecked("chkPrefShowCenterRulerMarks", state.showCenterRulerMarks !== false);
   setChecked("chkPrefShowRulers", state.showRulers !== false);
@@ -114,6 +123,32 @@ export function syncPreferencesModalControls() {
   syncSwatchButton("prefCustomGridColorBtn", cg.color || "#8b5cf6");
   const cgColorBtn = document.getElementById("prefCustomGridColorBtn");
   if (cgColorBtn) cgColorBtn.style.opacity = autoCol ? "0.45" : "1";
+
+  const cguides = state.centerGuidesConfig || DEFAULT_USER_PREFS.centerGuidesConfig;
+  const cguidesAuto = cguides.autoColor !== false;
+  setChecked("chkPrefCenterGuidesAutoColor", cguidesAuto);
+  setChecked("chkPrefCenterGuidesOddHalf", Boolean(cguides.oddHalfLine));
+  const cguidesThick = Number(cguides.thickness ?? 1) || 1;
+  setVal("prefCenterGuidesThickness", cguidesThick);
+  setText("prefCenterGuidesThicknessVal", `${cguidesThick} px`);
+  setVal("prefCenterGuidesOpacity", Math.round((cguides.opacity ?? 0.45) * 100));
+  setText("prefCenterGuidesOpacityVal", `${Math.round((cguides.opacity ?? 0.45) * 100)}%`);
+  syncSwatchButton("prefCenterGuidesColorBtn", cguides.color || "#ef4444");
+  const cguidesColorBtn = document.getElementById("prefCenterGuidesColorBtn");
+  if (cguidesColorBtn) cguidesColorBtn.style.opacity = cguidesAuto ? "0.45" : "1";
+
+  const ov = state.guidesOverlayConfig || DEFAULT_USER_PREFS.guidesOverlayConfig;
+  const ovAuto = ov.autoColor !== false;
+  setChecked("chkPrefOverlaysAutoColor", ovAuto);
+  const ovThick = Number(ov.thickness ?? 1.5) || 1.5;
+  setVal("prefOverlaysThickness", ovThick);
+  setText("prefOverlaysThicknessVal", `${ovThick} px`);
+  syncSwatchButton("prefMeasureColorBtn", ov.measureColor || "#f59e0b");
+  syncSwatchButton("prefResizeColorBtn", ov.resizeColor || "#38bdf8");
+  const mBtn = document.getElementById("prefMeasureColorBtn");
+  const rBtn = document.getElementById("prefResizeColorBtn");
+  if (mBtn) mBtn.style.opacity = ovAuto ? "0.45" : "1";
+  if (rBtn) rBtn.style.opacity = ovAuto ? "0.45" : "1";
 }
 
 /**
@@ -279,6 +314,47 @@ export function initPreferencesModal() {
   bindCheck("chkPrefFillPreview", (v) => { state.pixelCursorConfig.fillPreview = v; });
   bindCheck("chkPrefCenterDot", (v) => { state.pixelCursorConfig.showCenterDot = v; });
   bindCheck("chkPrefShowGrid", (v) => { state.showGrid = v; });
+  const ensureBaseGrid = () => {
+    if (!state.baseGridConfig) state.baseGridConfig = { ...DEFAULT_USER_PREFS.baseGridConfig };
+    return state.baseGridConfig;
+  };
+  const bgModeEl = /** @type {HTMLSelectElement|null} */ (document.getElementById("prefBaseGridMode"));
+  bgModeEl?.addEventListener("change", () => {
+    const mode = bgModeEl.value === "fixed" ? "fixed" : "adaptive";
+    ensureBaseGrid().mode = mode;
+    const wrap = document.getElementById("prefBaseGridStepWrap");
+    if (wrap) wrap.style.display = mode === "fixed" ? "inline-flex" : "none";
+    saveUserPreferences();
+    renderAll();
+  });
+  const bindBaseStep = (id, axis) => {
+    const el = /** @type {HTMLInputElement|null} */ (document.getElementById(id));
+    el?.addEventListener("input", () => {
+      const n = Math.round(Number(el.value));
+      if (!Number.isFinite(n) || n < 1 || n > 128) return;
+      ensureBaseGrid()[axis] = n;
+      saveUserPreferences();
+      renderAll();
+    });
+    el?.addEventListener("change", () => {
+      const n = Math.max(1, Math.min(128, Math.round(Number(el.value) || 8)));
+      el.value = String(n);
+      ensureBaseGrid()[axis] = n;
+      saveUserPreferences();
+      renderAll();
+    });
+  };
+  bindBaseStep("prefBaseGridStepX", "stepX");
+  bindBaseStep("prefBaseGridStepY", "stepY");
+  const chkContrastEl = /** @type {HTMLInputElement|null} */ (document.getElementById("prefCheckerContrast"));
+  chkContrastEl?.addEventListener("input", () => {
+    const val = Math.max(4, Math.min(64, Math.round(Number(chkContrastEl.value) || 14)));
+    ensureBaseGrid().checkerContrast = val;
+    const lbl = document.getElementById("prefCheckerContrastVal");
+    if (lbl) lbl.textContent = String(val);
+    saveUserPreferences();
+    notify("checker:contrast");
+  });
   bindCheck("chkPrefShowCenterGuides", (v) => { state.showCenterGuides = v; });
   bindCheck("chkPrefShowCenterRulerMarks", (v) => { state.showCenterRulerMarks = v; });
   bindCheck("chkPrefShowRulers", (v) => { state.showRulers = v; });
@@ -394,6 +470,95 @@ export function initPreferencesModal() {
       saveUserPreferences();
       renderAll();
     });
+  });
+
+  const ensureCenterGuides = () => {
+    if (!state.centerGuidesConfig) state.centerGuidesConfig = { ...DEFAULT_USER_PREFS.centerGuidesConfig };
+    return state.centerGuidesConfig;
+  };
+  bindCheck("chkPrefCenterGuidesAutoColor", (v) => {
+    ensureCenterGuides().autoColor = v;
+    const btn = document.getElementById("prefCenterGuidesColorBtn");
+    if (btn) btn.style.opacity = v ? "0.45" : "1";
+  });
+  bindCheck("chkPrefCenterGuidesOddHalf", (v) => { ensureCenterGuides().oddHalfLine = v; });
+  const cguidesOpInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefCenterGuidesOpacity"));
+  cguidesOpInput?.addEventListener("input", () => {
+    const val = Math.max(10, Math.min(100, Number(cguidesOpInput.value) || 45));
+    ensureCenterGuides().opacity = val / 100;
+    const label = document.getElementById("prefCenterGuidesOpacityVal");
+    if (label) label.textContent = `${val}%`;
+    saveUserPreferences();
+    renderAll();
+  });
+  const cguidesThickInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefCenterGuidesThickness"));
+  cguidesThickInput?.addEventListener("input", () => {
+    const val = Math.max(0.5, Math.min(3, Math.round((Number(cguidesThickInput.value) || 1) * 2) / 2));
+    ensureCenterGuides().thickness = val;
+    const label = document.getElementById("prefCenterGuidesThicknessVal");
+    if (label) label.textContent = `${val} px`;
+    saveUserPreferences();
+    renderAll();
+  });
+  const cguidesColorBtn = document.getElementById("prefCenterGuidesColorBtn");
+  cguidesColorBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const curHex = state.centerGuidesConfig?.color || "#ef4444";
+    openCustomRgbaPopover(cguidesColorBtn, curHex, (newHex) => {
+      const cfg = ensureCenterGuides();
+      cfg.color = newHex;
+      cfg.autoColor = false;
+      const autoEl = /** @type {HTMLInputElement|null} */ (document.getElementById("chkPrefCenterGuidesAutoColor"));
+      if (autoEl) autoEl.checked = false;
+      cguidesColorBtn.style.opacity = "1";
+      syncSwatchButton("prefCenterGuidesColorBtn", newHex);
+      saveUserPreferences();
+      renderAll();
+    });
+  });
+
+  const ensureGuidesOverlay = () => {
+    if (!state.guidesOverlayConfig) state.guidesOverlayConfig = { ...DEFAULT_USER_PREFS.guidesOverlayConfig };
+    return state.guidesOverlayConfig;
+  };
+  bindCheck("chkPrefOverlaysAutoColor", (v) => {
+    ensureGuidesOverlay().autoColor = v;
+    const mBtn = document.getElementById("prefMeasureColorBtn");
+    const rBtn = document.getElementById("prefResizeColorBtn");
+    if (mBtn) mBtn.style.opacity = v ? "0.45" : "1";
+    if (rBtn) rBtn.style.opacity = v ? "0.45" : "1";
+  });
+  const bindOverlayColor = (btnId, key, fallback) => {
+    const btn = document.getElementById(btnId);
+    btn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const curHex = state.guidesOverlayConfig?.[key] || fallback;
+      openCustomRgbaPopover(btn, curHex, (newHex) => {
+        const cfg = ensureGuidesOverlay();
+        cfg[key] = newHex;
+        cfg.autoColor = false;
+        const autoEl = /** @type {HTMLInputElement|null} */ (document.getElementById("chkPrefOverlaysAutoColor"));
+        if (autoEl) autoEl.checked = false;
+        const mBtn = document.getElementById("prefMeasureColorBtn");
+        const rBtn = document.getElementById("prefResizeColorBtn");
+        if (mBtn) mBtn.style.opacity = "1";
+        if (rBtn) rBtn.style.opacity = "1";
+        syncSwatchButton(btnId, newHex);
+        saveUserPreferences();
+        renderAll();
+      });
+    });
+  };
+  bindOverlayColor("prefMeasureColorBtn", "measureColor", "#f59e0b");
+  bindOverlayColor("prefResizeColorBtn", "resizeColor", "#38bdf8");
+  const ovThickInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefOverlaysThickness"));
+  ovThickInput?.addEventListener("input", () => {
+    const val = Math.max(0.5, Math.min(3, Math.round((Number(ovThickInput.value) || 1.5) * 2) / 2));
+    ensureGuidesOverlay().thickness = val;
+    const label = document.getElementById("prefOverlaysThicknessVal");
+    if (label) label.textContent = `${val} px`;
+    saveUserPreferences();
+    renderAll();
   });
 
   const lwInput = /** @type {HTMLInputElement|null} */ (document.getElementById("prefCursorLineWidth"));

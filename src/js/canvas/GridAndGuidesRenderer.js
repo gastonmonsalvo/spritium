@@ -88,13 +88,18 @@ export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX,
   const maxDim = Math.max(w, h);
 
   const layers = [];
-  const addStep = (step, alpha) => {
-    if (step >= maxDim || step < 1) return;
-    layers.push({ step, alpha });
+  const addStep = (stepX, alpha, stepY = stepX) => {
+    if ((stepX >= w && stepY >= h) || stepX < 1 || stepY < 1) return;
+    layers.push({ stepX, stepY, alpha });
   };
 
   if (state.showGrid !== false) {
-    if (screenPixelSize < 3) {
+    const baseMode = state.baseGridConfig?.mode || "adaptive";
+    if (baseMode === "fixed") {
+      const fixedStepX = Math.max(1, Math.min(128, Math.round(Number(state.baseGridConfig?.stepX ?? state.baseGridConfig?.step) || 8)));
+      const fixedStepY = Math.max(1, Math.min(128, Math.round(Number(state.baseGridConfig?.stepY ?? state.baseGridConfig?.step) || 8)));
+      addStep(fixedStepX, blockAlpha, fixedStepY);
+    } else if (screenPixelSize < 3) {
       addStep(32, blockAlpha);
     } else if (screenPixelSize < 5) {
       addStep(8, blockAlpha * 0.55);
@@ -146,10 +151,10 @@ export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX,
       );
       bgSizes.push(`${stepW}px ${stepH}px`, `${stepW}px ${stepH}px`);
     }
-    for (const { step, alpha } of ordered) {
+    for (const { stepX, stepY, alpha } of ordered) {
       const color = `rgba(${gridRgb}, ${alpha})`;
-      const stepW = (cellCssX * step).toFixed(4);
-      const stepH = (cellCssY * step).toFixed(4);
+      const stepW = (cellCssX * stepX).toFixed(4);
+      const stepH = (cellCssY * stepY).toFixed(4);
       bgImages.push(
         `linear-gradient(to right, ${color} 0, ${color} 1px, transparent 1px)`,
         `linear-gradient(to bottom, ${color} 0, ${color} 1px, transparent 1px)`,
@@ -167,15 +172,15 @@ export function drawAdaptivePixelGrid(ctx, layersToDraw, w, h, cellSize, tilesX,
   ctx.lineWidth = Math.max(0.5, 1 / zoom);
   const totalCols = w * tilesX;
   const totalRows = h * tilesY;
-  for (const { step, alpha } of layers) {
+  for (const { stepX, stepY, alpha } of layers) {
     ctx.strokeStyle = `rgba(${gridRgb}, ${alpha})`;
     ctx.beginPath();
-    for (let i = 0; i <= totalCols; i += step) {
+    for (let i = 0; i <= totalCols; i += stepX) {
       const pos = Math.floor(i * cellSize) + 0.5;
       ctx.moveTo(pos, 0);
       ctx.lineTo(pos, totalH);
     }
-    for (let i = 0; i <= totalRows; i += step) {
+    for (let i = 0; i <= totalRows; i += stepY) {
       const pos = Math.floor(i * cellSize) + 0.5;
       ctx.moveTo(0, pos);
       ctx.lineTo(totalW, pos);
@@ -203,15 +208,22 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
 
   const cellW = baseW / w;
   const cellH = baseH / h;
-  const lineW = Math.max(0.75, 1.15 / (zoom || 1));
+  const cgCfg = state.centerGuidesConfig || {};
+  const screenThick = Math.max(0.5, Math.min(3, Number(cgCfg.thickness ?? 1) || 1));
+  const lineW = screenThick / Math.max(0.25, zoom || 1);
+  const baseAlpha = Math.max(0.1, Math.min(1, Number(cgCfg.opacity ?? 0.45)));
   const isLightTheme =
     Boolean(state.isLightTheme) ||
     (typeof document !== "undefined" && document.body?.classList.contains("theme-light"));
   const isLightSurface =
     typeof state.canvasBgLightness === "number" ? state.canvasBgLightness >= 0.5 : isLightTheme;
-  const lineStroke = isLightSurface ? "rgba(185, 28, 28, 0.54)" : "rgba(239, 68, 68, 0.34)";
-  const bandFill = isLightSurface ? "rgba(220, 38, 38, 0.12)" : "rgba(239, 68, 68, 0.09)";
-  const bandStroke = isLightSurface ? "rgba(185, 28, 28, 0.38)" : "rgba(239, 68, 68, 0.24)";
+  const rgb = cgCfg.autoColor !== false
+    ? (isLightSurface ? [185, 28, 28] : [239, 68, 68])
+    : (parseColorToRgb(cgCfg.color || "#ef4444") || [239, 68, 68]);
+  const lineAlpha = cgCfg.autoColor !== false && isLightSurface ? Math.max(0.54, baseAlpha) : baseAlpha;
+  const lineStroke = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${lineAlpha})`;
+  const bandFill = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${(lineAlpha * 0.24).toFixed(3)})`;
+  const bandStroke = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${(lineAlpha * 0.72).toFixed(3)})`;
 
   ctx.save();
   ctx.beginPath();
@@ -219,8 +231,8 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
   ctx.clip();
 
   if (w >= 4) {
-    if (w % 2 === 0) {
-      const midX = Math.round(tileOriginX + (w / 2) * cellW) + 0.5;
+    if (w % 2 === 0 || cgCfg.oddHalfLine) {
+      const midX = tileOriginX + (w / 2) * cellW;
       ctx.strokeStyle = lineStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
@@ -235,17 +247,17 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
       ctx.strokeStyle = bandStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
-      ctx.moveTo(Math.round(x0) + 0.5, tileOriginY);
-      ctx.lineTo(Math.round(x0) + 0.5, tileOriginY + baseH);
-      ctx.moveTo(Math.round(x0 + cellW) + 0.5, tileOriginY);
-      ctx.lineTo(Math.round(x0 + cellW) + 0.5, tileOriginY + baseH);
+      ctx.moveTo(x0, tileOriginY);
+      ctx.lineTo(x0, tileOriginY + baseH);
+      ctx.moveTo(x0 + cellW, tileOriginY);
+      ctx.lineTo(x0 + cellW, tileOriginY + baseH);
       ctx.stroke();
     }
   }
 
   if (h >= 4) {
-    if (h % 2 === 0) {
-      const midY = Math.round(tileOriginY + (h / 2) * cellH) + 0.5;
+    if (h % 2 === 0 || cgCfg.oddHalfLine) {
+      const midY = tileOriginY + (h / 2) * cellH;
       ctx.strokeStyle = lineStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
@@ -260,10 +272,10 @@ export function drawCanvasCenterGuides(ctx, tileOriginX, tileOriginY, baseW, bas
       ctx.strokeStyle = bandStroke;
       ctx.lineWidth = lineW;
       ctx.beginPath();
-      ctx.moveTo(tileOriginX, Math.round(y0) + 0.5);
-      ctx.lineTo(tileOriginX + baseW, Math.round(y0) + 0.5);
-      ctx.moveTo(tileOriginX, Math.round(y0 + cellH) + 0.5);
-      ctx.lineTo(tileOriginX + baseW, Math.round(y0 + cellH) + 0.5);
+      ctx.moveTo(tileOriginX, y0);
+      ctx.lineTo(tileOriginX + baseW, y0);
+      ctx.moveTo(tileOriginX, y0 + cellH);
+      ctx.lineTo(tileOriginX + baseW, y0 + cellH);
       ctx.stroke();
     }
   }

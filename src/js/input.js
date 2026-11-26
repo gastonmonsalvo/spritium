@@ -8,6 +8,8 @@ import { renderAll, getGridCoordinates, getFloatGridCoordinates, zoomAtClientPoi
 import { createFreeTransformController, getFreeTransformCursor } from "./tools/freeTransform.js";
 import { renderRulers } from "./canvas/rulers.js";
 import { renderGridCoordsOverlay } from "./canvas/gridCoordsOverlay.js";
+import { setDistanceMeasureActive } from "./canvas/distanceMeasureOverlay.js";
+import { createCanvasResizeDragController } from "./canvas/canvasResizeDrag.js";
 import { isActiveLayerLocked } from "./workspace/layers.js";
 import { syncLinkedCelsForActiveLayer } from "./workspace/timelineMatrix.js";
 import { isTilemapTileModeActive, getTilemapToolStrategy, reconcileActiveTilemapLayer } from "./workspace/tilemap.js";
@@ -215,12 +217,14 @@ function handleCanvasMouseDown(e, canvas, ptr) {
 }
 
 function handleCanvasMouseMove(e, canvas, ptr) {
+  if (ptr.canvasResizeDrag?.isActive?.()) return;
   const rawPt = getGridCoordinates(e, canvas);
   const ptMove = applyCustomGridConstraints(rawPt.x, rawPt.y, ptr, ptr.isMouseDown ? "move" : "hover");
   const { x, y } = ptMove;
   state.cursorPos = { x, y };
   renderRulers();
   renderGridCoordsOverlay();
+  setDistanceMeasureActive(Boolean(e.ctrlKey));
   if (!ptr.isMouseDown) handleHoverPreview(x, y, ptr);
   if (ptr.isPanning && ptr.panStart) { updatePanScroll(e, ptr, canvas); return; }
   if (ptr.isDraggingSymmetry) {
@@ -235,15 +239,17 @@ function handleCanvasMouseMove(e, canvas, ptr) {
     if (ptr.isMouseDown && ptr.mouseButton !== 1) ptr.ftController.onMove({ rawX, rawY, event: e });
     return;
   }
+  const altResizeCursor = ptr.canvasResizeDrag?.getHoverCursor?.(e);
   const altGuideHover =
-    e.altKey && !e.ctrlKey && !e.shiftKey && !state.isMovingSymmetryAxis && !ALT_SELECTION_TOOLS.has(state.currentTool)
+    !altResizeCursor && e.altKey && !e.ctrlKey && !e.shiftKey && !state.isMovingSymmetryAxis && !ALT_SELECTION_TOOLS.has(state.currentTool)
       ? findRulerGuideHit(e, canvas)
       : null;
-  const toolCursor = altGuideHover
-    ? (altGuideHover.guide.axis === "h" ? "row-resize" : "col-resize")
-    : wantsSymmetryAxisDrag(e)
-      ? "move"
-      : getToolCursorCss(state.currentTool);
+  const toolCursor = altResizeCursor
+    || (altGuideHover
+      ? (altGuideHover.guide.axis === "h" ? "row-resize" : "col-resize")
+      : wantsSymmetryAxisDrag(e)
+        ? "move"
+        : getToolCursorCss(state.currentTool));
   if (canvas.style.cursor !== toolCursor) canvas.style.cursor = toolCursor;
   if (TOOL_STRATEGIES[state.currentTool]?.hasPendingSession?.()) {
     TOOL_STRATEGIES[state.currentTool].onMove({ x, y, button: 0, event: e });
@@ -364,8 +370,24 @@ export function setupMouseEvents(canvas) {
     zoomAtClientPoint(prevZoom + (e.deltaY < 0 ? step : -step), e.clientX, e.clientY);
   };
   const wheelTarget = document.getElementById("canvasContainer") || canvas;
+  const canvasResizeDrag = createCanvasResizeDragController(canvas);
+  ptr.canvasResizeDrag = canvasResizeDrag;
+  wheelTarget.addEventListener("pointerdown", (e) => {
+    if (canvasResizeDrag.onDown(e)) return;
+  }, { capture: true });
   wheelTarget.addEventListener("wheel", handleCanvasWheelZoom, { passive: false });
-  wheelTarget.addEventListener("pointermove", (e) => trackCanvasPointer(e.clientX, e.clientY));
+  wheelTarget.addEventListener("pointermove", (e) => {
+    trackCanvasPointer(e.clientX, e.clientY);
+    if (!canvasResizeDrag.isActive()) {
+      const edgeCur = canvasResizeDrag.getHoverCursor(e);
+      if (edgeCur) {
+        wheelTarget.style.cursor = edgeCur;
+        canvas.style.cursor = edgeCur;
+      } else if (wheelTarget.style.cursor) {
+        wheelTarget.style.cursor = "";
+      }
+    }
+  });
   wheelTarget.addEventListener("pointerleave", () => trackCanvasPointer(null, null));
   canvas.addEventListener("pointerdown", (e) => {
     state.lastPointerType = e.pointerType || "mouse";
@@ -444,6 +466,7 @@ export function setupMouseEvents(canvas) {
     handleCanvasMouseMove(e, canvas, ptr);
   });
   window.addEventListener("pointermove", (e) => {
+    if (canvasResizeDrag.onMove(e)) return;
     if (state.activeGuideDrag) {
       const { rawX, rawY } = getFloatGridCoordinates(e, canvas);
       const { w, h } = getGridDims();
@@ -476,9 +499,16 @@ export function setupMouseEvents(canvas) {
       touchStrokePendingUndo = false;
     }
   };
-  window.addEventListener("pointerup", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
-  window.addEventListener("pointercancel", (e) => { clearTouchPointer(e); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
-  window.addEventListener("blur", () => { touchPointers.clear(); pinchState = null; wasPinching = false; touchStrokePendingUndo = false; ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
+  window.addEventListener("pointerup", (e) => { clearTouchPointer(e); if (canvasResizeDrag.onUp()) return; handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
+  window.addEventListener("pointercancel", (e) => { clearTouchPointer(e); canvasResizeDrag.cancel(); handleWindowMouseUp(e, canvas, ptr); }, { capture: true });
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Control") setDistanceMeasureActive(true);
+    if (e.key === "Escape") canvasResizeDrag.cancel();
+  });
+  window.addEventListener("keyup", (e) => {
+    if (e.key === "Control") setDistanceMeasureActive(false);
+  });
+  window.addEventListener("blur", () => { canvasResizeDrag.cancel(); setDistanceMeasureActive(false); touchPointers.clear(); pinchState = null; wasPinching = false; touchStrokePendingUndo = false; ptr.isMouseDown = false; ptr.activeStrategy = null; state.activeGuideDrag = null; ptr.ftController.onUp(); });
 
   // Arrastrar desde #rulerTop o #rulerLeft para crear/mover guías (clic derecho o soltar fuera quita la guía)
   const bindRulerGuideEvents = (rulerId, axis) => {

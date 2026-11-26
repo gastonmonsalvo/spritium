@@ -441,6 +441,62 @@ export async function changeResolution(targetWidth, targetHeight = targetWidth) 
 }
 
 /**
+ * Redimensiona el lienzo (Canvas Size 1:1) recortando o expandiendo con píxeles transparentes
+ * sin reescalar ni deformar el arte existente en todas las capas y frames.
+ * @param {number} targetWidth
+ * @param {number} [targetHeight]
+ */
+export function resizeCanvasCrop(targetWidth, targetHeight = targetWidth) {
+  const dstW = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetWidth) || 32)));
+  const dstH = Math.max(4, Math.min(MAX_GRID_DIM, Math.round(Number(targetHeight) || dstW)));
+  const { w: curW, h: curH } = getGridDims();
+  if (curW === dstW && curH === dstH) return;
+
+  pushState();
+  state.resBaseSnapshot = null;
+  syncActiveFrame();
+  setGridSize(dstW, dstH);
+
+  for (let fi = 0; fi < state.frames.length; fi++) {
+    for (let li = 0; li < state.frames[fi].layers.length; li++) {
+      const lObj = state.frames[fi].layers[li];
+      if (!lObj || lObj.type === "folder") continue;
+      if (lObj.type === "tilemap") {
+        ensureLayerTileGridDimensions(lObj);
+        syncTilemapLayerToGrid(lObj);
+      } else if (Array.isArray(lObj.grid)) {
+        const oldGrid = lObj.grid;
+        const newGrid = Array.from({ length: dstH }, (_, y) => {
+          const row = new Array(dstW).fill(0);
+          const srcRow = oldGrid[y];
+          if (Array.isArray(srcRow)) {
+            const copyW = Math.min(dstW, srcRow.length);
+            for (let x = 0; x < copyW; x++) row[x] = srcRow[x] ?? 0;
+          }
+          return row;
+        });
+        lObj.grid = newGrid;
+      }
+    }
+  }
+
+  state.layers = state.frames[state.activeFrameIndex].layers;
+  syncActiveLayerGrid();
+  if (state.selection && state.selection.size > 0) {
+    const kept = new Set();
+    for (const key of state.selection) {
+      const [sx, sy] = String(key).split(",").map(Number);
+      if (sx >= 0 && sx < dstW && sy >= 0 && sy < dstH) kept.add(key);
+    }
+    state.selection = kept.size > 0 ? kept : null;
+  }
+  notify("tilemap:render");
+  updateResolutionButtons(dstW, dstH);
+  applyZoom(state.zoom || 1);
+  setStatus({ key: "log.res_changed", params: { w: dstW, h: dstH } });
+}
+
+/**
  * Compone las capas visibles del frame activo y descarga la imagen como PNG.
  */
 export function downloadCurrent() {

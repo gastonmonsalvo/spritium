@@ -296,9 +296,11 @@
 .pref-layout {
   display: grid;
   grid-template-columns: 174px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 16px;
-  min-height: 300px;
-  max-height: calc(86vh - 125px);
+  flex: 1;
+  min-height: 260px;
+  max-height: calc(86vh - 135px);
   overflow: hidden;
 }
 
@@ -340,7 +342,8 @@
 
 .pref-content {
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 8px;
+  padding-bottom: 12px;
   min-height: 0;
 }
 

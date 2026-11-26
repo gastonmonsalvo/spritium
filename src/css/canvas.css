@@ -44,7 +44,9 @@
   z-index: 2;
 }
 
-#gridCoordsOverlay {
+#gridCoordsOverlay,
+#distanceMeasureOverlay,
+#canvasResizeOverlay {
   grid-column: 2;
   grid-row: 2;
   display: none;
@@ -54,6 +56,15 @@
   pointer-events: none;
   z-index: 3;
   overflow: hidden;
+}
+
+#distanceMeasureOverlay {
+  z-index: 14;
+}
+
+#canvasResizeOverlay {
+  z-index: 16;
+  overflow: visible;
 }
 
 .grid-coords-col {
@@ -101,7 +112,9 @@
 
 .canvas-with-rulers.no-rulers #paintCanvas,
 .canvas-with-rulers.no-rulers #gridOverlay,
-.canvas-with-rulers.no-rulers #gridCoordsOverlay {
+.canvas-with-rulers.no-rulers #gridCoordsOverlay,
+.canvas-with-rulers.no-rulers #distanceMeasureOverlay,
+.canvas-with-rulers.no-rulers #canvasResizeOverlay {
   grid-column: 1;
   grid-row: 1;
 }

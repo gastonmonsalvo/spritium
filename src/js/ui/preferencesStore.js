@@ -55,6 +55,25 @@ export const DEFAULT_USER_PREFS = Object.freeze({
     snap: false,
     lockCell: false,
   }),
+  centerGuidesConfig: Object.freeze({
+    color: "#ef4444",
+    autoColor: true,
+    thickness: 1,
+    opacity: 0.45,
+    oddHalfLine: false,
+  }),
+  guidesOverlayConfig: Object.freeze({
+    autoColor: true,
+    measureColor: "#f59e0b",
+    resizeColor: "#38bdf8",
+    thickness: 1.5,
+  }),
+  baseGridConfig: Object.freeze({
+    mode: "adaptive",
+    stepX: 8,
+    stepY: 8,
+    checkerContrast: 14,
+  }),
 });
 
 function isHexColor(v) {
@@ -85,6 +104,9 @@ export function normalizeUserPreferences(raw) {
   const ret = raw?.reticleConfig || {};
   const gcoords = raw?.gridCoordsConfig || {};
   const cgrid = raw?.customGrid || {};
+  const cguides = raw?.centerGuidesConfig || {};
+  const goverlays = raw?.guidesOverlayConfig || {};
+  const bgrid = raw?.baseGridConfig || {};
   const opacity = Math.max(0.2, Math.min(1, Number(cfg.opacity ?? DEFAULT_USER_PREFS.pixelCursorConfig.opacity) || 0.75));
   const activeColorAlpha = Math.max(0.1, Math.min(1, Number(cfg.activeColorAlpha ?? DEFAULT_USER_PREFS.pixelCursorConfig.activeColorAlpha) || 0.75));
   const gcOpacity = Math.max(0.05, Math.min(0.6, Number(gcoords.opacity ?? DEFAULT_USER_PREFS.gridCoordsConfig.opacity) || 0.14));
@@ -149,6 +171,25 @@ export function normalizeUserPreferences(raw) {
       snap: typeof cgrid.snap === "boolean" ? cgrid.snap : DEFAULT_USER_PREFS.customGrid.snap,
       lockCell: typeof cgrid.lockCell === "boolean" ? cgrid.lockCell : DEFAULT_USER_PREFS.customGrid.lockCell,
     },
+    centerGuidesConfig: {
+      color: isHexColor(cguides.color) ? cguides.color.trim() : DEFAULT_USER_PREFS.centerGuidesConfig.color,
+      autoColor: typeof cguides.autoColor === "boolean" ? cguides.autoColor : DEFAULT_USER_PREFS.centerGuidesConfig.autoColor,
+      thickness: Math.max(0.5, Math.min(3, Math.round((Number(cguides.thickness ?? DEFAULT_USER_PREFS.centerGuidesConfig.thickness) || 1) * 2) / 2)),
+      opacity: Math.max(0.1, Math.min(1, Number(cguides.opacity ?? DEFAULT_USER_PREFS.centerGuidesConfig.opacity) || 0.45)),
+      oddHalfLine: typeof cguides.oddHalfLine === "boolean" ? cguides.oddHalfLine : DEFAULT_USER_PREFS.centerGuidesConfig.oddHalfLine,
+    },
+    guidesOverlayConfig: {
+      autoColor: typeof goverlays.autoColor === "boolean" ? goverlays.autoColor : DEFAULT_USER_PREFS.guidesOverlayConfig.autoColor,
+      measureColor: isHexColor(goverlays.measureColor) ? goverlays.measureColor.trim() : DEFAULT_USER_PREFS.guidesOverlayConfig.measureColor,
+      resizeColor: isHexColor(goverlays.resizeColor) ? goverlays.resizeColor.trim() : DEFAULT_USER_PREFS.guidesOverlayConfig.resizeColor,
+      thickness: Math.max(0.5, Math.min(3, Math.round((Number(goverlays.thickness ?? DEFAULT_USER_PREFS.guidesOverlayConfig.thickness) || 1.5) * 2) / 2)),
+    },
+    baseGridConfig: {
+      mode: bgrid.mode === "fixed" ? "fixed" : "adaptive",
+      stepX: Math.max(1, Math.min(128, Math.round(Number(bgrid.stepX ?? bgrid.step ?? DEFAULT_USER_PREFS.baseGridConfig.stepX) || 8))),
+      stepY: Math.max(1, Math.min(128, Math.round(Number(bgrid.stepY ?? bgrid.step ?? DEFAULT_USER_PREFS.baseGridConfig.stepY) || 8))),
+      checkerContrast: Math.max(4, Math.min(64, Math.round(Number(bgrid.checkerContrast ?? DEFAULT_USER_PREFS.baseGridConfig.checkerContrast) || 14))),
+    },
   };
 }
 
@@ -167,6 +208,9 @@ export function getUserPreferencesPayload() {
     reticleConfig: state.reticleConfig,
     gridCoordsConfig: state.gridCoordsConfig,
     customGrid: state.customGrid,
+    centerGuidesConfig: state.centerGuidesConfig,
+    guidesOverlayConfig: state.guidesOverlayConfig,
+    baseGridConfig: state.baseGridConfig,
   });
 }
 
@@ -215,6 +259,9 @@ export function applyUserPreferencesObject(raw, { persist = true } = {}) {
   state.reticleConfig = { ...prefs.reticleConfig };
   state.gridCoordsConfig = { ...prefs.gridCoordsConfig };
   state.customGrid = { ...prefs.customGrid };
+  state.centerGuidesConfig = { ...prefs.centerGuidesConfig };
+  state.guidesOverlayConfig = { ...prefs.guidesOverlayConfig };
+  state.baseGridConfig = { ...prefs.baseGridConfig };
 
   if (persist) saveUserPreferences();
   syncViewTogglesUI();

@@ -90,6 +90,27 @@ export function renderPreferencesModal() {
                   <button type="button" class="tool-btn lang-btn" data-lang="en" data-i18n="lang.en_label">${escapeHtml(i18n.t("lang.en_label"))}</button>
                 </div>
               </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 4px;">
+                <span style="font-weight: 600; color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="settings-2" class="ui-icon-sm"></i>
+                  <span data-i18n="pref.config_backup_title">${escapeHtml(i18n.t("pref.config_backup_title"))}</span>
+                </span>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="tool-btn" data-action="exportUserConfig" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;">
+                    <i data-lucide="download" class="ui-icon-sm"></i>
+                    <span data-i18n="pref.config_export">${escapeHtml(i18n.t("pref.config_export"))}</span>
+                  </button>
+                  <button type="button" class="tool-btn" data-action="openConfigDialog" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;">
+                    <i data-lucide="upload" class="ui-icon-sm"></i>
+                    <span data-i18n="pref.config_import">${escapeHtml(i18n.t("pref.config_import"))}</span>
+                  </button>
+                  <button type="button" class="btn-subtle-danger" data-action="resetAllUserConfig" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;">
+                    <i data-lucide="rotate-ccw" class="ui-icon-sm"></i>
+                    <span data-i18n="pref.config_reset_all">${escapeHtml(i18n.t("pref.config_reset_all"))}</span>
+                  </button>
+                </div>
+              </div>
             </section>
 
             <section class="pref-panel" data-pref-panel="reticle">
@@ -171,10 +192,44 @@ export function renderPreferencesModal() {
                 <input type="checkbox" id="chkPrefShowGrid" />
                 <span data-i18n="pref.show_grid_html">${escapeHtml(i18n.t("pref.show_grid_html"))}</span>
               </label>
+              <div style="display: flex; align-items: center; gap: 8px; padding-left: 22px; flex-wrap: wrap;">
+                <label for="prefBaseGridMode" style="color: var(--text-secondary);" data-i18n="pref.base_grid_mode">${escapeHtml(i18n.t("pref.base_grid_mode"))}</label>
+                <select id="prefBaseGridMode" style="padding: 3px 6px;">
+                  <option value="adaptive" data-i18n="pref.base_grid_adaptive">${escapeHtml(i18n.t("pref.base_grid_adaptive"))}</option>
+                  <option value="fixed" data-i18n="pref.base_grid_fixed">${escapeHtml(i18n.t("pref.base_grid_fixed"))}</option>
+                </select>
+                <div id="prefBaseGridStepWrap" style="display: none; align-items: center; gap: 4px;">
+                  <input type="number" id="prefBaseGridStepX" min="1" max="128" value="8" style="width: 52px; padding: 3px 6px;" />
+                  <span>×</span>
+                  <input type="number" id="prefBaseGridStepY" min="1" max="128" value="8" style="width: 52px; padding: 3px 6px;" />
+                  <span style="color: var(--text-secondary);">px</span>
+                </div>
+              </div>
+              <div style="padding-left: 22px;">
+                ${renderRangeRow({ id: "prefCheckerContrast", valId: "prefCheckerContrastVal", labelKey: "pref.checker_contrast", min: 4, max: 64, step: 2, value: 14, valText: "14", valWidth: "46px", rangeWidth: "120px" })}
+              </div>
               <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="chkPrefShowCenterGuides" />
                 <span data-i18n="pref.show_center_guides">${escapeHtml(i18n.t("pref.show_center_guides"))}</span>
               </label>
+              <div style="display: flex; flex-direction: column; gap: 6px; padding-left: 22px;">
+                ${renderRangeRow({ id: "prefCenterGuidesOpacity", valId: "prefCenterGuidesOpacityVal", labelKey: "pref.opacity", min: 10, max: 100, step: 5, value: 45, valText: "45%", valWidth: "46px", rangeWidth: "120px" })}
+                ${renderRangeRow({ id: "prefCenterGuidesThickness", valId: "prefCenterGuidesThicknessVal", labelKey: "pref.thickness", min: 0.5, max: 3, step: 0.5, value: 1, valText: "1 px", valWidth: "46px", rangeWidth: "120px" })}
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span data-i18n="pref.center_guides_color">${escapeHtml(i18n.t("pref.center_guides_color"))}</span>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px; font-size: 11px;">
+                      <input type="checkbox" id="chkPrefCenterGuidesAutoColor" />
+                      <span data-i18n="pref.custom_grid_auto_color">${escapeHtml(i18n.t("pref.custom_grid_auto_color"))}</span>
+                    </label>
+                    <button type="button" id="prefCenterGuidesColorBtn" class="rgba-picker-btn" style="width: 28px; height: 22px;"></button>
+                  </div>
+                </div>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 6px;">
+                  <input type="checkbox" id="chkPrefCenterGuidesOddHalf" />
+                  <span data-i18n="pref.center_guides_odd_half">${escapeHtml(i18n.t("pref.center_guides_odd_half"))}</span>
+                </label>
+              </div>
               <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="chkPrefShowCenterRulerMarks" />
                 <span data-i18n="pref.show_center_ruler_marks">${escapeHtml(i18n.t("pref.show_center_ruler_marks"))}</span>
@@ -243,6 +298,29 @@ export function renderPreferencesModal() {
                       <button type="button" id="prefCustomGridColorBtn" class="rgba-picker-btn" style="width: 28px; height: 22px;"></button>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 7px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-weight: 600; color: var(--text-primary);" data-i18n="pref.overlays_title">${escapeHtml(i18n.t("pref.overlays_title"))}</span>
+                  <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px; font-size: 11px;">
+                    <input type="checkbox" id="chkPrefOverlaysAutoColor" />
+                    <span data-i18n="pref.custom_grid_auto_color">${escapeHtml(i18n.t("pref.custom_grid_auto_color"))}</span>
+                  </label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; padding-left: 22px; flex-wrap: wrap;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span data-i18n="pref.measure_color">${escapeHtml(i18n.t("pref.measure_color"))}</span>
+                    <button type="button" id="prefMeasureColorBtn" class="rgba-picker-btn" style="width: 28px; height: 22px;"></button>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span data-i18n="pref.resize_color">${escapeHtml(i18n.t("pref.resize_color"))}</span>
+                    <button type="button" id="prefResizeColorBtn" class="rgba-picker-btn" style="width: 28px; height: 22px;"></button>
+                  </div>
+                </div>
+                <div style="padding-left: 22px;">
+                  ${renderRangeRow({ id: "prefOverlaysThickness", valId: "prefOverlaysThicknessVal", labelKey: "pref.thickness", min: 0.5, max: 3, step: 0.5, value: 1.5, valText: "1.5 px", valWidth: "46px", rangeWidth: "120px" })}
                 </div>
               </div>
             </section>

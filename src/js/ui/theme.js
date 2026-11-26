@@ -2,7 +2,7 @@
  * theme.js: Tema oscuro/claro, intensidad del fondo del lienzo y escala de interfaz.
  */
 
-import { state } from "../core/state.js";
+import { state, subscribe } from "../core/state.js";
 import { renderAll } from "../canvas/canvas.js";
 import { renderRulers } from "../canvas/rulers.js";
 import { setStatus, refreshIcons } from "./status.js";
@@ -99,11 +99,12 @@ function applyCanvasBgVisuals({ persist = true, immediate = false } = {}) {
   const useChecker = canvasBgState.checker !== false;
   const isLight = typeof document !== "undefined" && document.body?.classList.contains("theme-light");
 
+  const checkerDelta = Math.max(4, Math.min(64, Math.round(Number(state.baseGridConfig?.checkerContrast ?? 14) || 14)));
   let c1;
   let c2;
   let clearBodyInline = false;
   if (!rgba) {
-    if (isLight && val === 92 && useChecker) {
+    if (isLight && val === 92 && useChecker && checkerDelta === 14) {
       // Mantiene exactamente el damero crema cálido definido en body.theme-light (#DDD3C1 / #EAE2D3)
       c1 = [221, 211, 193];
       c2 = [234, 226, 211];
@@ -112,12 +113,13 @@ function applyCanvasBgVisuals({ persist = true, immediate = false } = {}) {
       const t = val / 100;
       const base = Math.round(24 + t * 214);
       c1 = [base, clampByte(base - 8), clampByte(base - 22)];
+      const dir = val > 50 && c1[0] - checkerDelta >= 0 ? -checkerDelta : checkerDelta;
       c2 = useChecker
-        ? [clampByte(c1[0] + (val > 50 ? 12 : 14)), clampByte(c1[1] + (val > 50 ? 14 : 14)), clampByte(c1[2] + (val > 50 ? 16 : 14))]
+        ? [clampByte(c1[0] + dir), clampByte(c1[1] + dir), clampByte(c1[2] + dir)]
         : [...c1];
     } else {
       const base = Math.round(20 + (val / 100) * 224);
-      const alt = useChecker ? clampByte(base + (val > 50 ? -12 : 12)) : base;
+      const alt = useChecker ? clampByte(base + (val > 50 ? -checkerDelta : checkerDelta)) : base;
       c1 = [base, base, clampByte(base + 3)];
       c2 = [alt, alt, clampByte(alt + 4)];
     }
@@ -132,7 +134,7 @@ function applyCanvasBgVisuals({ persist = true, immediate = false } = {}) {
     c1 = [r1, g1, b1];
     if (useChecker) {
       const lum = (0.2126 * r1 + 0.7152 * g1 + 0.0722 * b1) / 255;
-      const shift = lum > 0.5 ? -14 : 14;
+      const shift = lum > 0.5 ? -checkerDelta : checkerDelta;
       c2 = [
         blend(altRgb[0], clampByte(rgba[0] + shift)),
         blend(altRgb[1], clampByte(rgba[1] + shift)),
@@ -337,6 +339,8 @@ export function initCanvasBgIntensity() {
     const isLight = typeof document !== "undefined" && document.body?.classList.contains("theme-light");
     setCanvasBgConfig({ percent: isLight ? 92 : 12, color: null, checker: true }, { persist: false });
   }
+  subscribe("checker:contrast", () => applyCanvasBgVisuals({ persist: false, immediate: false }));
+  subscribe("prefs:changed", () => applyCanvasBgVisuals({ persist: false, immediate: false }));
 }
 
 /**
